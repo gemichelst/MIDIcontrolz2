@@ -1,6 +1,6 @@
 {
   "name": "midicontrolz2",
-  "version": "2.10.0",
+  "version": "2.10.1",
   "type": "module",
   "scripts": {
     "dev": "vite --port 3000 --host 0.0.0.0",

@@ -200,6 +200,12 @@
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
 
+  
+    #panel-utilities .btn:active {
+      transform: scale(0.96);
+      filter: brightness(1.2);
+    }
+
   </style>
 
   <style>
@@ -355,7 +361,7 @@
     <select id="sel-out" onchange="connectMidiPorts()">
       <option value="">— MIDI Out —</option>
     </select>
-    <button class="btn sm danger" onclick="midiPanic()" style="margin-left:8px;" title="Send All Notes Off / All Sound Off">🛑 Panic</button>
+    <button class="btn sm danger" onclick="midiPanic()" style="margin-left:8px;" data-tooltip="Sends 'All Notes Off' and 'All Sound Off' messages to all channels to immediately silence stuck notes.">🛑 Panic</button>
   </div>
 
   <!-- PWA Install button — hidden until beforeinstallprompt fires -->
@@ -509,7 +515,7 @@
         <p style="font-size:0.78rem;color:var(--text3);margin-bottom:8px;">Enter hex bytes separated by spaces. F0 … F7</p>
         <textarea class="hex-input" id="sysex-input" placeholder="F0 00 20 29 02 0A 77 00 F7"></textarea>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn primary" onclick="sendSysEx()">▶ Send SysEx</button>
+          <button class="btn primary" onclick="sendSysEx()" data-tooltip="Transmit the raw hexadecimal bytes above directly to the active MIDI Out port">▶ Send SysEx</button>
           <button class="btn" onclick="parseSysExInput()" data-tooltip="Validate and count the number of bytes in the hexadecimal input without sending">🔍 Parse</button>
         </div>
         <div id="sysex-parse-result" style="margin-top:10px;font-size:0.78rem;color:var(--accent3);font-family:monospace;"></div>
@@ -538,14 +544,14 @@
             <label style="display:block;font-size:0.75rem;color:var(--text3);margin-bottom:4px;">Value</label>
             <input type="number" id="raw-val" value="127" min="0" max="127" style="width:60px;background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:5px 6px;border-radius:4px;outline:none;">
           </div>
-          <button class="btn primary" onclick="sendRawMidi()">▶ Send</button>
+          <button class="btn primary" onclick="sendRawMidi()" data-tooltip="Transmit this specific CC, Note, or Program Change message instantly">▶ Send</button>
         </div>
       </div>
       
       <div class="sysex-area" id="device-sysex-cmds">
         <h3>Device Quick Commands</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-          <button class="btn sm" style="background:#dc2626;color:white;border:none;" onclick="sendFactoryReset()">⚠️ Factory Reset</button>
+          <button class="btn sm" style="background:#dc2626;color:white;border:none;" onclick="sendFactoryReset()" data-tooltip="Sends a universal System Exclusive factory reset command to the connected hardware">⚠️ Factory Reset</button>
         </div>
         <div id="device-quick-cmds-list" style="display:flex;gap:8px;flex-wrap:wrap;">
  style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -666,7 +672,7 @@
 
         <!-- LFO GENERATOR -->
         <div style="background:var(--surface2); padding:16px; border-radius:8px; border:1px solid var(--border);">
-          <h3 style="font-size:1rem; margin-bottom:8px;">🌊 CC LFO Generator</h3>
+          <h3 style="font-size:1rem; margin-bottom:8px;" data-tooltip="Continuously modulates a target CC parameter using mathematical sine wave sweeps.">🌊 CC LFO Generator</h3>
           <p style="font-size:0.75rem; color:var(--text3); margin-bottom:12px;">Continuously send a sine wave CC sweep to modulate external parameters.</p>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px; font-size:0.8rem;">
             <div>
@@ -795,7 +801,7 @@
         <div class="settings-card">
           <h3>ℹ About</h3>
           <div style="font-size:0.82rem;color:var(--text2);line-height:1.9;">
-            <strong>MIDIcontrolz2</strong> v2.10.0<br>
+            <strong>MIDIcontrolz2</strong> v2.10.1<br>
             WebMIDI API · No backend · No install<br>
             Device configs: JSON templates<br>
             <a href="https://midicontrols.doerd.de" target="_blank"
