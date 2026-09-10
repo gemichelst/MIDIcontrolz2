@@ -1237,10 +1237,19 @@ function exportPresetJSON() {
 // ============================================================
 //  DEVICE MANAGER
 // ============================================================
+
 function renderDeviceManager() {
   const grid = document.getElementById('device-manager-grid');
   if (!grid) return;
+  const searchInput = document.getElementById('dm-search');
+  const term = searchInput ? searchInput.value.toLowerCase() : '';
+  const filtered = State.devices.filter(dev => 
+    (dev.name || '').toLowerCase().includes(term) ||
+    (dev.manufacturer || '').toLowerCase().includes(term) ||
+    (dev.description || '').toLowerCase().includes(term)
+  );
   grid.innerHTML = filtered.map(dev => `
+
     <div class="dm-card">
       <div class="dm-card-header">
         <div class="icon">${dev.icon || '🎹'}</div>
@@ -1856,7 +1865,7 @@ function downloadCapturedTemplate(i) {
 const originalOnMidiMessage = onMidiMessage;
 onMidiMessage = function(event) {
   const data = event.data;
-  if(data[0] === 0xF0 && data.length > 50) {
+  if(data[0] === 0xF0 && data.length > 8) {
     // Looks like a bulk dump
     receivedTemplates.push(data);
     if(typeof renderReceivedTemplates === 'function') renderReceivedTemplates();
