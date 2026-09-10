@@ -842,6 +842,11 @@ function onMidiMessage(event) {
 
   if (State.settings.thru && State.midiOut) sendMidiOut(data);
 
+  
+  if (window.mapperLearnMode && window.mapperLearnTarget && window.handleMapperMidiLearn) {
+    if (window.handleMapperMidiLearn(data)) return;
+  }
+
   if (_learnTarget) { handleMidiLearn(data); return; }
 
   const status = data[0];

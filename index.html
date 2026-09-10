@@ -160,6 +160,18 @@
       stroke: #ef4444 !important;
     }
 
+  
+    .svg-drop-target {
+      stroke: #22c55e !important;
+      stroke-width: 3px !important;
+      filter: drop-shadow(0 0 6px #22c55e);
+    }
+    .svg-selected-learn {
+      stroke: #eab308 !important;
+      stroke-width: 3px !important;
+      animation: pulse-learn 1.5s infinite;
+    }
+
   </style>
 
   <style>
@@ -349,10 +361,18 @@
       </div>
       <div id="editor-device" style="display:none;"></div>
 
+      
       <!-- MIDI MAPPER & SVG ENGINE -->
       <div id="midi-mapper-section" style="display:none; margin-top:20px; background:var(--surface2); padding:12px; border-radius:8px;">
-        <h2 style="font-size:1.1rem;margin-bottom:10px;">Visual MIDI Mapper (Drag & Drop)</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h2 style="font-size:1.1rem;margin:0;">Visual MIDI Mapper (Drag & Drop)</h2>
+          <div style="display:flex; gap:8px;">
+            <button class="btn sm" id="btn-mapper-learn" onclick="toggleMapperLearn()">🎛 Learn: OFF</button>
+            <button class="btn sm primary" onclick="exportSvgMapping()">💾 Export Mapping</button>
+          </div>
+        </div>
         <p style="font-size:0.85rem;color:var(--text3);margin-bottom:10px;">Drag CC numbers onto the SVG controls to map them instantly. Click a control to edit.</p>
+
         <div id="draggable-ccs" style="margin-bottom:10px; background:var(--surface3); padding:10px; border-radius:6px; min-height:40px;">
           <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="1">CC 1 (Mod)</span>
           <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="7">CC 7 (Vol)</span>
