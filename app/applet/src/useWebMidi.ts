@@ -48,6 +48,12 @@ export function useWebMidi() {
       else if (type === 0xC) msgType = 'pc';
       else if (status === 0xF0) msgType = 'sysex';
 
+      // Check for Identity Reply
+      // F0 7E <device ID> 06 02 <mfg> <family(2)> <model(2)> <version(4)> F7
+      if (msgType === 'sysex' && data.length >= 15 && data[1] === 0x7E && data[3] === 0x06 && data[4] === 0x02) {
+        window.dispatchEvent(new CustomEvent('midi-identity-reply', { detail: { data } }));
+      }
+
       const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
       
       setMessages(prev => [{
