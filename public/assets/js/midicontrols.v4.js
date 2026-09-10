@@ -738,6 +738,7 @@ function handleMidiLearn(data) {
       toast(`Pad ${pi+1} → Note ${noteName(data[1])} (${data[1]}) on Ch ${ch+1} ✓`, 'success');
     }
   } else if (type === 0xB) {
+    if (typeof window.trackRecentCC === 'function') window.trackRecentCC(data[1], ch);
     // CC — map to knob
     if (_learnTarget.type === 'knob') {
       ensureKnobArray(dev);
@@ -875,6 +876,7 @@ function onMidiMessage(event) {
     if (State.settings.highlight) highlightPad(ch, data[1], false);
     if (typeof highlightKey === 'function') highlightKey(data[1], false);
   } else if (type === 0xB) {
+    if (typeof window.trackRecentCC === 'function') window.trackRecentCC(data[1], ch);
     msg = { type:'cc', ch, cc:data[1], val:data[2], timestamp:ts };
     State.liveValues[`cc_${ch}_${data[1]}`] = data[2];
     if (State.settings.highlight) updateLiveKnob(ch, data[1], data[2]);
@@ -1806,22 +1808,43 @@ function renderSysexQueue() {
   container.innerHTML = sysexQueue.map(f => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:4px 0;"><span>${f.name}</span><span style="opacity:0.6">${(f.size/1024).toFixed(1)} KB</span></div>`).join('');
 }
 
+
 async function sendSysexQueue() {
   if (!State.midiOut) return toast("No MIDI Out selected", "error");
   if (sysexQueue.length === 0) return toast("No files queued", "error");
   
   toast(`Sending ${sysexQueue.length} files...`, "info");
+  
+  const pContainer = document.getElementById('sysex-progress-container');
+  const pBar = document.getElementById('sysex-progress-bar');
+  if (pContainer && pBar) {
+    pContainer.style.display = 'block';
+    pBar.style.width = '0%';
+  }
+
   for (let i=0; i<sysexQueue.length; i++) {
     const file = sysexQueue[i];
     const buffer = await file.arrayBuffer();
     const data = new Uint8Array(buffer);
     sendMidiOut(data);
+    
+    if (pBar) {
+      const pct = Math.round(((i + 1) / sysexQueue.length) * 100);
+      pBar.style.width = pct + '%';
+    }
+
     await new Promise(r => setTimeout(r, 200)); // Delay for buffer
   }
+  
+  if (pContainer) {
+    setTimeout(() => { pContainer.style.display = 'none'; }, 1000);
+  }
+
   toast("SysEx Queue sent successfully!", "success");
   sysexQueue = [];
   renderSysexQueue();
 }
+
 
 function renderReceivedTemplates() {
   const container = document.getElementById('sysex-receive-list');
@@ -1972,10 +1995,67 @@ function saveJsonEditor() {
 
 
 
+
+let midiOutQueue = [];
+let isFlushingMidi = false;
+
+function flushMidiQueue() {
+  if (midiOutQueue.length === 0) {
+    isFlushingMidi = false;
+    return;
+  }
+  // take up to 20 messages at once
+  const batch = midiOutQueue.splice(0, 20);
+  batch.forEach(data => {
+    try {
+      State.midiOut.send(data);
+    } catch(e) {
+      console.error('MIDI Send Error:', e);
+    }
+  });
+  if (midiOutQueue.length > 0) {
+    setTimeout(flushMidiQueue, 10);
+  } else {
+    isFlushingMidi = false;
+  }
+}
+
 function sendMidiOut(data) {
   if (State.midiOut) {
     flashActivity('out');
-    State.midiOut.send(data);
+    midiOutQueue.push(data);
+    if (!isFlushingMidi) {
+      isFlushingMidi = true;
+      flushMidiQueue();
+    }
   }
 }
 }
+}
+
+
+window.sendFactoryReset = function() {
+  if (!State.midiOut) return toast("No MIDI Out selected", "error");
+  // F0 7E 7F 09 01 F7
+  sendMidiOut([0xF0, 0x7E, 0x7F, 0x09, 0x01, 0xF7]);
+  toast('Factory Reset (All-System-Reset) Sent', 'warning');
+};
+
+
+let recentCCs = [];
+window.trackRecentCC = function(cc, ch) {
+  const label = `CC ${cc} (Ch ${ch+1})`;
+  // remove if exists
+  recentCCs = recentCCs.filter(x => x !== label);
+  recentCCs.unshift(label);
+  if (recentCCs.length > 5) recentCCs.pop();
+  
+  const container = document.getElementById('recent-cc-monitor');
+  if (container) {
+    container.innerHTML = recentCCs.map(r => `
+      <span style="background:var(--surface3); border:1px solid var(--border); padding:2px 8px; border-radius:12px; font-size:0.75rem; color:var(--text2); display:inline-block;">
+        ${r}
+      </span>
+    `).join('');
+  }
+};

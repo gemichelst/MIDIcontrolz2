@@ -452,9 +452,14 @@
           <button class="btn primary" onclick="sendRawMidi()">▶ Send</button>
         </div>
       </div>
+      
       <div class="sysex-area" id="device-sysex-cmds">
         <h3>Device Quick Commands</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <button class="btn sm" style="background:#dc2626;color:white;border:none;" onclick="sendFactoryReset()">⚠️ Factory Reset</button>
+        </div>
         <div id="device-quick-cmds-list" style="display:flex;gap:8px;flex-wrap:wrap;">
+ style="display:flex;gap:8px;flex-wrap:wrap;">
           <span style="font-size:0.8rem;color:var(--text3);">Select a device to see device-specific commands.</span>
         </div>
       </div>
