@@ -360,14 +360,22 @@ function renderDeviceEditor() {
 
   // Channel bar
   html += `
-  <div class="channel-bar">
-    <label>MIDI Channel:</label>
-    <select onchange="setPresetChannel(this.value)">
+  <div class="channel-bar" style="display:flex;align-items:center;gap:12px;background:var(--surface2);padding:10px;border-radius:6px;margin-bottom:20px;">
+    <label style="font-weight:bold;">MIDI Channel:</label>
+    <select onchange="setPresetChannel(this.value)" style="background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;">
       ${Array.from({length:16},(_,i) =>
         `<option value="${i}" ${preset.channel === i ? 'selected' : ''}>Ch ${i+1}</option>`
       ).join('')}
     </select>
-    <span style="font-size:0.75rem;color:var(--text3);">
+    
+    <div style="width:1px;height:24px;background:var(--border);margin:0 4px;"></div>
+    
+    <button class="btn sm" onclick="savePresetVersion()">💾 Save Version</button>
+    <button class="btn sm" onclick="revertPresetVersion()" ${!preset.lastSavedState ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>↩ Revert to Previous</button>
+    
+    <span style="font-size:0.8rem;color:var(--accent);margin-left:auto;font-weight:bold;">v${preset.version || 1}</span>
+    
+    <span style="font-size:0.75rem;color:var(--text3);margin-left:12px;">
       ${dev.sysex ? '⚡ SysEx supported' : '— No SysEx'}
     </span>
   </div>`;
@@ -1836,10 +1844,20 @@ function vkMouseEnter(note) {
   }
 }
 
+
+window.vkOctaveShift = 0;
+
+function changeVkOctave(dir) {
+  window.vkOctaveShift += dir;
+  if (window.vkOctaveShift < -2) window.vkOctaveShift = -2;
+  if (window.vkOctaveShift > 2)  window.vkOctaveShift = 2;
+  renderVirtualKeyboard();
+}
+
 function renderVirtualKeyboard() {
   const vk = document.getElementById('virtual-keyboard');
   if(!vk) return;
-  const startNote = 48; // C3
+  const startNote = 48 + (window.vkOctaveShift * 12); 
   let html = '';
   for(let i = 0; i < 25; i++) {
     const note = startNote + i;
@@ -1858,7 +1876,13 @@ function renderVirtualKeyboard() {
     }
   }
   vk.innerHTML = html;
+  
+  const display = document.getElementById('vk-octave-display');
+  if(display) {
+    display.textContent = noteName(startNote) + ' - ' + noteName(startNote + 24);
+  }
 }
+
 function highlightKey(note, state) {
   if(state) activeKeys.add(note);
   else activeKeys.delete(note);
@@ -2176,3 +2200,140 @@ window.pingDevice = function() {
     }
   }, 2000);
 };
+
+function updateSignalFlow() {
+  const sfInd = document.getElementById('signal-flow-indicator');
+  const sfIn = document.getElementById('sf-in');
+  const sfOut = document.getElementById('sf-out');
+  if (!sfInd) return;
+  
+  if (State.settings.thru && State.midiIn && State.midiOut) {
+    sfInd.style.display = 'flex';
+    sfIn.textContent = State.midiIn.name || 'Unknown';
+    sfOut.textContent = State.midiOut.name || 'Unknown';
+  } else {
+    sfInd.style.display = 'none';
+  }
+}
+
+function savePresetVersion() {
+  const dev = getActiveDev(); if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  
+  // Create snapshot without the lastSavedState to avoid nesting explosion
+  const snapshot = JSON.parse(JSON.stringify(p));
+  delete snapshot.lastSavedState;
+  
+  p.lastSavedState = snapshot;
+  p.version = (p.version || 1) + 1;
+  save();
+  renderDeviceEditor();
+  toast('Preset version ' + p.version + ' saved ✓', 'success');
+}
+
+function revertPresetVersion() {
+  const dev = getActiveDev(); if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (!p.lastSavedState) { toast('No previous version found', 'error'); return; }
+  
+  const restore = JSON.parse(JSON.stringify(p.lastSavedState));
+  restore.lastSavedState = p.lastSavedState; // Keep the ability to revert back to it if needed? Actually no, reverting to previous means we ARE at previous. We can keep it so they can revert again if they make mistakes, but let's just restore it cleanly.
+  dev.defaultPresets[State.activePresetIndex] = restore;
+  save();
+  renderDeviceEditor();
+  toast('Reverted to version ' + (restore.version || 1) + ' ✓', 'info');
+}
+
+function openBatchRenameModal(id) {
+  const dev = State.devices.find(d => d.id === id);
+  if (!dev) return;
+  
+  const presets = dev.defaultPresets || [];
+  let checkboxes = presets.map((p, i) => `
+    <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;margin-bottom:4px;">
+      <input type="checkbox" class="batch-rename-cb" value="${i}" checked>
+      Preset ${i+1}: ${p.name || 'Preset ' + (i+1)}
+    </label>
+  `).join('');
+
+  openModal(`
+    <h2>✏️ Batch Rename Presets</h2>
+    <div style="font-size:0.8rem;color:var(--text2);margin-bottom:12px;">${dev.name} (${presets.length} presets)</div>
+    
+    <div style="max-height:150px;overflow-y:auto;background:var(--surface2);padding:8px;border-radius:4px;margin-bottom:12px;border:1px solid var(--border);">
+      ${checkboxes}
+    </div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Search for (optional)</label>
+        <input type="text" id="br-search" placeholder="e.g. Preset">
+      </div>
+      <div class="form-group">
+        <label>Replace with</label>
+        <input type="text" id="br-replace" placeholder="e.g. Patch">
+      </div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Prefix</label>
+        <input type="text" id="br-prefix" placeholder="e.g. [Live] ">
+      </div>
+      <div class="form-group">
+        <label>Suffix</label>
+        <input type="text" id="br-suffix" placeholder="e.g. V1">
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="applyBatchRename('${dev.id}')">Apply Rename</button>
+    </div>
+  `);
+}
+
+function applyBatchRename(id) {
+  const dev = State.devices.find(d => d.id === id);
+  if (!dev) return;
+  
+  const search = document.getElementById('br-search').value;
+  const replace = document.getElementById('br-replace').value;
+  const prefix = document.getElementById('br-prefix').value;
+  const suffix = document.getElementById('br-suffix').value;
+  
+  const checkboxes = document.querySelectorAll('.batch-rename-cb');
+  let renamedCount = 0;
+  
+  checkboxes.forEach(cb => {
+    if (cb.checked) {
+      const idx = parseInt(cb.value);
+      const p = dev.defaultPresets[idx];
+      let currentName = p.name || 'Preset ' + (idx + 1);
+      
+      if (search) {
+        // use regex globally, case insensitive if possible
+        try {
+          const re = new RegExp(search, 'g');
+          currentName = currentName.replace(re, replace);
+        } catch(e) {
+          // fallback string replace
+          currentName = currentName.split(search).join(replace);
+        }
+      }
+      
+      if (prefix) currentName = prefix + currentName;
+      if (suffix) currentName = currentName + suffix;
+      
+      p.name = currentName;
+      renamedCount++;
+    }
+  });
+  
+  if (renamedCount > 0) {
+    save();
+    if (State.activeDeviceId === dev.id) renderDeviceEditor();
+    toast('Renamed ' + renamedCount + ' presets ✓', 'success');
+  }
+  closeModal();
+}
