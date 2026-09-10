@@ -338,6 +338,7 @@ function renderDeviceEditor() {
         <button class="btn primary" onclick="readFromDevice()">⬇ Read Device</button>
         <button class="btn success" onclick="writeToDevice()">⬆ Write Device</button>
         <button class="btn" onclick="exportPresetJSON()">📤 Export JSON</button>
+        <button class="btn" onclick="exportDeviceSyx('${dev.id}')">📤 Export .syx</button>
         <button class="btn" onclick="saveBackup()">💾 Backup</button>
         <button class="btn" onclick="copyCCMap()">📋 Copy CC Map</button>
       </div>
@@ -420,7 +421,10 @@ function renderDeviceEditor() {
       const deg = Math.round((val / 127) * 270 - 135);
       html += `
       <div class="ctrl-knob">
-        <div class="knob-label">${kd.label}</div>
+        <div class="knob-label" style="display:flex; justify-content:space-between; align-items:center; padding:0 4px;">
+          <span>${kd.label}</span>
+          <button class="midi-learn-btn" onclick="startMidiLearn('knob','${ki}',this)" style="font-size:0.5rem; padding:1px 4px; opacity:0.7;">LEARN</button>
+        </div>
         <div class="knob-vis" id="knob-vis-${ki}"
           data-ki="${ki}" data-val="${val}"
           style="transform:rotate(${deg}deg)"
@@ -1200,6 +1204,7 @@ function renderDeviceManager() {
       </div>
       <div class="dm-card-actions">
         <button class="btn sm primary" onclick="selectDevice('${dev.id}');showPanel('editor')">Edit</button>
+        <button class="btn sm" onclick="previewPresetFromManager('${dev.id}')">👁 Preview</button>
         <button class="btn sm" onclick="exportDeviceJSON('${dev.id}')">📤 .json</button>
         <button class="btn sm" onclick="exportDeviceSyx('${dev.id}')">📤 .syx</button>
         ${!DEVICE_MANIFEST.includes(dev.id)
@@ -1627,11 +1632,11 @@ function midiPanic() {
     return;
   }
   for (let ch = 0; ch < 16; ch++) {
+    State.midiOut.send([0xB0 + ch, 0x7B, 0]); // All Notes Off (B0 7B 00)
     State.midiOut.send([0xB0 + ch, 120, 0]); // All Sound Off
-    State.midiOut.send([0xB0 + ch, 123, 0]); // All Notes Off
     State.midiOut.send([0xB0 + ch, 64, 0]);  // Sustain off
   }
-  toast("MIDI Panic: All Notes & Sound Off sent", "info");
+  toast("MIDI Panic: All Notes Off (B0 7B 00) sent", "info");
 }
 
 let sysexQueue = [];
@@ -1711,16 +1716,16 @@ function downloadCapturedTemplate(i) {
 }
 
 // Hook into SysEx listener to capture templates (like Novation Dumps)
-const originalHandleMidiMessage = handleMidiMessage;
-handleMidiMessage = function(portId, e) {
-  const data = e.data;
+const originalOnMidiMessage = onMidiMessage;
+onMidiMessage = function(event) {
+  const data = event.data;
   if(data[0] === 0xF0 && data.length > 50) {
     // Looks like a bulk dump
     receivedTemplates.push(data);
-    renderReceivedTemplates();
+    if(typeof renderReceivedTemplates === 'function') renderReceivedTemplates();
     toast("SysEx Template Captured", "info");
   }
-  originalHandleMidiMessage(portId, e);
+  originalOnMidiMessage(event);
 };
 
 function exportDeviceSyx(id) {
@@ -1743,4 +1748,40 @@ function exportDeviceSyx(id) {
   a.download = (dev.name || "preset").replace(/\s+/g, '_') + ".syx";
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function previewPresetFromManager(id) {
+  const dev = State.devices.find(d => d.id === id);
+  if (!dev) return;
+  
+  const preset = dev.defaultPresets?.[0] || {};
+  const tags = dev.tags && dev.tags.length > 0 ? dev.tags.join(', ') : 'None';
+  
+  let knobsHtml = (preset.knobs || dev.controls?.knobs || []).map(k => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--surface3);padding:2px 0;"><span>${k.label || 'Knob'}</span><span>CC ${k.cc}</span></div>`).join('');
+  let padsHtml = (preset.pads || dev.controls?.pads || []).map(p => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--surface3);padding:2px 0;"><span>${p.label || 'Pad'}</span><span>Note ${p.note}</span></div>`).join('');
+  
+  const html = `
+    <h3 style="margin-top:0;font-size:1.2rem;border-bottom:1px solid var(--border);padding-bottom:8px;">Preview: ${dev.name}</h3>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;">${dev.description||'No description provided.'}</p>
+    <div style="font-size:0.85rem;margin-bottom:12px;background:var(--surface2);padding:6px;border-radius:4px;"><strong>Tags:</strong> ${tags}</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <h4 style="border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:8px;font-size:1rem;">Mapped Knobs</h4>
+        <div style="font-size:0.8rem;height:140px;overflow-y:auto;background:var(--surface2);padding:8px;border-radius:6px;border:1px solid var(--border);">
+          ${knobsHtml || '<span style="color:var(--text3);">No knobs mapped</span>'}
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <h4 style="border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:8px;font-size:1rem;">Mapped Pads</h4>
+        <div style="font-size:0.8rem;height:140px;overflow-y:auto;background:var(--surface2);padding:8px;border-radius:6px;border:1px solid var(--border);">
+          ${padsHtml || '<span style="color:var(--text3);">No pads mapped</span>'}
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal()">Close Preview</button>
+      <button class="btn primary" onclick="closeModal(); selectDevice('${dev.id}'); showPanel('editor');">Load in Editor</button>
+    </div>
+  `;
+  openModal(html);
 }
