@@ -1971,9 +1971,11 @@ function saveJsonEditor() {
 }
 
 
+
 function sendMidiOut(data) {
   if (State.midiOut) {
     flashActivity('out');
-    sendMidiOut(data);
+    State.midiOut.send(data);
   }
+}
 }
