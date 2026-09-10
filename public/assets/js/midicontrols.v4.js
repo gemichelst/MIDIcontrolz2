@@ -264,12 +264,31 @@ function onDeviceSelectChange(id) {
 // ============================================================
 function showPanel(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(`panel-${name}`).classList.add('active');
+  const targetPanel = document.getElementById(`panel-${name}`);
+  if (!targetPanel) return;
+  targetPanel.classList.add('active');
+  
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(`tab-${name}`).classList.add('active');
-  if (name === 'backup')   renderBackupList();
-  if (name === 'manager')  renderDeviceManager();
-  if (name === 'settings') renderSettings();
+  const tab = document.getElementById(`tab-${name}`);
+  if (tab) tab.classList.add('active');
+  
+  try {
+    if (name === 'backup')   renderBackupList();
+    if (name === 'manager')  renderDeviceManager();
+    if (name === 'settings') renderSettings();
+    if (name === 'editor')   {
+        if (State.activeDeviceId) renderDeviceEditor();
+    }
+  } catch (e) {
+    console.error('Error rendering panel ' + name, e);
+    targetPanel.innerHTML = `
+      <div style="padding: 20px; background: rgba(220,38,38,0.1); border: 1px solid #dc2626; border-radius: 8px; text-align: center;">
+        <h3 style="color: #ef4444; margin-bottom: 12px;">⚠️ Failed to load ${name} panel</h3>
+        <p style="font-size: 0.85rem; color: var(--text2); margin-bottom: 16px;">An unexpected rendering error occurred.</p>
+        <button class="btn sm" onclick="showPanel('${name}')">↻ Retry</button>
+      </div>
+    `;
+  }
 }
 
 // ============================================================
@@ -1029,22 +1048,26 @@ function writeLPD8Preset() {
 //  LIVE UI HIGHLIGHT
 // ============================================================
 
+
 function flashActivity(type = 'in') {
   const dot = document.getElementById('midi-dot');
-  if (!dot) return;
+  const led = document.getElementById('global-midi-led');
+  
   if (type === 'in') {
-    dot.style.backgroundColor = '#22c55e';
-    dot.style.boxShadow = '0 0 10px #22c55e';
+    if (dot) { dot.style.backgroundColor = '#22c55e'; dot.style.boxShadow = '0 0 10px #22c55e'; }
+    if (led) { led.style.backgroundColor = '#22c55e'; led.style.boxShadow = '0 0 8px #22c55e'; }
   } else if (type === 'out') {
-    dot.style.backgroundColor = '#3b82f6';
-    dot.style.boxShadow = '0 0 10px #3b82f6';
+    if (dot) { dot.style.backgroundColor = '#3b82f6'; dot.style.boxShadow = '0 0 10px #3b82f6'; }
+    if (led) { led.style.backgroundColor = '#3b82f6'; led.style.boxShadow = '0 0 8px #3b82f6'; }
   }
+  
   clearTimeout(flashActivity._t);
   flashActivity._t = setTimeout(() => {
-    dot.style.backgroundColor = '';
-    dot.style.boxShadow = '';
-  }, 150);
+    if (dot) { dot.style.backgroundColor = ''; dot.style.boxShadow = ''; }
+    if (led) { led.style.backgroundColor = 'var(--surface3)'; led.style.boxShadow = 'none'; }
+  }, 100);
 }
+
 
 
 function highlightPad(ch, note, on) {
@@ -2104,7 +2127,7 @@ function runLatencyTest() {
 }
 
 // Hook loopback detect into onMidiMessage
-const origMidiMsgUtils = window.onMidiMessage;
+const origMidiMsgUtils = window.onMidiMessage || onMidiMessage;
 window.onMidiMessage = function(event) {
   const data = event.data;
   
@@ -2264,7 +2287,7 @@ window.learnCmChord = function() {
 };
 
 // Modify onMidiMessage to hook into these tools
-const origMidiProcess = window.onMidiMessage;
+const origMidiProcess = window.onMidiMessage || onMidiMessage;
 window.onMidiMessage = function(event) {
   const data = event.data;
   const type = data[0] >> 4;
@@ -2376,7 +2399,7 @@ window.renderVelocityChart = function() {
   window.velocityChartRoot.render(chart);
 };
 
-const originalProcessForVelocity = window.onMidiMessage;
+const originalProcessForVelocity = window.onMidiMessage || onMidiMessage;
 window.onMidiMessage = function(event) {
   const data = event.data;
   const type = data[0] >> 4;
@@ -2563,3 +2586,20 @@ window.addEventListener('beforeunload', (e) => {
     e.returnValue = ''; // Required for modern browsers
   }
 });
+
+
+window.applyMonitorQuickFilter = function() {
+  const v = document.getElementById('monitor-quick-filter').value;
+  const n = document.getElementById('filter-note');
+  const c = document.getElementById('filter-cc');
+  const p = document.getElementById('filter-pc');
+  const s = document.getElementById('filter-sysex');
+  
+  if (!n || !c || !p || !s) return;
+  
+  if(v === 'all') { n.checked = true; c.checked = true; p.checked = true; s.checked = true; }
+  else if(v === 'perf') { n.checked = true; c.checked = true; p.checked = true; s.checked = false; }
+  else if(v === 'sysex') { n.checked = false; c.checked = false; p.checked = false; s.checked = true; }
+  
+  if (window.renderMonitor) window.renderMonitor();
+};

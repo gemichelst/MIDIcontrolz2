@@ -347,9 +347,17 @@
   <!-- Spacer -->
   <div class="spacer"></div>
 
+  
   <!-- MIDI Status -->
-  <div id="midi-status">
+  <div id="midi-status" style="display:flex; align-items:center; gap:8px; margin-right:8px;">
+    <div style="display:flex; align-items:center; gap:4px;" data-tooltip="Global MIDI I/O Activity Indicator">
+      <div id="global-midi-led" style="width:10px; height:10px; border-radius:50%; background:var(--surface3); border:1px solid var(--border); transition: background-color 0.1s, box-shadow 0.1s;"></div>
+      <span style="font-size:0.6rem; color:var(--text3); font-weight:bold; letter-spacing:0.5px; margin-right:4px;">I/O</span>
+    </div>
+    <div style="width:1px; height:14px; background:var(--border);"></div>
     <div class="status-dot" id="midi-dot"></div>
+
+
     <span id="midi-status-text">No WebMIDI</span>
   </div>
 
@@ -488,6 +496,13 @@
         <button class="btn sm" id="btn-monitor-pause" onclick="toggleMonitorPause()">⏸ Pause</button>
         <button class="btn sm" onclick="pingDevice()">🏓 Ping Device</button>
         <span id="ping-result" style="font-size:0.8rem;color:var(--accent);display:flex;align-items:center;"></span>
+        
+        <select id="monitor-quick-filter" onchange="applyMonitorQuickFilter()" style="background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;outline:none;font-size:0.8rem;margin-right:8px;" data-tooltip="Quickly toggle groups of MIDI filters to isolate events">
+          <option value="all">All Events</option>
+          <option value="perf">Performance Only</option>
+          <option value="sysex">SysEx Only</option>
+        </select>
+
         <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;">
           <input type="checkbox" id="filter-note" checked onchange="renderMonitor()"> Notes
         </label>
@@ -814,7 +829,7 @@
         <div class="settings-card">
           <h3>ℹ About</h3>
           <div style="font-size:0.82rem;color:var(--text2);line-height:1.9;">
-            <strong>MIDIcontrolz2</strong> v2.11.0<br>
+            <strong>MIDIcontrolz2</strong> v2.12.0<br>
             WebMIDI API · No backend · No install<br>
             Device configs: JSON templates<br>
             <a href="https://midicontrols.doerd.de" target="_blank"
