@@ -131,6 +131,25 @@
      STYLESHEET
 ════════════════════════════════════════════════════════ -->
 <link rel="stylesheet" href="assets/css/midicontrols.v2.css">
+  <style>
+    @media (max-width: 768px) {
+      #mobile-menu-btn { display: inline-block !important; }
+      #sidebar { 
+        position: absolute; 
+        z-index: 100; 
+        left: 0; 
+        top: 60px; /* height of topnav */
+        bottom: 0;
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease; 
+        box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+      }
+      #sidebar.open { transform: translateX(0); }
+    }
+    @media (min-width: 769px) {
+      #mobile-menu-btn { display: none !important; }
+    }
+  </style>
 </head>
 
 <body>
@@ -212,6 +231,14 @@
 
     <!-- EDITOR PANEL -->
     <div class="panel active" id="panel-editor">
+      <!-- Virtual Keyboard -->
+      <div style="margin-bottom:16px;background:var(--surface2);padding:12px;border-radius:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <h3 style="font-size:0.9rem;margin:0;">Virtual Keyboard</h3>
+          <span style="font-size:0.75rem;color:var(--text3);">Incoming Note-On events highlight keys</span>
+        </div>
+        <div id="virtual-keyboard" style="display:flex;height:80px;position:relative;width:max-content;background:var(--surface3);border:1px solid var(--border);border-radius:4px;overflow:hidden;"></div>
+      </div>
       <div id="editor-welcome" class="welcome-screen">
         <div class="big-icon">🎹</div>
         <h2>Select a device to start editing</h2>
@@ -294,6 +321,29 @@
           <span style="font-size:0.8rem;color:var(--text3);">Select a device to see device-specific commands.</span>
         </div>
       </div>
+      
+      <div class="sysex-area" style="display:flex;gap:20px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:300px;border:1px solid var(--border);border-radius:6px;padding:12px;background:var(--surface2);">
+          <h3 style="margin-top:0;font-size:1rem;">SysEx Bulk Queue</h3>
+          <p style="font-size:0.8rem;color:var(--text3);margin-bottom:12px;">Queue multiple .syx files and send sequentially.</p>
+          <input type="file" id="sysex-queue-input" accept=".syx,.sys" multiple style="display:none" onchange="handleSysexQueueFiles(event)">
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <button class="btn" onclick="document.getElementById('sysex-queue-input').click()">📁 Select Files</button>
+            <button class="btn primary" onclick="sendSysexQueue()">▶ Send Queue</button>
+          </div>
+          <div id="sysex-queue-list" style="font-size:0.8rem;background:var(--surface3);padding:8px;border-radius:4px;min-height:60px;max-height:120px;overflow-y:auto;">
+            <span style="color:var(--text3);">No files queued.</span>
+          </div>
+        </div>
+        
+        <div style="flex:1;min-width:300px;border:1px solid var(--border);border-radius:6px;padding:12px;background:var(--surface2);">
+          <h3 style="margin-top:0;font-size:1rem;">Template Receive Manager</h3>
+          <p style="font-size:0.8rem;color:var(--text3);margin-bottom:12px;">Incoming bulk SysEx templates from devices like Novation SL will appear here.</p>
+          <div id="sysex-receive-list" style="display:flex;flex-direction:column;gap:8px;font-size:0.8rem;background:var(--surface3);padding:8px;border-radius:4px;min-height:95px;max-height:150px;overflow-y:auto;">
+            <span style="color:var(--text3);text-align:center;padding-top:10px;">Waiting for dumps...</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- BACKUP PANEL -->
@@ -311,7 +361,13 @@
     <!-- DEVICE MANAGER PANEL -->
     <div class="panel" id="panel-manager">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-        <h2 style="font-size:1.1rem;">Device Manager</h2>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <h2 style="font-size:1.1rem;">Device Manager</h2>
+          <input type="text" id="dm-search" placeholder="Search devices..." oninput="renderDeviceManager()" style="background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:4px;outline:none;font-size:0.8rem;">
+          <select id="dm-category" onchange="renderDeviceManager()" style="background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:4px;outline:none;font-size:0.8rem;">
+            <option value="All">All Tags</option>
+          </select>
+        </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn primary" onclick="openAddDeviceModal()">＋ Add Device</button>
           <button class="btn" onclick="importDeviceJSON()">📂 Import JSON</button>

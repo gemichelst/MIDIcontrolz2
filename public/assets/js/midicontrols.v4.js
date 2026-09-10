@@ -1181,7 +1181,7 @@ function exportPresetJSON() {
 function renderDeviceManager() {
   const grid = document.getElementById('device-manager-grid');
   if (!grid) return;
-  grid.innerHTML = State.devices.map(dev => `
+  grid.innerHTML = filtered.map(dev => `
     <div class="dm-card">
       <div class="dm-card-header">
         <div class="icon">${dev.icon || '🎹'}</div>
@@ -1200,7 +1200,8 @@ function renderDeviceManager() {
       </div>
       <div class="dm-card-actions">
         <button class="btn sm primary" onclick="selectDevice('${dev.id}');showPanel('editor')">Edit</button>
-        <button class="btn sm" onclick="exportDeviceJSON('${dev.id}')">📤 Export</button>
+        <button class="btn sm" onclick="exportDeviceJSON('${dev.id}')">📤 .json</button>
+        <button class="btn sm" onclick="exportDeviceSyx('${dev.id}')">📤 .syx</button>
         ${!DEVICE_MANIFEST.includes(dev.id)
           ? `<button class="btn sm danger" onclick="removeDevice('${dev.id}')">🗑 Remove</button>`
           : '<span style="font-size:0.7rem;color:var(--text3);">built-in</span>'
@@ -1577,6 +1578,12 @@ if ('serviceWorker' in navigator) {
 //  INIT — async entry point
 // ============================================================
 async function init() {
+  // Setup Virtual Keyboard
+  renderVirtualKeyboard();
+  // Auto-save every 5 seconds
+  setInterval(() => {
+    saveState();
+  }, 5000);
   await loadDevices();
   populateDeviceDropdown();   // ← add this
   renderSettings();
@@ -1589,4 +1596,151 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init(); // DOM already parsed (e.g. script is at bottom of <body>)
+}
+let activeKeys = new Set();
+function renderVirtualKeyboard() {
+  const vk = document.getElementById('virtual-keyboard');
+  if(!vk) return;
+  const startNote = 48; // C3
+  let html = '';
+  for(let i = 0; i < 25; i++) {
+    const note = startNote + i;
+    const isBlack = [1, 3, 6, 8, 10].includes(i % 12);
+    const active = activeKeys.has(note);
+    if(isBlack) {
+      html += `<div id="vk-${note}" style="width:20px;height:50px;background:${active ? '#ef4444' : '#1e293b'};margin:0 -10px;z-index:10;border:1px solid #0f172a;border-bottom-left-radius:3px;border-bottom-right-radius:3px;cursor:pointer;"></div>`;
+    } else {
+      html += `<div id="vk-${note}" style="width:30px;height:80px;background:${active ? '#f87171' : '#f1f5f9'};border-right:1px solid #cbd5e1;border-bottom-left-radius:3px;border-bottom-right-radius:3px;cursor:pointer;z-index:0;"></div>`;
+    }
+  }
+  vk.innerHTML = html;
+}
+function highlightKey(note, state) {
+  if(state) activeKeys.add(note);
+  else activeKeys.delete(note);
+  renderVirtualKeyboard();
+}
+
+function midiPanic() {
+  if (!State.midiOut) {
+    toast("No MIDI Out selected", "error");
+    return;
+  }
+  for (let ch = 0; ch < 16; ch++) {
+    State.midiOut.send([0xB0 + ch, 120, 0]); // All Sound Off
+    State.midiOut.send([0xB0 + ch, 123, 0]); // All Notes Off
+    State.midiOut.send([0xB0 + ch, 64, 0]);  // Sustain off
+  }
+  toast("MIDI Panic: All Notes & Sound Off sent", "info");
+}
+
+let sysexQueue = [];
+let receivedTemplates = [];
+
+function handleSysexQueueFiles(evt) {
+  const files = Array.from(evt.target.files);
+  if(files.length > 0) {
+    sysexQueue = files;
+    renderSysexQueue();
+  }
+}
+
+function renderSysexQueue() {
+  const container = document.getElementById('sysex-queue-list');
+  if(!container) return;
+  if(sysexQueue.length === 0) {
+    container.innerHTML = '<span style="color:var(--text3);">No files queued.</span>';
+    return;
+  }
+  container.innerHTML = sysexQueue.map(f => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:4px 0;"><span>${f.name}</span><span style="opacity:0.6">${(f.size/1024).toFixed(1)} KB</span></div>`).join('');
+}
+
+async function sendSysexQueue() {
+  if (!State.midiOut) return toast("No MIDI Out selected", "error");
+  if (sysexQueue.length === 0) return toast("No files queued", "error");
+  
+  toast(`Sending ${sysexQueue.length} files...`, "info");
+  for (let i=0; i<sysexQueue.length; i++) {
+    const file = sysexQueue[i];
+    const buffer = await file.arrayBuffer();
+    const data = new Uint8Array(buffer);
+    State.midiOut.send(data);
+    await new Promise(r => setTimeout(r, 200)); // Delay for buffer
+  }
+  toast("SysEx Queue sent successfully!", "success");
+  sysexQueue = [];
+  renderSysexQueue();
+}
+
+function renderReceivedTemplates() {
+  const container = document.getElementById('sysex-receive-list');
+  if(!container) return;
+  if(receivedTemplates.length === 0) {
+    container.innerHTML = '<span style="color:var(--text3);text-align:center;padding-top:10px;">Waiting for dumps...</span>';
+    return;
+  }
+  container.innerHTML = receivedTemplates.map((tmpl, i) => `
+    <div style="background:var(--surface2);border:1px solid var(--border);padding:6px;border-radius:4px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-weight:bold;">
+        <span>Captured Template ${i+1}</span>
+        <span style="opacity:0.6">${tmpl.length} bytes</span>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <button class="btn sm" style="flex:1;" onclick="sendCapturedTemplate(${i})">▶ Send Back</button>
+        <button class="btn sm" style="flex:1;" onclick="downloadCapturedTemplate(${i})">💾 Save .syx</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function sendCapturedTemplate(i) {
+  if (!State.midiOut) return toast("No MIDI Out selected", "error");
+  State.midiOut.send(receivedTemplates[i]);
+  toast("Template sent", "info");
+}
+
+function downloadCapturedTemplate(i) {
+  const data = receivedTemplates[i];
+  const blob = new Blob([data], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; 
+  a.download = `captured_template_${i+1}.syx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Hook into SysEx listener to capture templates (like Novation Dumps)
+const originalHandleMidiMessage = handleMidiMessage;
+handleMidiMessage = function(portId, e) {
+  const data = e.data;
+  if(data[0] === 0xF0 && data.length > 50) {
+    // Looks like a bulk dump
+    receivedTemplates.push(data);
+    renderReceivedTemplates();
+    toast("SysEx Template Captured", "info");
+  }
+  originalHandleMidiMessage(portId, e);
+};
+
+function exportDeviceSyx(id) {
+  const dev = State.devices.find(d => d.id === id);
+  if (!dev) return;
+  const jsonStr = JSON.stringify(dev);
+  const jsonBytes = new TextEncoder().encode(jsonStr);
+  
+  // Custom non-commercial SysEx header: F0 7D (Educational)
+  const syx = new Uint8Array(jsonBytes.length + 3);
+  syx[0] = 0xF0; 
+  syx[1] = 0x7D;
+  syx.set(jsonBytes, 2);
+  syx[syx.length - 1] = 0xF7;
+  
+  const blob = new Blob([syx], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; 
+  a.download = (dev.name || "preset").replace(/\s+/g, '_') + ".syx";
+  a.click();
+  URL.revokeObjectURL(url);
 }

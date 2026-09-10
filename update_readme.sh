@@ -1,3 +1,4 @@
+cat << 'README_CONTENT' > README.md
 # MIDIcontrolz2 🎹
 
 A powerful, browser-based MIDI controller editor and management suite built purely with Vanilla JavaScript, HTML, CSS, and the WebMIDI API.
@@ -75,3 +76,5 @@ Located in the SysEx tab, this tool reads raw binary (`.syx` / `.sys`) files via
 - **Full Support:** Google Chrome, Microsoft Edge, Brave (Blink-based browsers).
 - **Partial Support:** Firefox (requires `dom.webmidi.enabled` set in `about:config`).
 - **No Support:** Safari (Apple WebKit currently lacks WebMIDI API support).
+README_CONTENT
+rm DOCUMENTATION.md
