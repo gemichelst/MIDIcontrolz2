@@ -1,3 +1,4 @@
+let activeKeys = new Set();
 /* =============================================================
    MidiControls v2 — assets/js/midicontrols.v2.js
    Full application logic — WebMIDI · Device Editor · Monitor
@@ -1694,7 +1695,6 @@ if (document.readyState === 'loading') {
 } else {
   init(); // DOM already parsed (e.g. script is at bottom of <body>)
 }
-var activeKeys = new Set();
 function vkSendNoteOn(note) {
   highlightKey(note, true);
   if (State.midiOut) {
@@ -1712,14 +1712,14 @@ function vkSendNoteOff(note) {
 
 function renderVirtualKeyboard() {
   const vk = document.getElementById('virtual-keyboard');
+  console.log('virtual-keyboard element exists:', !!vk);
   if(!vk) return;
   const startNote = 48; // C3
   let html = '';
   for(let i = 0; i < 25; i++) {
     const note = startNote + i;
     const isBlack = [1, 3, 6, 8, 10].includes(i % 12);
-    if (typeof activeKeys === "undefined") { window.activeKeys = new Set(); }
-    const active = window.activeKeys ? window.activeKeys.has(note) : false;
+    const active = activeKeys.has(note);
     if(isBlack) {
       html += `<div id="vk-${note}" 
         onmousedown="vkSendNoteOn(${note})" onmouseup="vkSendNoteOff(${note})" onmouseleave="vkSendNoteOff(${note})" ontouchstart="vkSendNoteOn(${note})" ontouchend="vkSendNoteOff(${note})"
@@ -1733,9 +1733,8 @@ function renderVirtualKeyboard() {
   vk.innerHTML = html;
 }
 function highlightKey(note, state) {
-  if(typeof window.activeKeys==="undefined") window.activeKeys=new Set();
-  if(state) window.activeKeys.add(note);
-  else window.activeKeys.delete(note);
+  if(state) activeKeys.add(note);
+  else activeKeys.delete(note);
   renderVirtualKeyboard();
 }
 
