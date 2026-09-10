@@ -894,6 +894,16 @@ function onMidiMessage(event) {
 //  SYSEX INCOMING — parse LPD8 preset dump
 // ============================================================
 function handleSysExIn(data) {
+  if (data[0] === 0xF0 && data[1] === 0x7E && data[3] === 0x06 && data[4] === 0x02) {
+    if (window.pingStartTime) {
+      const ms = Math.round(performance.now() - window.pingStartTime);
+      const span = document.getElementById('ping-result');
+      if (span) span.innerHTML = `Latency: <strong>${ms}ms</strong>`;
+      window.pingStartTime = 0;
+    }
+  }
+
+
   // Akai LPD8 preset dump: F0 47 7F 75 63 ...
   if (data[0]===0xF0 && data[1]===0x47 && data[2]===0x7F &&
       data[3]===0x75 && data[4]===0x63) {
@@ -1710,12 +1720,16 @@ if (document.readyState === 'loading') {
 } else {
   init(); // DOM already parsed (e.g. script is at bottom of <body>)
 }
+
+window.vkIsDragging = false;
+document.addEventListener('mouseup', () => { window.vkIsDragging = false; });
+
 function vkSendNoteOn(note) {
+  window.vkIsDragging = true;
   highlightKey(note, true);
   if (State.midiOut) {
     const ch = State.activePresetIndex !== undefined && getActiveDev()?.defaultPresets?.[State.activePresetIndex]?.channel || 0;
-    const vel = document.getElementById('vk-velocity') ? parseInt(document.getElementById('vk-velocity').value) : 100;
-    sendMidiOut([0x90 + ch, note, vel]);
+    sendMidiOut([0x90 + ch, note, 100]);
   }
 }
 function vkSendNoteOff(note) {
@@ -1725,10 +1739,14 @@ function vkSendNoteOff(note) {
     sendMidiOut([0x80 + ch, note, 0]);
   }
 }
+function vkMouseEnter(note) {
+  if (window.vkIsDragging) {
+    vkSendNoteOn(note);
+  }
+}
 
 function renderVirtualKeyboard() {
   const vk = document.getElementById('virtual-keyboard');
-  console.log('virtual-keyboard element exists:', !!vk);
   if(!vk) return;
   const startNote = 48; // C3
   let html = '';
@@ -1738,11 +1756,13 @@ function renderVirtualKeyboard() {
     const active = activeKeys.has(note);
     if(isBlack) {
       html += `<div id="vk-${note}" 
-        onmousedown="vkSendNoteOn(${note})" onmouseup="vkSendNoteOff(${note})" onmouseleave="vkSendNoteOff(${note})" ontouchstart="vkSendNoteOn(${note})" ontouchend="vkSendNoteOff(${note})"
+        onmousedown="vkSendNoteOn(${note})" onmouseup="vkSendNoteOff(${note})" onmouseleave="vkSendNoteOff(${note})" onmouseenter="vkMouseEnter(${note})"
+        ontouchstart="vkSendNoteOn(${note})" ontouchend="vkSendNoteOff(${note})"
         style="width:20px;height:50px;background:${active ? '#ef4444' : '#1e293b'};margin:0 -10px;z-index:10;border:1px solid #0f172a;border-bottom-left-radius:3px;border-bottom-right-radius:3px;cursor:pointer; transition: background 0.1s;"></div>`;
     } else {
       html += `<div id="vk-${note}" 
-        onmousedown="vkSendNoteOn(${note})" onmouseup="vkSendNoteOff(${note})" onmouseleave="vkSendNoteOff(${note})" ontouchstart="vkSendNoteOn(${note})" ontouchend="vkSendNoteOff(${note})"
+        onmousedown="vkSendNoteOn(${note})" onmouseup="vkSendNoteOff(${note})" onmouseleave="vkSendNoteOff(${note})" onmouseenter="vkMouseEnter(${note})"
+        ontouchstart="vkSendNoteOn(${note})" ontouchend="vkSendNoteOff(${note})"
         style="width:30px;height:80px;background:${active ? '#f87171' : '#f1f5f9'};border-right:1px solid #cbd5e1;border-bottom-left-radius:3px;border-bottom-right-radius:3px;cursor:pointer;z-index:0; transition: background 0.1s;"></div>`;
     }
   }
@@ -1751,8 +1771,19 @@ function renderVirtualKeyboard() {
 function highlightKey(note, state) {
   if(state) activeKeys.add(note);
   else activeKeys.delete(note);
-  renderVirtualKeyboard();
+  
+  // Update DOM directly to prevent destroying dragging mouse events
+  const el = document.getElementById('vk-' + note);
+  if (el) {
+    const isBlack = [1, 3, 6, 8, 10].includes((note - 48) % 12);
+    if (state) {
+      el.style.background = isBlack ? '#ef4444' : '#f87171';
+    } else {
+      el.style.background = isBlack ? '#1e293b' : '#f1f5f9';
+    }
+  }
 }
+
 
 function midiPanic() {
   if (!State.midiOut) {
@@ -2036,4 +2067,21 @@ window.trackRecentCC = function(cc, ch) {
       </span>
     `).join('');
   }
+};
+
+window.pingDevice = function() {
+  const span = document.getElementById('ping-result');
+  if (!State.midiOut || !State.midiIn) {
+    if (span) span.innerHTML = '<span style="color:#ef4444;">Err: Connect In & Out</span>';
+    return;
+  }
+  if (span) span.innerHTML = 'Pinging...';
+  window.pingStartTime = performance.now();
+  sendMidiOut([0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]);
+  setTimeout(() => {
+    if (window.pingStartTime !== 0 && span && span.innerHTML === 'Pinging...') {
+      span.innerHTML = '<span style="color:#ef4444;">Timeout (No Reply)</span>';
+      window.pingStartTime = 0;
+    }
+  }, 2000);
 };

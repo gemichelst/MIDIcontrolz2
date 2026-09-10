@@ -1,11 +1,12 @@
 {
   "name": "midicontrolz2",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port 3000 --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "bump": "node bump-version.cjs"
   },
   "devDependencies": {
     "vite": "^5.0.0"

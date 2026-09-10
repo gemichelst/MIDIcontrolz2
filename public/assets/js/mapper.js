@@ -292,9 +292,8 @@ window.renderDeviceManager = function() {
   if (heatmapMode) {
     const grid = document.getElementById('device-manager-grid');
     if (!grid) return;
-    const cards = grid.querySelectorAll('.dm-card');
     
-    window.State.devices.forEach((dev, idx) => {
+    window.State.devices.forEach((dev) => {
       let changes = 0;
       ['pads', 'knobs', 'faders'].forEach(type => {
         if (dev.controls && dev.controls[type]) {
@@ -304,7 +303,7 @@ window.renderDeviceManager = function() {
         }
       });
       
-      const card = cards[idx];
+      const card = document.getElementById('dm-card-' + dev.id);
       if (card) {
         if (changes > 5) {
           card.style.border = '2px solid #ef4444';

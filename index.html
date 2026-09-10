@@ -410,6 +410,8 @@
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         <button class="btn sm" onclick="clearMonitor()">🗑 Clear</button>
         <button class="btn sm" id="btn-monitor-pause" onclick="toggleMonitorPause()">⏸ Pause</button>
+        <button class="btn sm" onclick="pingDevice()">🏓 Ping Device</button>
+        <span id="ping-result" style="font-size:0.8rem;color:var(--accent);display:flex;align-items:center;"></span>
         <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;">
           <input type="checkbox" id="filter-note" checked onchange="renderMonitor()"> Notes
         </label>
@@ -599,7 +601,7 @@
         <div class="settings-card">
           <h3>ℹ About</h3>
           <div style="font-size:0.82rem;color:var(--text2);line-height:1.9;">
-            <strong>MIDIcontrolz2</strong> v2.3.2<br>
+            <strong>MIDIcontrolz2</strong> v2.4.0<br>
             WebMIDI API · No backend · No install<br>
             Device configs: JSON templates<br>
             <a href="https://midicontrols.doerd.de" target="_blank"
