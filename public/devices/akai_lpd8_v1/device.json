@@ -1,0 +1,123 @@
+{
+  "id": "akai_lpd8_v1",
+  "name": "LPD8",
+  "manufacturer": "Akai Professional",
+  "icon": "🥁",
+  "color": "#cc2929",
+  "midiName": ["LPD8", "Akai LPD8"],
+  "sysex": true,
+  "presets": 4,
+  "description": "8-pad, 8-knob USB MIDI pad controller",
+  "controls": {
+    "pads": [
+      { "id": "pad1", "label": "Pad 1", "note": 36, "cc": 1,  "pc": 0, "mode": "Momentary" },
+      { "id": "pad2", "label": "Pad 2", "note": 37, "cc": 2,  "pc": 1, "mode": "Momentary" },
+      { "id": "pad3", "label": "Pad 3", "note": 38, "cc": 3,  "pc": 2, "mode": "Momentary" },
+      { "id": "pad4", "label": "Pad 4", "note": 39, "cc": 4,  "pc": 3, "mode": "Momentary" },
+      { "id": "pad5", "label": "Pad 5", "note": 40, "cc": 1,  "pc": 4, "mode": "Momentary" },
+      { "id": "pad6", "label": "Pad 6", "note": 41, "cc": 2,  "pc": 5, "mode": "Momentary" },
+      { "id": "pad7", "label": "Pad 7", "note": 42, "cc": 3,  "pc": 6, "mode": "Momentary" },
+      { "id": "pad8", "label": "Pad 8", "note": 43, "cc": 4,  "pc": 7, "mode": "Momentary" }
+    ],
+    "knobs": [
+      { "id": "k1", "label": "K1", "cc": 1, "lo": 0, "hi": 127 },
+      { "id": "k2", "label": "K2", "cc": 2, "lo": 0, "hi": 127 },
+      { "id": "k3", "label": "K3", "cc": 3, "lo": 0, "hi": 127 },
+      { "id": "k4", "label": "K4", "cc": 4, "lo": 0, "hi": 127 },
+      { "id": "k5", "label": "K5", "cc": 5, "lo": 0, "hi": 127 },
+      { "id": "k6", "label": "K6", "cc": 6, "lo": 0, "hi": 127 },
+      { "id": "k7", "label": "K7", "cc": 7, "lo": 0, "hi": 127 },
+      { "id": "k8", "label": "K8", "cc": 8, "lo": 0, "hi": 127 }
+    ],
+    "faders": [],
+    "buttons": []
+  },
+  "defaultPresets": [
+    {
+      "name": "Preset 1 — Default",
+      "channel": 0,
+      "pads": [
+        { "note": 36, "cc": 1,  "pc": 0, "mode": "Momentary" },
+        { "note": 37, "cc": 2,  "pc": 1, "mode": "Momentary" },
+        { "note": 38, "cc": 3,  "pc": 2, "mode": "Momentary" },
+        { "note": 39, "cc": 4,  "pc": 3, "mode": "Momentary" },
+        { "note": 40, "cc": 1,  "pc": 4, "mode": "Momentary" },
+        { "note": 41, "cc": 2,  "pc": 5, "mode": "Momentary" },
+        { "note": 42, "cc": 3,  "pc": 6, "mode": "Momentary" },
+        { "note": 43, "cc": 4,  "pc": 7, "mode": "Momentary" }
+      ],
+      "knobs": [
+        { "cc": 1,  "lo": 0, "hi": 127 }, { "cc": 2,  "lo": 0, "hi": 127 },
+        { "cc": 3,  "lo": 0, "hi": 127 }, { "cc": 4,  "lo": 0, "hi": 127 },
+        { "cc": 5,  "lo": 0, "hi": 127 }, { "cc": 6,  "lo": 0, "hi": 127 },
+        { "cc": 7,  "lo": 0, "hi": 127 }, { "cc": 8,  "lo": 0, "hi": 127 }
+      ]
+    },
+    {
+      "name": "Preset 2 — Ableton",
+      "channel": 7,
+      "pads": [
+        { "note": 88, "cc": 30, "pc": 24, "mode": "Momentary" },
+        { "note": 89, "cc": 31, "pc": 25, "mode": "Momentary" },
+        { "note": 90, "cc": 32, "pc": 26, "mode": "Momentary" },
+        { "note": 91, "cc": 33, "pc": 27, "mode": "Momentary" },
+        { "note": 92, "cc": 26, "pc": 28, "mode": "Momentary" },
+        { "note": 93, "cc": 27, "pc": 29, "mode": "Momentary" },
+        { "note": 94, "cc": 28, "pc": 30, "mode": "Momentary" },
+        { "note": 95, "cc": 29, "pc": 31, "mode": "Momentary" }
+      ],
+      "knobs": [
+        { "cc": 50, "lo": 0, "hi": 127 }, { "cc": 51, "lo": 0, "hi": 127 },
+        { "cc": 52, "lo": 0, "hi": 127 }, { "cc": 53, "lo": 0, "hi": 127 },
+        { "cc": 54, "lo": 0, "hi": 127 }, { "cc": 55, "lo": 0, "hi": 127 },
+        { "cc": 56, "lo": 0, "hi": 127 }, { "cc": 57, "lo": 0, "hi": 127 }
+      ]
+    },
+    {
+      "name": "Preset 3 — Toggle",
+      "channel": 7,
+      "pads": [
+        { "note": 76, "cc": 30, "pc": 0, "mode": "Toggle" },
+        { "note": 77, "cc": 31, "pc": 1, "mode": "Toggle" },
+        { "note": 78, "cc": 32, "pc": 2, "mode": "Toggle" },
+        { "note": 79, "cc": 33, "pc": 3, "mode": "Toggle" },
+        { "note": 80, "cc": 26, "pc": 4, "mode": "Toggle" },
+        { "note": 81, "cc": 27, "pc": 5, "mode": "Toggle" },
+        { "note": 82, "cc": 28, "pc": 6, "mode": "Toggle" },
+        { "note": 83, "cc": 29, "pc": 7, "mode": "Toggle" }
+      ],
+      "knobs": [
+        { "cc": 42, "lo": 0, "hi": 127 }, { "cc": 43, "lo": 0, "hi": 127 },
+        { "cc": 44, "lo": 0, "hi": 127 }, { "cc": 45, "lo": 0, "hi": 127 },
+        { "cc": 46, "lo": 0, "hi": 127 }, { "cc": 47, "lo": 0, "hi": 127 },
+        { "cc": 48, "lo": 0, "hi": 127 }, { "cc": 49, "lo": 0, "hi": 127 }
+      ]
+    },
+    {
+      "name": "Preset 4 — Toggle 2",
+      "channel": 7,
+      "pads": [
+        { "note": 64, "cc": 30, "pc": 8,  "mode": "Toggle" },
+        { "note": 65, "cc": 31, "pc": 9,  "mode": "Toggle" },
+        { "note": 66, "cc": 32, "pc": 10, "mode": "Toggle" },
+        { "note": 67, "cc": 33, "pc": 11, "mode": "Toggle" },
+        { "note": 68, "cc": 26, "pc": 12, "mode": "Toggle" },
+        { "note": 69, "cc": 27, "pc": 13, "mode": "Toggle" },
+        { "note": 70, "cc": 28, "pc": 14, "mode": "Toggle" },
+        { "note": 71, "cc": 29, "pc": 15, "mode": "Toggle" }
+      ],
+      "knobs": [
+        { "cc": 34, "lo": 0, "hi": 127 }, { "cc": 35, "lo": 0, "hi": 127 },
+        { "cc": 36, "lo": 0, "hi": 127 }, { "cc": 37, "lo": 0, "hi": 127 },
+        { "cc": 38, "lo": 0, "hi": 127 }, { "cc": 39, "lo": 0, "hi": 127 },
+        { "cc": 40, "lo": 0, "hi": 127 }, { "cc": 41, "lo": 0, "hi": 127 }
+      ]
+    }
+  ],
+  "quickSysEx": [
+    { "label": "Read Preset 1", "bytes": "F0 47 7F 75 61 00 01 01 F7" },
+    { "label": "Read Preset 2", "bytes": "F0 47 7F 75 61 00 01 02 F7" },
+    { "label": "Read Preset 3", "bytes": "F0 47 7F 75 61 00 01 03 F7" },
+    { "label": "Read Preset 4", "bytes": "F0 47 7F 75 61 00 01 04 F7" }
+  ]
+}

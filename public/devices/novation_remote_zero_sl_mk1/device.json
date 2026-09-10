@@ -1,0 +1,66 @@
+{
+  "id": "novation_remote_zero_sl_mk1",
+  "name": "Remote Zero SL mk1",
+  "manufacturer": "Novation",
+  "icon": "🎚️",
+  "color": "#2980b9",
+  "midiName": ["SL MkII", "Remote SL", "Zero SL", "SL Compact"],
+  "sysex": true,
+  "presets": 40,
+  "description": "Zero-key Remote SL — 8 encoders, 8 faders, LCD display, Automap",
+  "controls": {
+    "pads": [],
+    "knobs": [
+      { "id": "enc1", "label": "Enc 1", "cc": 21, "lo": 0, "hi": 127 },
+      { "id": "enc2", "label": "Enc 2", "cc": 22, "lo": 0, "hi": 127 },
+      { "id": "enc3", "label": "Enc 3", "cc": 23, "lo": 0, "hi": 127 },
+      { "id": "enc4", "label": "Enc 4", "cc": 24, "lo": 0, "hi": 127 },
+      { "id": "enc5", "label": "Enc 5", "cc": 25, "lo": 0, "hi": 127 },
+      { "id": "enc6", "label": "Enc 6", "cc": 26, "lo": 0, "hi": 127 },
+      { "id": "enc7", "label": "Enc 7", "cc": 27, "lo": 0, "hi": 127 },
+      { "id": "enc8", "label": "Enc 8", "cc": 28, "lo": 0, "hi": 127 }
+    ],
+    "faders": [
+      { "id": "fdr1", "label": "Fader 1", "cc": 41 },
+      { "id": "fdr2", "label": "Fader 2", "cc": 42 },
+      { "id": "fdr3", "label": "Fader 3", "cc": 43 },
+      { "id": "fdr4", "label": "Fader 4", "cc": 44 },
+      { "id": "fdr5", "label": "Fader 5", "cc": 45 },
+      { "id": "fdr6", "label": "Fader 6", "cc": 46 },
+      { "id": "fdr7", "label": "Fader 7", "cc": 47 },
+      { "id": "fdr8", "label": "Fader 8", "cc": 48 }
+    ],
+    "buttons": [
+      { "id": "btn1",    "label": "Btn 1",    "note": 112, "color": "green" },
+      { "id": "btn2",    "label": "Btn 2",    "note": 113, "color": "green" },
+      { "id": "btn3",    "label": "Btn 3",    "note": 114, "color": "green" },
+      { "id": "btn4",    "label": "Btn 4",    "note": 115, "color": "green" },
+      { "id": "btn5",    "label": "Btn 5",    "note": 116, "color": "green" },
+      { "id": "btn6",    "label": "Btn 6",    "note": 117, "color": "green" },
+      { "id": "btn7",    "label": "Btn 7",    "note": 118, "color": "green" },
+      { "id": "btn8",    "label": "Btn 8",    "note": 119, "color": "green" },
+      { "id": "rewind",  "label": "Rewind",   "note": 116, "color": "amber" },
+      { "id": "fwd",     "label": "Forward",  "note": 117, "color": "amber" },
+      { "id": "stop",    "label": "Stop",     "note": 115, "color": "red"   },
+      { "id": "play",    "label": "Play",     "note": 118, "color": "green" },
+      { "id": "loop",    "label": "Loop",     "note": 113, "color": "amber" },
+      { "id": "record",  "label": "Record",   "note": 119, "color": "red"   }
+    ]
+  },
+  "defaultPresets": [
+    { "name": "Preset 1", "channel": 0 },
+    { "name": "Preset 2", "channel": 1 },
+    { "name": "Preset 3", "channel": 2 },
+    { "name": "Preset 4", "channel": 3 },
+    { "name": "Preset 5", "channel": 4 },
+    { "name": "Preset 6", "channel": 5 },
+    { "name": "Preset 7", "channel": 6 },
+    { "name": "Preset 8", "channel": 7 }
+  ],
+  "quickSysEx": [
+    { "label": "Init Automap",       "bytes": "F0 00 20 29 03 03 12 01 F7" },
+    { "label": "LCD Line 1: Hello",  "bytes": "F0 00 20 29 03 03 04 00 48 65 6C 6C 6F 00 F7" },
+    { "label": "LCD Line 2: MIDI",   "bytes": "F0 00 20 29 03 03 04 01 4D 49 44 49 00 F7" },
+    { "label": "LCD Clear",          "bytes": "F0 00 20 29 03 03 04 00 20 20 20 20 20 20 20 20 00 F7" }
+  ]
+}

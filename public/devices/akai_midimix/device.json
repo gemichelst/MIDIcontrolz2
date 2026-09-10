@@ -1,0 +1,93 @@
+{
+  "id": "akai_midimix",
+  "name": "MIDImix",
+  "manufacturer": "Akai Professional",
+  "icon": "🎚️",
+  "color": "#e67e22",
+  "midiName": ["MIDI Mix", "MIDImix"],
+  "sysex": false,
+  "presets": 1,
+  "description": "8-channel MIDI mixer — 24 knobs, 9 faders, Mute/Solo/RecArm",
+  "controls": {
+    "pads": [],
+    "knobs": [
+      { "id": "ch1k1", "label": "Ch1 K1", "cc": 16, "lo": 0, "hi": 127 },
+      { "id": "ch1k2", "label": "Ch1 K2", "cc": 17, "lo": 0, "hi": 127 },
+      { "id": "ch1k3", "label": "Ch1 K3", "cc": 18, "lo": 0, "hi": 127 },
+      { "id": "ch2k1", "label": "Ch2 K1", "cc": 20, "lo": 0, "hi": 127 },
+      { "id": "ch2k2", "label": "Ch2 K2", "cc": 21, "lo": 0, "hi": 127 },
+      { "id": "ch2k3", "label": "Ch2 K3", "cc": 22, "lo": 0, "hi": 127 },
+      { "id": "ch3k1", "label": "Ch3 K1", "cc": 24, "lo": 0, "hi": 127 },
+      { "id": "ch3k2", "label": "Ch3 K2", "cc": 25, "lo": 0, "hi": 127 },
+      { "id": "ch3k3", "label": "Ch3 K3", "cc": 26, "lo": 0, "hi": 127 },
+      { "id": "ch4k1", "label": "Ch4 K1", "cc": 28, "lo": 0, "hi": 127 },
+      { "id": "ch4k2", "label": "Ch4 K2", "cc": 29, "lo": 0, "hi": 127 },
+      { "id": "ch4k3", "label": "Ch4 K3", "cc": 30, "lo": 0, "hi": 127 },
+      { "id": "ch5k1", "label": "Ch5 K1", "cc": 46, "lo": 0, "hi": 127 },
+      { "id": "ch5k2", "label": "Ch5 K2", "cc": 47, "lo": 0, "hi": 127 },
+      { "id": "ch5k3", "label": "Ch5 K3", "cc": 48, "lo": 0, "hi": 127 },
+      { "id": "ch6k1", "label": "Ch6 K1", "cc": 50, "lo": 0, "hi": 127 },
+      { "id": "ch6k2", "label": "Ch6 K2", "cc": 51, "lo": 0, "hi": 127 },
+      { "id": "ch6k3", "label": "Ch6 K3", "cc": 52, "lo": 0, "hi": 127 },
+      { "id": "ch7k1", "label": "Ch7 K1", "cc": 54, "lo": 0, "hi": 127 },
+      { "id": "ch7k2", "label": "Ch7 K2", "cc": 55, "lo": 0, "hi": 127 },
+      { "id": "ch7k3", "label": "Ch7 K3", "cc": 56, "lo": 0, "hi": 127 },
+      { "id": "ch8k1", "label": "Ch8 K1", "cc": 58, "lo": 0, "hi": 127 },
+      { "id": "ch8k2", "label": "Ch8 K2", "cc": 59, "lo": 0, "hi": 127 },
+      { "id": "ch8k3", "label": "Ch8 K3", "cc": 60, "lo": 0, "hi": 127 }
+    ],
+    "faders": [
+      { "id": "f1",     "label": "Ch 1",   "cc": 19 },
+      { "id": "f2",     "label": "Ch 2",   "cc": 23 },
+      { "id": "f3",     "label": "Ch 3",   "cc": 27 },
+      { "id": "f4",     "label": "Ch 4",   "cc": 31 },
+      { "id": "f5",     "label": "Ch 5",   "cc": 49 },
+      { "id": "f6",     "label": "Ch 6",   "cc": 53 },
+      { "id": "f7",     "label": "Ch 7",   "cc": 57 },
+      { "id": "f8",     "label": "Ch 8",   "cc": 61 },
+      { "id": "master", "label": "Master", "cc": 62 }
+    ],
+    "buttons": [
+      { "id": "mute1", "label": "Mute 1", "note": 1,  "cc": 1,  "color": "amber" },
+      { "id": "mute2", "label": "Mute 2", "note": 2,  "cc": 2,  "color": "amber" },
+      { "id": "mute3", "label": "Mute 3", "note": 3,  "cc": 3,  "color": "amber" },
+      { "id": "mute4", "label": "Mute 4", "note": 4,  "cc": 4,  "color": "amber" },
+      { "id": "mute5", "label": "Mute 5", "note": 5,  "cc": 5,  "color": "amber" },
+      { "id": "mute6", "label": "Mute 6", "note": 6,  "cc": 6,  "color": "amber" },
+      { "id": "mute7", "label": "Mute 7", "note": 7,  "cc": 7,  "color": "amber" },
+      { "id": "mute8", "label": "Mute 8", "note": 8,  "cc": 8,  "color": "amber" },
+      { "id": "solo",  "label": "Solo",   "note": 9,  "cc": 9,  "color": "green" },
+      { "id": "rec1",  "label": "Rec 1",  "note": 10, "cc": 10, "color": "red"   },
+      { "id": "rec2",  "label": "Rec 2",  "note": 11, "cc": 11, "color": "red"   },
+      { "id": "rec3",  "label": "Rec 3",  "note": 12, "cc": 12, "color": "red"   },
+      { "id": "rec4",  "label": "Rec 4",  "note": 13, "cc": 13, "color": "red"   },
+      { "id": "rec5",  "label": "Rec 5",  "note": 14, "cc": 14, "color": "red"   },
+      { "id": "rec6",  "label": "Rec 6",  "note": 15, "cc": 15, "color": "red"   },
+      { "id": "rec7",  "label": "Rec 7",  "note": 16, "cc": 16, "color": "red"   },
+      { "id": "rec8",  "label": "Rec 8",  "note": 17, "cc": 17, "color": "red"   }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Default",
+      "channel": 0,
+      "knobs":  [
+        {"cc":16},{"cc":17},{"cc":18},{"cc":20},{"cc":21},{"cc":22},
+        {"cc":24},{"cc":25},{"cc":26},{"cc":28},{"cc":29},{"cc":30},
+        {"cc":46},{"cc":47},{"cc":48},{"cc":50},{"cc":51},{"cc":52},
+        {"cc":54},{"cc":55},{"cc":56},{"cc":58},{"cc":59},{"cc":60}
+      ],
+      "faders": [
+        {"cc":19},{"cc":23},{"cc":27},{"cc":31},
+        {"cc":49},{"cc":53},{"cc":57},{"cc":61},{"cc":62}
+      ],
+      "buttons": [
+        {"note":1},{"note":2},{"note":3},{"note":4},
+        {"note":5},{"note":6},{"note":7},{"note":8},
+        {"note":9},{"note":10},{"note":11},{"note":12},
+        {"note":13},{"note":14},{"note":15},{"note":16},{"note":17}
+      ]
+    }
+  ],
+  "quickSysEx": []
+}

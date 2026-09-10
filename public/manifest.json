@@ -1,0 +1,44 @@
+{
+  "name": "MidiControls",
+  "short_name": "MidiCtrl",
+  "description": "Browser-based MIDI controller editor — Akai, Novation and more. No install.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d0f14",
+  "theme_color": "#6c63ff",
+  "prefer_related_applications": false,
+  "categories": ["music", "utilities", "productivity"],
+  "lang": "en",
+  "icons": [
+    { "src": "assets/icon-72.png",  "sizes": "72x72",   "type": "image/png" },
+    { "src": "assets/icon-96.png",  "sizes": "96x96",   "type": "image/png" },
+    { "src": "assets/icon-144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "assets/icon-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "label": "MidiControls Editor"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "MIDI Monitor",
+      "short_name": "Monitor",
+      "url": "/?panel=monitor",
+      "icons": [{ "src": "assets/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "SysEx Panel",
+      "short_name": "SysEx",
+      "url": "/?panel=sysex",
+      "icons": [{ "src": "assets/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}

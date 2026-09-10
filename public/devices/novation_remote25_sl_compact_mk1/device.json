@@ -1,0 +1,57 @@
+{
+  "id": "novation_remote25_sl_compact_mk1",
+  "name": "Remote 25 SL Compact",
+  "manufacturer": "Novation",
+  "icon": "🎹",
+  "color": "#27ae60",
+  "midiName": ["SL Compact", "Remote 25", "SL MkII"],
+  "sysex": true,
+  "presets": 40,
+  "description": "25-key controller — 8 encoders, 8 drum pads, LCD, transport, Automap",
+  "controls": {
+    "pads": [
+      { "id": "pad1", "label": "Pad 1", "note": 36, "cc": 36, "mode": "Momentary" },
+      { "id": "pad2", "label": "Pad 2", "note": 37, "cc": 37, "mode": "Momentary" },
+      { "id": "pad3", "label": "Pad 3", "note": 38, "cc": 38, "mode": "Momentary" },
+      { "id": "pad4", "label": "Pad 4", "note": 39, "cc": 39, "mode": "Momentary" },
+      { "id": "pad5", "label": "Pad 5", "note": 40, "cc": 40, "mode": "Momentary" },
+      { "id": "pad6", "label": "Pad 6", "note": 41, "cc": 41, "mode": "Momentary" },
+      { "id": "pad7", "label": "Pad 7", "note": 42, "cc": 42, "mode": "Momentary" },
+      { "id": "pad8", "label": "Pad 8", "note": 43, "cc": 43, "mode": "Momentary" }
+    ],
+    "knobs": [
+      { "id": "enc1", "label": "Enc 1", "cc": 21, "lo": 0, "hi": 127 },
+      { "id": "enc2", "label": "Enc 2", "cc": 22, "lo": 0, "hi": 127 },
+      { "id": "enc3", "label": "Enc 3", "cc": 23, "lo": 0, "hi": 127 },
+      { "id": "enc4", "label": "Enc 4", "cc": 24, "lo": 0, "hi": 127 },
+      { "id": "enc5", "label": "Enc 5", "cc": 25, "lo": 0, "hi": 127 },
+      { "id": "enc6", "label": "Enc 6", "cc": 26, "lo": 0, "hi": 127 },
+      { "id": "enc7", "label": "Enc 7", "cc": 27, "lo": 0, "hi": 127 },
+      { "id": "enc8", "label": "Enc 8", "cc": 28, "lo": 0, "hi": 127 }
+    ],
+    "faders": [],
+    "buttons": [
+      { "id": "rewind", "label": "Rewind",  "note": 116, "color": "amber" },
+      { "id": "fwd",    "label": "Forward", "note": 117, "color": "amber" },
+      { "id": "stop",   "label": "Stop",    "note": 115, "color": "red"   },
+      { "id": "play",   "label": "Play",    "note": 118, "color": "green" },
+      { "id": "loop",   "label": "Loop",    "note": 113, "color": "amber" },
+      { "id": "record", "label": "Record",  "note": 119, "color": "red"   }
+    ]
+  },
+  "defaultPresets": [
+    { "name": "Preset 1", "channel": 0 },
+    { "name": "Preset 2", "channel": 1 },
+    { "name": "Preset 3", "channel": 2 },
+    { "name": "Preset 4", "channel": 3 },
+    { "name": "Preset 5", "channel": 4 },
+    { "name": "Preset 6", "channel": 5 },
+    { "name": "Preset 7", "channel": 6 },
+    { "name": "Preset 8", "channel": 7 }
+  ],
+  "quickSysEx": [
+    { "label": "Init Automap",      "bytes": "F0 00 20 29 03 03 12 01 F7" },
+    { "label": "LCD: Hi there!",    "bytes": "F0 00 20 29 03 03 04 00 48 69 20 74 68 65 72 65 21 00 F7" },
+    { "label": "LCD Clear",         "bytes": "F0 00 20 29 03 03 04 00 20 20 20 20 20 20 20 20 00 F7" }
+  ]
+}
