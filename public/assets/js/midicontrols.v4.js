@@ -1265,13 +1265,40 @@ function renderDeviceManager() {
   if (!grid) return;
   const searchInput = document.getElementById('dm-search');
   const term = searchInput ? searchInput.value.toLowerCase() : '';
-  const filtered = State.devices.filter(dev => 
-    (dev.name || '').toLowerCase().includes(term) ||
-    (dev.manufacturer || '').toLowerCase().includes(term) ||
-    (dev.description || '').toLowerCase().includes(term)
-  );
-  grid.innerHTML = filtered.map(dev => `
+  
+  const categorySelect = document.getElementById('dm-category');
+  const selectedTag = categorySelect ? categorySelect.value : 'All';
 
+  // Extract tags
+  const allTags = new Set();
+  State.devices.forEach(d => {
+    if (d.tags && Array.isArray(d.tags)) d.tags.forEach(t => allTags.add(t));
+  });
+  
+  if (categorySelect) {
+    let opts = '<option value="All">All Tags</option>';
+    Array.from(allTags).sort().forEach(tag => {
+      opts += `<option value="${tag}">${tag}</option>`;
+    });
+    if (categorySelect.innerHTML !== opts) {
+      categorySelect.innerHTML = opts;
+      categorySelect.value = selectedTag;
+    }
+  }
+
+  // Filter
+  const filtered = State.devices.filter(dev => {
+    const matchTerm = (dev.name || '').toLowerCase().includes(term) ||
+                      (dev.manufacturer || '').toLowerCase().includes(term) ||
+                      (dev.description || '').toLowerCase().includes(term);
+    const matchTag = selectedTag === 'All' || (dev.tags && dev.tags.includes(selectedTag));
+    return matchTerm && matchTag;
+  });
+
+  grid.innerHTML = filtered.map(dev => {
+    const tagsHtml = (dev.tags || []).map(t => `<span style="background:var(--surface3);padding:2px 6px;border-radius:4px;font-size:0.65rem;margin-right:4px;">${t}</span>`).join('');
+    
+    return `
     <div class="dm-card">
       <div class="dm-card-header">
         <div class="icon">${dev.icon || '🎹'}</div>
@@ -1281,7 +1308,8 @@ function renderDeviceManager() {
         </div>
       </div>
       <div style="font-size:0.75rem;color:var(--text3);">${dev.description || ''}</div>
-      <div style="font-size:0.72rem;color:var(--text3);">
+      <div style="margin-top:6px;">${tagsHtml}</div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:6px;">
         ${(dev.controls?.pads?.length||0)} pads ·
         ${(dev.controls?.knobs?.length||0)} knobs ·
         ${(dev.controls?.faders?.length||0)} faders ·
@@ -1289,22 +1317,19 @@ function renderDeviceManager() {
         ${dev.presets||1} preset(s)
       </div>
       <div class="dm-card-actions">
-        <button class="btn sm primary" onclick="selectDevice('${dev.id}');showPanel('editor')">Edit</button>
-        <button class="btn sm" onclick="previewPresetFromManager('${dev.id}')">👁 Preview</button>
-        <button class="btn sm" onclick="exportDeviceJSON('${dev.id}')">📤 .json</button>
-        <button class="btn sm" onclick="exportDeviceSyx('${dev.id}')">📤 .syx</button>
+        <button class="btn sm primary" onclick="selectDevice('${dev.id}');showPanel('editor')">Edit Map</button>
         ${!DEVICE_MANIFEST.includes(dev.id)
-          ? `<button class="btn sm danger" onclick="removeDevice('${dev.id}')">🗑 Remove</button>`
+          ? `<button class="btn sm" onclick="openEditDeviceModal('${dev.id}')">⚙️ Config</button>`
+          : ''
+        }
+        <button class="btn sm" onclick="exportDeviceJSON('${dev.id}')">📤 .json</button>
+        ${!DEVICE_MANIFEST.includes(dev.id)
+          ? `<button class="btn sm danger" onclick="removeDevice('${dev.id}')">🗑</button>`
           : '<span style="font-size:0.7rem;color:var(--text3);">built-in</span>'
         }
       </div>
-    </div>`).join('');
-}
-
-function exportDeviceJSON(id) {
-  const dev = State.devices.find(d => d.id === id); if (!dev) return;
-  downloadJSON(dev, `${dev.id}.json`);
-  toast(`${dev.name} exported ✓`, 'success');
+    </div>`;
+  }).join('');
 }
 
 function removeDevice(id) {
@@ -1454,6 +1479,54 @@ function openAddDeviceModal() {
       <button class="btn" onclick="closeModal()">Cancel</button>
       <button class="btn primary" onclick="createNewDevice()">Create Device</button>
     </div>`);
+}
+
+
+function openEditDeviceModal(id) {
+  const dev = State.devices.find(d => d.id === id);
+  if (!dev) return;
+  
+  openModal(`
+    <h2>⚙️ Edit Device Config</h2>
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" id="edit-dev-name" value="${dev.name || ''}">
+    </div>
+    <div class="form-group">
+      <label>Tags (comma-separated)</label>
+      <input type="text" id="edit-dev-tags" value="${(dev.tags || []).join(', ')}">
+    </div>
+    <div class="form-group">
+      <label>Manufacturer</label>
+      <input type="text" id="edit-dev-mfr" value="${dev.manufacturer || ''}">
+    </div>
+    <div class="form-group">
+      <label>Icon (emoji)</label>
+      <input type="text" id="edit-dev-icon" value="${dev.icon || '🎹'}" maxlength="4">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveEditDevice('${dev.id}')">Save Changes</button>
+    </div>
+  `);
+}
+
+function saveEditDevice(id) {
+  const dev = State.devices.find(d => d.id === id);
+  if (!dev) return;
+
+  dev.name = document.getElementById('edit-dev-name')?.value.trim() || dev.name;
+  dev.manufacturer = document.getElementById('edit-dev-mfr')?.value.trim() || dev.manufacturer;
+  dev.icon = document.getElementById('edit-dev-icon')?.value || dev.icon;
+  
+  const tagsInput = document.getElementById('edit-dev-tags')?.value || '';
+  dev.tags = tagsInput.split(',').map(s => s.trim()).filter(Boolean);
+  
+  save();
+  closeModal();
+  populateDeviceDropdown();
+  renderDeviceManager();
+  toast('Device updated ✓', 'success');
 }
 
 function createNewDevice() {
