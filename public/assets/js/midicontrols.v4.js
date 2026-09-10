@@ -2030,8 +2030,6 @@ function sendMidiOut(data) {
     }
   }
 }
-}
-}
 
 
 window.sendFactoryReset = function() {
