@@ -2601,5 +2601,5 @@ window.applyMonitorQuickFilter = function() {
   else if(v === 'perf') { n.checked = true; c.checked = true; p.checked = true; s.checked = false; }
   else if(v === 'sysex') { n.checked = false; c.checked = false; p.checked = false; s.checked = true; }
   
-  if (window.renderMonitor) window.renderMonitor();
+  if (typeof renderMonitor === "function") renderMonitor();
 };
