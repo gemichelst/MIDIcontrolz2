@@ -54,8 +54,18 @@ export function useWebMidi() {
         window.dispatchEvent(new CustomEvent('midi-identity-reply', { detail: { data } }));
       }
 
+      // Check for Novation Template Dump / SysEx (F0 00 20 29 ...)
+      if (msgType === 'sysex' && data.length > 8 && data[1] === 0x00 && data[2] === 0x20 && data[3] === 0x29) {
+        window.dispatchEvent(new CustomEvent('novation-sysex-dump', { detail: { data } }));
+      }
+
       const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
       
+      // Dispatch global event for MIDI Learn & Animations
+      window.dispatchEvent(new CustomEvent('midi-message-received', { 
+        detail: { msgType, channel, data1: data[1], data2: data[2], data, hex } 
+      }));
+
       setMessages(prev => [{
         id: Math.random().toString(),
         timestamp: Date.now(),

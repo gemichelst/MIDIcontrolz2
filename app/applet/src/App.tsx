@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWebMidi } from './useWebMidi';
 import { BUILT_IN_DEVICES } from './devices';
-import { Settings, Save, Download, Upload, Monitor, Edit3, Type, Layers, Send } from 'lucide-react';
+import { Settings, Save, Upload, Monitor, Edit3, Type, Layers, Send, Target, DownloadCloud } from 'lucide-react';
 import { DeviceConfig } from './types';
 
 const VirtualKeyboard = ({ onPlayNote, onStopNote }: { onPlayNote: (n: number) => void, onStopNote: (n: number) => void }) => {
@@ -33,9 +33,20 @@ export default function App() {
   const [activeDevice, setActiveDevice] = useState<DeviceConfig | null>(BUILT_IN_DEVICES[0]);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [customDevices, setCustomDevices] = useState<DeviceConfig[]>([]);
+  
+  // Hardware Mapping State
+  const [jsonDraft, setJsonDraft] = useState<string>('');
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [midiLearnMode, setMidiLearnMode] = useState<boolean>(false);
+  const [midiLearnTarget, setMidiLearnTarget] = useState<{type: 'knobs' | 'pads', id: string} | null>(null);
+  
+  // Active UI Feedback State
+  const [activeControl, setActiveControl] = useState<string | null>(null);
+
+  // SysEx & Template Receive State
   const [sysexQueue, setSysexQueue] = useState<File[]>([]);
   const [isSendingQueue, setIsSendingQueue] = useState(false);
-  const [jsonDraft, setJsonDraft] = useState<string>('');
+  const [receivedTemplates, setReceivedTemplates] = useState<{id: string, timestamp: number, size: number, hex: string, data: number[]}[]>([]);
 
   useEffect(() => {
     if (activeDevice) {
@@ -43,23 +54,99 @@ export default function App() {
     }
   }, [activeDevice]);
 
-  // Identity Request Listener
+  // JSON Validation Layer
+  useEffect(() => {
+    try {
+      const parsed = JSON.parse(jsonDraft);
+      if (!parsed.knobs || !parsed.pads) {
+        setJsonError('Missing required keys: "knobs" and "pads" arrays are required.');
+      } else if (!Array.isArray(parsed.knobs) || !Array.isArray(parsed.pads)) {
+        setJsonError('"knobs" and "pads" must be arrays.');
+      } else {
+        setJsonError(null);
+      }
+    } catch (e: any) {
+      setJsonError('Invalid JSON syntax: ' + e.message);
+    }
+  }, [jsonDraft]);
+
+  // Global MIDI Handlers
   useEffect(() => {
     const handleIdentity = (e: any) => {
       const data = e.detail.data;
       if (data[5] === 0x00 && data[6] === 0x20 && data[7] === 0x29) {
-        // Novation
         const dev = BUILT_IN_DEVICES.find(d => d.manufacturer === 'Novation' && d.id.includes('remote_zero'));
         if (dev) setActiveDevice(dev);
       } else if (data[5] === 0x47) {
-        // Akai
         const dev = BUILT_IN_DEVICES.find(d => d.manufacturer === 'Akai Professional');
         if (dev) setActiveDevice(dev);
       }
     };
+
+    const handleNovationDump = (e: any) => {
+      const data = e.detail.data;
+      setReceivedTemplates(prev => [...prev, {
+        id: Math.random().toString(),
+        timestamp: Date.now(),
+        data: Array.from(data),
+        hex: Array.from(data as Uint8Array).map((b: number) => b.toString(16).padStart(2, '0').toUpperCase()).join(' '),
+        size: data.length
+      }]);
+    };
+
+    const handleMidiMessage = (e: any) => {
+      const { msgType, data1 } = e.detail;
+      
+      // 1. MIDI Learn Logic
+      if (midiLearnMode && midiLearnTarget) {
+        if (msgType === 'cc' || msgType === 'noteon') {
+          try {
+            const parsed = JSON.parse(jsonDraft);
+            const list = parsed[midiLearnTarget.type];
+            const idx = list.findIndex((c: any) => c.id === midiLearnTarget.id);
+            if (idx > -1) {
+              if (msgType === 'cc') {
+                list[idx].cc = data1;
+                delete list[idx].note;
+              } else {
+                list[idx].note = data1;
+                delete list[idx].cc;
+              }
+              setJsonDraft(JSON.stringify(parsed, null, 2));
+            }
+          } catch (err) {}
+          setMidiLearnTarget(null); // Clear target after learning
+        }
+      }
+
+      // 2. UI Animation Feedback
+      if (activeDevice) {
+        let targetId = null;
+        if (msgType === 'cc') {
+          const match = activeDevice.controls.knobs.find(k => k.cc === data1);
+          if (match) targetId = match.id;
+        } else if (msgType === 'noteon') {
+          const match = activeDevice.controls.pads.find(p => p.note === data1);
+          if (match) targetId = match.id;
+        }
+        
+        if (targetId) {
+          setActiveControl(targetId);
+          setTimeout(() => setActiveControl(null), 250); // Clear animation
+        }
+      }
+    };
+
     window.addEventListener('midi-identity-reply', handleIdentity);
-    return () => window.removeEventListener('midi-identity-reply', handleIdentity);
-  }, []);
+    window.addEventListener('novation-sysex-dump', handleNovationDump);
+    window.addEventListener('midi-message-received', handleMidiMessage);
+    
+    return () => {
+      window.removeEventListener('midi-identity-reply', handleIdentity);
+      window.removeEventListener('novation-sysex-dump', handleNovationDump);
+      window.removeEventListener('midi-message-received', handleMidiMessage);
+    };
+  }, [activeDevice, midiLearnMode, midiLearnTarget, jsonDraft]);
 
   // Send Identity Request when output is selected
   useEffect(() => {
@@ -82,10 +169,10 @@ export default function App() {
   };
 
   const savePreset = () => {
-    if (!activeDevice) return;
+    if (!activeDevice || jsonError) return;
     const deviceToSave = {
       ...activeDevice,
-      controls: JSON.parse(jsonDraft) // Include any custom edits
+      controls: JSON.parse(jsonDraft)
     };
     const data = JSON.stringify(deviceToSave, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
@@ -107,7 +194,6 @@ export default function App() {
           if (parsed && parsed.controls) {
             setActiveDevice(parsed);
             setCustomDevices(prev => {
-              // Ensure uniqueness or just append
               const updated = [...prev];
               if (!updated.find(d => d.id === parsed.id)) updated.push(parsed);
               return updated;
@@ -122,7 +208,7 @@ export default function App() {
       };
       reader.readAsText(file);
     }
-    e.target.value = ''; // Reset
+    e.target.value = '';
   };
 
   const handleSysexFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,7 +224,6 @@ export default function App() {
       const buffer = await file.arrayBuffer();
       const bytes = new Uint8Array(buffer);
       sendMidi(Array.from(bytes));
-      // small delay to avoid buffer overflows on the device
       await new Promise(r => setTimeout(r, 200)); 
     }
     setIsSendingQueue(false);
@@ -146,10 +231,20 @@ export default function App() {
     setSysexQueue([]);
   };
 
+  const downloadTemplate = (tmpl: any) => {
+    const blob = new Blob([new Uint8Array(tmpl.data)], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `template_dump_${tmpl.timestamp}.syx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className={`flex h-screen w-full flex-col ${isDarkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {/* TOPBAR */}
-      <div className={`flex items-center justify-between p-4 ${isDarkMode ? 'bg-slate-800' : 'bg-white shadow-sm'}`}>
+      <div className={`flex items-center justify-between p-4 ${isDarkMode ? 'bg-slate-800' : 'bg-white shadow-sm'} shrink-0 z-10`}>
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold tracking-tight">MIDIcontrolz2</h1>
           
@@ -181,7 +276,7 @@ export default function App() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* SIDEBAR */}
-        <div className={`w-64 p-4 border-r ${isDarkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-100/50'} overflow-y-auto`}>
+        <div className={`w-64 p-4 border-r ${isDarkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-100/50'} overflow-y-auto shrink-0`}>
           <div className="flex flex-col gap-2">
             <button onClick={() => setActiveTab('editor')} className={`flex items-center gap-2 p-2 rounded ${activeTab === 'editor' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700/50'}`}>
               <Edit3 size={18} /> Editor
@@ -206,7 +301,7 @@ export default function App() {
               <button 
                 key={`${d.id}-${i}`}
                 onClick={() => setActiveDevice(d)}
-                className={`w-full text-left p-2 rounded text-sm mb-1 ${activeDevice?.id === d.id ? 'bg-slate-700 text-white font-medium' : 'hover:bg-slate-700/30'}`}
+                className={`w-full text-left p-2 rounded text-sm mb-1 ${activeDevice?.id === d.id ? 'bg-slate-700 text-white font-medium' : 'hover:bg-slate-700/30'} truncate`}
               >
                 <span className="mr-2">{d.icon}</span> {d.name}
               </button>
@@ -216,6 +311,8 @@ export default function App() {
 
         {/* MAIN CONTENT */}
         <div className="flex-1 p-6 overflow-auto">
+          
+          {/* EDITOR TAB */}
           {activeTab === 'editor' && activeDevice && (
             <div>
               <div className="flex justify-between items-center mb-6">
@@ -239,7 +336,7 @@ export default function App() {
                   <h3 className="text-lg font-semibold mb-3">Knobs / Encoders</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
                     {activeDevice.controls.knobs.map(knob => (
-                      <div key={knob.id} className={`p-4 rounded-xl border flex flex-col items-center justify-center ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white shadow-sm'}`}>
+                      <div key={knob.id} className={`p-4 rounded-xl border flex flex-col items-center justify-center transition-all duration-200 ${activeControl === knob.id ? 'midi-active' : ''} ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white shadow-sm'}`}>
                         <div className="w-12 h-12 rounded-full border-4 border-slate-500 mb-3 relative flex items-center justify-center bg-slate-700/20">
                            <div className="w-1 h-3 bg-slate-400 absolute top-0 rounded-full" style={{transform: 'rotate(-45deg)', transformOrigin: '50% 24px'}}></div>
                         </div>
@@ -256,7 +353,7 @@ export default function App() {
                   <h3 className="text-lg font-semibold mb-3">Pads</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
                     {activeDevice.controls.pads.map(pad => (
-                      <div key={pad.id} className={`p-4 rounded-xl border flex flex-col items-center justify-center aspect-square transition-colors cursor-pointer hover:bg-slate-700/50 ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white shadow-sm'}`}>
+                      <div key={pad.id} className={`p-4 rounded-xl border flex flex-col items-center justify-center aspect-square transition-all duration-200 cursor-pointer hover:bg-slate-700/50 ${activeControl === pad.id ? 'midi-active' : ''} ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white shadow-sm'}`}>
                         <span className="text-sm font-bold">{pad.label}</span>
                         <span className="text-xs opacity-60 mt-2">Note {pad.note}</span>
                         {pad.cc !== undefined && <span className="text-[10px] opacity-40">CC {pad.cc}</span>}
@@ -273,6 +370,7 @@ export default function App() {
             </div>
           )}
 
+          {/* MONITOR TAB */}
           {activeTab === 'monitor' && (
             <div className="h-full flex flex-col">
               <div className="flex justify-between items-center mb-4">
@@ -286,98 +384,197 @@ export default function App() {
                     <span className="text-slate-500 w-24">{new Date(m.timestamp).toISOString().split('T')[1].slice(0, 11)}</span>
                     <span className="w-20 text-purple-400 font-semibold">{m.type}</span>
                     <span className="w-12 text-blue-400">{m.channel !== undefined ? `Ch ${m.channel + 1}` : ''}</span>
-                    <span className="flex-1 opacity-90">{m.hex}</span>
+                    <span className="flex-1 opacity-90 break-all">{m.hex}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
+          {/* HARDWARE MAPPING TAB */}
           {activeTab === 'devices' && (
-            <div className="max-w-4xl">
-              <h2 className="text-2xl font-bold mb-4">Custom Hardware Mapping Editor</h2>
+            <div className="max-w-6xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Custom Hardware Mapping Editor</h2>
+                <div className="flex gap-2">
+                  <button onClick={savePreset} disabled={!!jsonError} className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><Save size={16}/> Save Preset</button>
+                  <label className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 text-white text-sm font-medium rounded hover:bg-slate-600 cursor-pointer transition-colors">
+                    <Upload size={16}/> Import Preset
+                    <input type="file" accept=".json" className="hidden" onChange={importPreset} />
+                  </label>
+                </div>
+              </div>
               <p className="mb-6 opacity-80 leading-relaxed">
-                You can create custom templates, modify existing ones, and save them locally to your browser. Use the JSON editor to modify control mappings directly.
+                You can create custom templates, modify existing ones, and save them locally. Enable MIDI Learn and click a control to automatically bind it to incoming hardware messages.
               </p>
               
-              <div className={`p-6 border rounded-xl shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-bold">Edit Current Template ({activeDevice?.name})</h3>
-                  <div className="flex gap-2">
-                    <button onClick={savePreset} className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-500 transition-colors"><Save size={16}/> Save Preset</button>
-                    <label className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 text-white text-sm font-medium rounded hover:bg-slate-600 cursor-pointer transition-colors">
-                      <Upload size={16}/> Import Preset
-                      <input type="file" accept=".json" className="hidden" onChange={importPreset} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Visual Editor (MIDI Learn) */}
+                <div className={`p-6 border rounded-xl shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold">Interactive UI</h3>
+                    <label className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold cursor-pointer transition-colors ${midiLearnMode ? 'bg-red-500/20 text-red-400 border border-red-500' : 'bg-slate-700 text-slate-300'}`}>
+                      <input type="checkbox" className="hidden" checked={midiLearnMode} onChange={e => { setMidiLearnMode(e.target.checked); setMidiLearnTarget(null); }} />
+                      <Target size={16} className={midiLearnMode ? 'animate-pulse' : ''} />
+                      MIDI Learn {midiLearnMode ? 'ON' : 'OFF'}
                     </label>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-sm font-bold mb-2 opacity-80">Device Name</label>
-                    <input type="text" value={activeDevice?.name || ''} onChange={e => setActiveDevice(prev => prev ? {...prev, name: e.target.value} : null)} className={`w-full p-2.5 rounded-lg border ${isDarkMode ? 'bg-slate-900 border-slate-700 focus:border-blue-500 outline-none' : 'bg-slate-50 border-slate-300'}`} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold mb-2 opacity-80">Manufacturer</label>
-                    <input type="text" value={activeDevice?.manufacturer || ''} onChange={e => setActiveDevice(prev => prev ? {...prev, manufacturer: e.target.value} : null)} className={`w-full p-2.5 rounded-lg border ${isDarkMode ? 'bg-slate-900 border-slate-700 focus:border-blue-500 outline-none' : 'bg-slate-50 border-slate-300'}`} />
-                  </div>
+                  
+                  {midiLearnMode && <p className="mb-4 text-sm text-red-400 font-medium">Click any control below to start listening for MIDI CC/Note...</p>}
+
+                  {/* Render Mock Knobs for selection */}
+                  {activeDevice?.controls.knobs && activeDevice.controls.knobs.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold mb-2 opacity-70">Knobs</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {activeDevice.controls.knobs.map(knob => {
+                          const isTarget = midiLearnTarget?.id === knob.id;
+                          return (
+                            <div 
+                              key={knob.id} 
+                              onClick={() => midiLearnMode && setMidiLearnTarget({type: 'knobs', id: knob.id})}
+                              className={`p-2 w-16 h-16 rounded border flex flex-col items-center justify-center cursor-pointer transition-colors ${isTarget ? 'bg-red-500/20 border-red-500 animate-pulse' : (isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-slate-100 border-slate-300')}`}
+                            >
+                              <span className="text-xs font-bold truncate w-full text-center">{knob.label}</span>
+                              <span className="text-[10px] opacity-60">CC {knob.cc}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Render Mock Pads for selection */}
+                  {activeDevice?.controls.pads && activeDevice.controls.pads.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2 opacity-70">Pads</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {activeDevice.controls.pads.map(pad => {
+                          const isTarget = midiLearnTarget?.id === pad.id;
+                          return (
+                            <div 
+                              key={pad.id} 
+                              onClick={() => midiLearnMode && setMidiLearnTarget({type: 'pads', id: pad.id})}
+                              className={`p-2 w-16 h-16 rounded border flex flex-col items-center justify-center cursor-pointer transition-colors ${isTarget ? 'bg-red-500/20 border-red-500 animate-pulse' : (isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-slate-100 border-slate-300')}`}
+                            >
+                              <span className="text-xs font-bold truncate w-full text-center">{pad.label}</span>
+                              <span className="text-[10px] opacity-60">N: {pad.note}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-bold mb-2 opacity-80">Hardware Control Layout (JSON)</label>
+                {/* JSON Code Editor */}
+                <div className={`p-6 border rounded-xl shadow-sm flex flex-col ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold">JSON Configuration</h3>
+                  </div>
+                  
+                  {jsonError && (
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm font-medium flex items-start gap-2">
+                      <span className="mt-0.5">⚠️</span> 
+                      <span>{jsonError}</span>
+                    </div>
+                  )}
+
                   <textarea 
-                    className={`w-full h-96 p-4 rounded-lg border font-mono text-sm leading-relaxed ${isDarkMode ? 'bg-[#0A0C10] border-slate-700 text-blue-300 focus:border-blue-500 outline-none' : 'bg-slate-50 border-slate-300'}`}
+                    className={`flex-1 w-full p-4 rounded-lg border font-mono text-sm leading-relaxed whitespace-pre overflow-auto min-h-[400px] ${isDarkMode ? 'bg-[#0A0C10] border-slate-700 text-blue-300 focus:border-blue-500 outline-none' : 'bg-slate-50 border-slate-300'} ${jsonError ? 'border-red-500/50 focus:border-red-500/50' : ''}`}
                     value={jsonDraft}
                     onChange={(e) => setJsonDraft(e.target.value)}
                   />
-                  <p className="text-xs opacity-60 mt-2">Modify the controls above to remap CC numbers, Note numbers, and labels.</p>
+                  <p className="text-xs opacity-60 mt-3">Direct modifications here immediately reflect in the active device template.</p>
                 </div>
+
               </div>
             </div>
           )}
 
+          {/* SYSEX BULK & TEMPLATE RECEIVE TAB */}
           {activeTab === 'sysex' && (
-            <div className="max-w-2xl">
-              <h2 className="text-2xl font-bold mb-4">SysEx Bulk Transmission</h2>
-              <p className="opacity-80 mb-6 leading-relaxed">Queue multiple SysEx (.syx) files from your local storage and send them sequentially to the selected output device.</p>
+            <div className="max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              {/* SysEx Queue */}
+              <div className={`p-6 rounded-xl border flex flex-col ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <h2 className="text-xl font-bold mb-2">SysEx Bulk Transmission</h2>
+                <p className="opacity-80 mb-6 text-sm">Queue multiple SysEx (.syx) files and send them sequentially.</p>
 
-              <div className={`p-6 rounded-xl border mb-6 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold">Queue Files</h3>
-                  <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-500 cursor-pointer transition-colors">
-                    <Upload size={16}/> Select SysEx Files
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-sm">Queue Files</h3>
+                  <label className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-500 cursor-pointer transition-colors">
+                    <Upload size={16}/> Select Files
                     <input type="file" multiple accept=".syx,.sys" className="hidden" onChange={handleSysexFiles} />
                   </label>
                 </div>
 
-                <div className={`min-h-[150px] p-4 rounded-lg border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                <div className={`flex-1 min-h-[200px] p-4 rounded-lg border overflow-y-auto mb-6 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                   {sysexQueue.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-sm opacity-50 pt-10 pb-10">No files queued.</div>
+                    <div className="h-full flex items-center justify-center text-sm opacity-50">No files queued.</div>
                   ) : (
                     <ul className="space-y-2">
                       {sysexQueue.map((f, i) => (
                         <li key={i} className="flex justify-between items-center text-sm p-3 rounded bg-slate-700/30">
-                          <span className="font-medium">{f.name}</span>
-                          <span className="opacity-60 text-xs bg-slate-800 px-2 py-1 rounded">{(f.size / 1024).toFixed(1)} KB</span>
+                          <span className="font-medium truncate">{f.name}</span>
+                          <span className="opacity-60 text-xs bg-slate-800 px-2 py-1 rounded ml-2 shrink-0">{(f.size / 1024).toFixed(1)} KB</span>
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
 
-                <div className="mt-6 flex justify-end">
-                  <button 
-                    onClick={sendSysexQueue} 
-                    disabled={sysexQueue.length === 0 || isSendingQueue}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Send size={16}/> {isSendingQueue ? 'Sending...' : 'Send Queue Sequential'}
-                  </button>
+                <button 
+                  onClick={sendSysexQueue} 
+                  disabled={sysexQueue.length === 0 || isSendingQueue}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Send size={16}/> {isSendingQueue ? 'Sending...' : 'Send Queue Sequential'}
+                </button>
+              </div>
+
+              {/* Template Receive Manager */}
+              <div className={`p-6 rounded-xl border flex flex-col ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <h2 className="text-xl font-bold mb-2">Template Receive Manager</h2>
+                <p className="opacity-80 mb-6 text-sm">Automatically captures incoming Template Dumps from Novation & compatible devices.</p>
+
+                <div className={`flex-1 p-4 rounded-lg border overflow-y-auto ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  {receivedTemplates.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-sm opacity-50 text-center px-4">
+                      <Layers size={32} className="mb-2 opacity-40"/>
+                      No templates received yet. Initiate a SysEx dump from your hardware.
+                    </div>
+                  ) : (
+                    <ul className="space-y-3">
+                      {receivedTemplates.map((tmpl, i) => (
+                        <li key={tmpl.id} className="p-3 rounded-lg border border-slate-700 bg-slate-800 shadow-sm flex flex-col gap-3">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm text-blue-400">Captured Template {i+1}</span>
+                            <span className="text-xs opacity-60 bg-slate-900 px-2 py-1 rounded">{tmpl.size} bytes</span>
+                          </div>
+                          <div className="text-[10px] font-mono opacity-50 truncate">
+                            {tmpl.hex.substring(0, 45)}...
+                          </div>
+                          <div className="flex gap-2 mt-1">
+                            <button onClick={() => sendMidi(tmpl.data)} className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium text-white transition-colors">
+                              <Send size={12}/> Send Back
+                            </button>
+                            <button onClick={() => downloadTemplate(tmpl)} className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium text-white transition-colors">
+                              <DownloadCloud size={12}/> Save .syx
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
+
             </div>
           )}
 
+          {/* SETTINGS TAB */}
           {activeTab === 'settings' && (
             <div className="max-w-2xl">
               <h2 className="text-2xl font-bold mb-4">Settings & Maintenance</h2>
