@@ -323,6 +323,7 @@ function renderDeviceEditor() {
   welcome.style.display = 'none';
   container.style.display = '';
   renderVirtualKeyboard();
+  if (typeof renderMacros === "function") renderMacros();
 
   const presets = dev.defaultPresets || [];
   const preset  = presets[State.activePresetIndex] || {};
@@ -371,7 +372,7 @@ function renderDeviceEditor() {
     <div style="width:1px;height:24px;background:var(--border);margin:0 4px;"></div>
     
     <button class="btn sm" onclick="savePresetVersion()">💾 Save Version</button>
-    <button class="btn sm" onclick="revertPresetVersion()" ${!preset.lastSavedState ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>↩ Revert to Previous</button>
+    
     
     <span style="font-size:0.8rem;color:var(--accent);margin-left:auto;font-weight:bold;">v${preset.version || 1}</span>
     
@@ -535,7 +536,27 @@ function renderDeviceEditor() {
     </div>
   `;
 
-  container.innerHTML = html;
+  
+  const historyHtml = (preset.history || []).map((h, i) => `
+    <div style="background:var(--surface2); padding:8px; border-radius:6px; margin-bottom:8px; border:1px solid var(--border);">
+      <div style="font-size:0.85rem; font-weight:bold; color:var(--text);">Version ${h.version}</div>
+      <div style="font-size:0.7rem; color:var(--text3); margin-bottom:6px;">${new Date(h.timestamp).toLocaleString()}</div>
+      <button class="btn sm" onclick="restoreHistoryVersion(${i})" style="width:100%; justify-content:center;">↩ Restore</button>
+    </div>
+  `).join('');
+
+  const finalHtml = `
+    <div style="display:grid; grid-template-columns: 1fr 240px; gap:20px; align-items:start;">
+      <div style="min-width:0;">${html}</div>
+      <div style="background:var(--surface3); border:1px solid var(--border); border-radius:8px; padding:12px; position:sticky; top:20px;">
+        <h3 style="font-size:1rem; margin-top:0; margin-bottom:12px;">Version History</h3>
+        <p style="font-size:0.75rem; color:var(--text3); margin-bottom:12px;">Click 'Save Version' in the channel bar to snapshot your mappings.</p>
+        <div style="max-height:600px; overflow-y:auto;">${historyHtml || '<div style="font-size:0.75rem; color:var(--text3);">No history saved.</div>'}</div>
+      </div>
+    </div>
+  `;
+  container.innerHTML = finalHtml;
+
 
   // Populate JSON Editor after render
   setTimeout(() => {
@@ -733,7 +754,10 @@ function handleMidiLearn(data) {
   const dev    = getActiveDev();
   if (!dev) { cancelLearn(); return; }
 
+  
   if (type === 0x9 && data[2] > 0) {
+    data[2] = typeof applyVelocityCurve === 'function' ? applyVelocityCurve(data[2]) : data[2];
+
     // Note On — map to pad
     if (_learnTarget.type === 'pad') {
       ensurePadArray(dev);
@@ -746,6 +770,22 @@ function handleMidiLearn(data) {
       toast(`Pad ${pi+1} → Note ${noteName(data[1])} (${data[1]}) on Ch ${ch+1} ✓`, 'success');
     }
   } else if (type === 0xB) {
+  if (type === 0xB) {
+    // Process macros
+    const dev = getActiveDev();
+    if (dev) {
+      const p = dev.defaultPresets[State.activePresetIndex];
+      if (p && p.macros) {
+        const matchingMacros = p.macros.filter(m => m.source === data[1]);
+        matchingMacros.forEach(m => {
+          (m.targets || []).forEach(tCC => {
+            sendMidiOut([0xB0 | ch, tCC, data[2]]);
+          });
+        });
+      }
+    }
+  }
+
     if (typeof window.trackRecentCC === 'function') window.trackRecentCC(data[1], ch);
     // CC — map to knob
     if (_learnTarget.type === 'knob') {
@@ -1085,15 +1125,15 @@ function renderMonitor() {
     const ts   = `<span class="msg-ts">${new Date(m.timestamp).toLocaleTimeString()}</span>`;
     const hexV = (n) => State.settings.hex ? `0x${n.toString(16).toUpperCase().padStart(2,'0')}` : n;
     switch (m.type) {
-      case 'note_on':  return `${ts}<span class="msg-note">▶ Note On  Ch${m.ch+1} ${noteName(m.note)} (${m.note}) vel:${m.vel}</span>`;
-      case 'note_off': return `${ts}<span class="msg-note">◼ Note Off Ch${m.ch+1} ${noteName(m.note)} (${m.note})</span>`;
-      case 'cc':       return `${ts}<span class="msg-cc">◈ CC ${hexV(m.cc)} = ${hexV(m.val)}  Ch${m.ch+1}</span>`;
-      case 'pc':       return `${ts}<span class="msg-pc">⬡ PC ${m.pc}  Ch${m.ch+1}</span>`;
+      case 'note_on':  return `${ts}<span class="msg-note" style="color:#3b82f6;font-weight:bold;">▶ Note On  Ch${m.ch+1} ${noteName(m.note)} (${m.note}) vel:${m.vel}</span>`;
+      case 'note_off': return `${ts}<span class="msg-note" style="color:#60a5fa;opacity:0.8;">◼ Note Off Ch${m.ch+1} ${noteName(m.note)} (${m.note})</span>`;
+      case 'cc':       return `${ts}<span class="msg-cc" style="color:#10b981;">◈ CC ${hexV(m.cc)} = ${hexV(m.val)}  Ch${m.ch+1}</span>`;
+      case 'pc':       return `${ts}<span class="msg-pc" style="color:#a855f7;">⬡ PC ${m.pc}  Ch${m.ch+1}</span>`;
       case 'panic':    return `${ts}<span style="color:#ef4444;font-weight:bold;">🚨 ${m.message}</span>`;
-      case 'sysex':    return `${ts}<span class="msg-sysex">⚡ SysEx [${m.bytes.length}B] ${m.bytes.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')}</span>`;
+      case 'sysex':    return `${ts}<span class="msg-sysex" style="color:#eab308;">⚡ SysEx [${m.bytes.length}B] ${m.bytes.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')}</span>`;
       default:         return `${ts}<span style="color:var(--text3)">${(m.raw||[]).map(b=>b.toString(16).toUpperCase()).join(' ')}</span>`;
     }
-  }).join('\n');
+    }).join('\n');
 
   document.getElementById('monitor-count').textContent = State.monitorMsgs.length;
 }
@@ -1877,6 +1917,7 @@ function renderVirtualKeyboard() {
   }
   vk.innerHTML = html;
   
+  drawVkCurve();
   const display = document.getElementById('vk-octave-display');
   if(display) {
     display.textContent = noteName(startNote) + ' - ' + noteName(startNote + 24);
@@ -2216,33 +2257,11 @@ function updateSignalFlow() {
   }
 }
 
-function savePresetVersion() {
-  const dev = getActiveDev(); if (!dev) return;
-  const p = dev.defaultPresets[State.activePresetIndex];
-  
-  // Create snapshot without the lastSavedState to avoid nesting explosion
-  const snapshot = JSON.parse(JSON.stringify(p));
-  delete snapshot.lastSavedState;
-  
-  p.lastSavedState = snapshot;
-  p.version = (p.version || 1) + 1;
-  save();
-  renderDeviceEditor();
-  toast('Preset version ' + p.version + ' saved ✓', 'success');
-}
 
-function revertPresetVersion() {
-  const dev = getActiveDev(); if (!dev) return;
-  const p = dev.defaultPresets[State.activePresetIndex];
-  if (!p.lastSavedState) { toast('No previous version found', 'error'); return; }
+
+
   
-  const restore = JSON.parse(JSON.stringify(p.lastSavedState));
-  restore.lastSavedState = p.lastSavedState; // Keep the ability to revert back to it if needed? Actually no, reverting to previous means we ARE at previous. We can keep it so they can revert again if they make mistakes, but let's just restore it cleanly.
-  dev.defaultPresets[State.activePresetIndex] = restore;
-  save();
-  renderDeviceEditor();
-  toast('Reverted to version ' + (restore.version || 1) + ' ✓', 'info');
-}
+
 
 function openBatchRenameModal(id) {
   const dev = State.devices.find(d => d.id === id);
@@ -2336,4 +2355,203 @@ function applyBatchRename(id) {
     toast('Renamed ' + renamedCount + ' presets ✓', 'success');
   }
   closeModal();
+}
+
+
+function renderMacros() {
+  const container = document.getElementById('macro-list');
+  if (!container) return;
+  const dev = getActiveDev();
+  if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (!p) return;
+  p.macros = p.macros || [];
+  
+  if (p.macros.length === 0) {
+    container.innerHTML = '<div style="font-size:0.8rem;color:var(--text3);">No macros defined.</div>';
+    return;
+  }
+  
+  container.innerHTML = p.macros.map((m, i) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);padding:8px;border-radius:6px;border:1px solid var(--border);">
+      <label style="font-size:0.8rem;font-weight:bold;">Source CC:</label>
+      <input type="number" min="0" max="127" value="${m.source ?? 0}" onchange="updateMacro(${i}, 'source', this.value)" style="width:60px;">
+      
+      <label style="font-size:0.8rem;font-weight:bold;margin-left:12px;">Targets (comma-separated CCs):</label>
+      <input type="text" value="${(m.targets || []).join(',')}" onchange="updateMacro(${i}, 'targets', this.value)" style="flex:1;" placeholder="e.g. 74, 71, 10">
+      
+      <button class="btn sm danger" onclick="deleteMacro(${i})">🗑</button>
+    </div>
+  `).join('');
+}
+
+function addMacro() {
+  const dev = getActiveDev(); if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  p.macros = p.macros || [];
+  p.macros.push({ source: 1, targets: [] });
+  save();
+  renderMacros();
+}
+
+function updateMacro(i, field, val) {
+  const dev = getActiveDev(); if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (field === 'source') {
+    p.macros[i].source = parseInt(val);
+  } else if (field === 'targets') {
+    p.macros[i].targets = val.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  }
+  save();
+}
+
+function deleteMacro(i) {
+  const dev = getActiveDev(); if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  p.macros.splice(i, 1);
+  save();
+  renderMacros();
+}
+
+
+window.vkCurveType = 'linear';
+
+function updateVkCurve() {
+  const select = document.getElementById('vk-curve-type');
+  if (select) window.vkCurveType = select.value;
+  drawVkCurve();
+}
+
+function drawVkCurve() {
+  const canvas = document.getElementById('vk-curve-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  
+  ctx.clearRect(0, 0, w, h);
+  
+  // Draw grid
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+  ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h);
+  ctx.stroke();
+  
+  // Draw curve
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let x = 0; x <= w; x++) {
+    const normX = x / w; // 0 to 1
+    let normY = normX;
+    if (window.vkCurveType === 'exp') normY = Math.pow(normX, 2);
+    else if (window.vkCurveType === 'log') normY = Math.sqrt(normX);
+    
+    const y = h - (normY * h);
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function applyVelocityCurve(vel) {
+  const normX = vel / 127;
+  let normY = normX;
+  if (window.vkCurveType === 'exp') normY = Math.pow(normX, 2);
+  else if (window.vkCurveType === 'log') normY = Math.sqrt(normX);
+  return Math.round(normY * 127);
+}
+
+
+function renderBackupTags() {
+  const container = document.getElementById('backup-tags-container');
+  if (!container) return;
+  const allTags = new Set();
+  State.devices.forEach(d => {
+    if (d.tags && Array.isArray(d.tags)) d.tags.forEach(t => allTags.add(t));
+  });
+  
+  if (allTags.size === 0) {
+    container.innerHTML = '<span style="font-size:0.75rem;color:var(--text3);">No tags found across any devices.</span>';
+    return;
+  }
+  
+  let html = '';
+  Array.from(allTags).sort().forEach(tag => {
+    html += `<label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;background:var(--surface3);padding:4px 8px;border-radius:4px;"><input type="checkbox" class="backup-tag-cb" value="${tag}"> ${tag}</label>`;
+  });
+  container.innerHTML = html;
+}
+
+function backupFiltered() {
+  const checkboxes = document.querySelectorAll('.backup-tag-cb');
+  const selectedTags = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+  
+  let devicesToExport = State.devices;
+  
+  if (selectedTags.length > 0) {
+    devicesToExport = State.devices.filter(dev => {
+      if (!dev.tags) return false;
+      return selectedTags.some(tag => dev.tags.includes(tag));
+    });
+  }
+  
+  if (devicesToExport.length === 0) {
+    toast('No devices match the selected tags.', 'error');
+    return;
+  }
+  
+  const bundle = {
+    version: '2.6.0',
+    date: new Date().toISOString(),
+    devices: devicesToExport
+  };
+  
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle, null, 2));
+  const el = document.createElement('a');
+  el.setAttribute("href", dataStr);
+  el.setAttribute("download", selectedTags.length > 0 ? "midi_backup_" + selectedTags.join('_') + ".json" : "midi_backup_all.json");
+  document.body.appendChild(el);
+  el.click();
+  el.remove();
+  toast('Exported ' + devicesToExport.length + ' devices ✓', 'success');
+}
+
+
+function savePresetVersion() {
+  const dev = getActiveDev(); if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  
+  const snapshot = JSON.parse(JSON.stringify(p));
+  delete snapshot.history; // don't infinitely nest history
+  delete snapshot.lastSavedState; // clean up old system
+  
+  p.history = p.history || [];
+  p.history.unshift({
+    version: (p.version || 1),
+    timestamp: new Date().toISOString(),
+    state: snapshot
+  });
+  
+  p.version = (p.version || 1) + 1;
+  save();
+  renderDeviceEditor();
+  toast('Preset version ' + p.version + ' saved ✓', 'success');
+}
+
+function restoreHistoryVersion(idx) {
+  const dev = getActiveDev(); if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (!p || !p.history || !p.history[idx]) return;
+  
+  const restore = JSON.parse(JSON.stringify(p.history[idx].state));
+  restore.history = p.history;
+  restore.version = p.history[idx].version;
+  
+  dev.defaultPresets[State.activePresetIndex] = restore;
+  save();
+  renderDeviceEditor();
+  toast('Reverted to version ' + restore.version + ' ✓', 'info');
 }
