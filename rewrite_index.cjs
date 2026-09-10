@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+const fs = require('fs');
+
+let html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -243,4 +245,7 @@
 <script type="text/javascript" src="/assets/js/midicontrols.v4.js" defer></script>
 <script type="text/javascript" src="/assets/js/mapper.js" defer></script>
 </body>
-</html>
+</html>`;
+
+fs.writeFileSync('index.html', html);
+console.log('Rewritten index.html successfully.');

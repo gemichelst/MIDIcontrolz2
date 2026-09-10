@@ -1694,7 +1694,7 @@ if (document.readyState === 'loading') {
 } else {
   init(); // DOM already parsed (e.g. script is at bottom of <body>)
 }
-let activeKeys = new Set();
+var activeKeys = new Set();
 function vkSendNoteOn(note) {
   highlightKey(note, true);
   if (State.midiOut) {
@@ -1718,7 +1718,8 @@ function renderVirtualKeyboard() {
   for(let i = 0; i < 25; i++) {
     const note = startNote + i;
     const isBlack = [1, 3, 6, 8, 10].includes(i % 12);
-    const active = activeKeys.has(note);
+    if (typeof activeKeys === "undefined") { window.activeKeys = new Set(); }
+    const active = window.activeKeys ? window.activeKeys.has(note) : false;
     if(isBlack) {
       html += `<div id="vk-${note}" 
         onmousedown="vkSendNoteOn(${note})" onmouseup="vkSendNoteOff(${note})" onmouseleave="vkSendNoteOff(${note})" ontouchstart="vkSendNoteOn(${note})" ontouchend="vkSendNoteOff(${note})"
@@ -1732,8 +1733,9 @@ function renderVirtualKeyboard() {
   vk.innerHTML = html;
 }
 function highlightKey(note, state) {
-  if(state) activeKeys.add(note);
-  else activeKeys.delete(note);
+  if(typeof window.activeKeys==="undefined") window.activeKeys=new Set();
+  if(state) window.activeKeys.add(note);
+  else window.activeKeys.delete(note);
   renderVirtualKeyboard();
 }
 
