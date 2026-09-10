@@ -61,6 +61,7 @@ export interface DeviceConfig {
   };
   defaultPresets: Preset[];
   quickSysEx: QuickSysEx[];
+  tags?: string[];
 }
 
 export interface MidiMessage {

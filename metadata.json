@@ -1,6 +1,6 @@
 {
   "name": "MIDIcontrolz2",
-  "description": "",
+  "description": "A powerful, browser-based MIDI controller editor and management suite built with React and the WebMIDI API. MIDIcontrolz2 is a modern overhaul of the original MIDIcontrolz application, introducing offline caching (PWA), a refined dark mode UI, custom hardware mapping tools, and advanced SysEx bulk transfer capabilities.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

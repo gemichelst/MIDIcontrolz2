@@ -12,12 +12,12 @@ export const BUILT_IN_DEVICES: DeviceConfig[] = [
     presets: 4,
     description: "8 velocity-sensitive pads, 8 knobs, 4 programs.",
     controls: {
-      pads: Array.from({length: 8}, (_, i) => ({ id: \`pad\${i+1}\`, label: \`Pad \${i+1}\`, note: 36+i, cc: i+1, pc: i+1, mode: "Momentary" })),
-      knobs: Array.from({length: 8}, (_, i) => ({ id: \`k\${i+1}\`, label: \`K\${i+1}\`, cc: i+1, lo: 0, hi: 127 })),
+      pads: Array.from({length: 8}, (_, i) => ({ id: `pad${i+1}`, label: `Pad ${i+1}`, note: 36+i, cc: i+1, pc: i+1, mode: "Momentary" })),
+      knobs: Array.from({length: 8}, (_, i) => ({ id: `k${i+1}`, label: `K${i+1}`, cc: i+1, lo: 0, hi: 127 })),
       faders: [],
       buttons: []
     },
-    defaultPresets: Array.from({length: 4}, (_, i) => ({ name: \`Program \${i+1}\`, channel: 0 })),
+    defaultPresets: Array.from({length: 4}, (_, i) => ({ name: `Program ${i+1}`, channel: 0 })),
     quickSysEx: []
   },
   {
@@ -32,10 +32,10 @@ export const BUILT_IN_DEVICES: DeviceConfig[] = [
     "description": "Zero-key Remote SL — 8 encoders, 8 faders, LCD display, Automap",
     "controls": {
       "pads": [],
-      "knobs": Array.from({length: 8}, (_, i) => ({ id: \`enc\${i+1}\`, label: \`Enc \${i+1}\`, cc: 21+i, lo: 0, hi: 127 })),
-      "faders": Array.from({length: 8}, (_, i) => ({ id: \`fdr\${i+1}\`, label: \`Fader \${i+1}\`, cc: 41+i })),
+      "knobs": Array.from({length: 8}, (_, i) => ({ id: `enc${i+1}`, label: `Enc ${i+1}`, cc: 21+i, lo: 0, hi: 127 })),
+      "faders": Array.from({length: 8}, (_, i) => ({ id: `fdr${i+1}`, label: `Fader ${i+1}`, cc: 41+i })),
       "buttons": [
-        ...Array.from({length: 8}, (_, i) => ({ id: \`btn\${i+1}\`, label: \`Btn \${i+1}\`, note: 112+i, color: "green" as const })),
+        ...Array.from({length: 8}, (_, i) => ({ id: `btn${i+1}`, label: `Btn ${i+1}`, note: 112+i, color: "green" as const })),
         { "id": "rewind",  "label": "Rewind",   "note": 116, "color": "amber" },
         { "id": "fwd",     "label": "Forward",  "note": 117, "color": "amber" },
         { "id": "stop",    "label": "Stop",     "note": 115, "color": "red"   },
@@ -44,7 +44,7 @@ export const BUILT_IN_DEVICES: DeviceConfig[] = [
         { "id": "record",  "label": "Record",   "note": 119, "color": "red"   }
       ]
     },
-    "defaultPresets": Array.from({length: 8}, (_, i) => ({ name: \`Preset \${i+1}\`, channel: i })),
+    "defaultPresets": Array.from({length: 8}, (_, i) => ({ name: `Preset ${i+1}`, channel: i })),
     "quickSysEx": [
       { "label": "Init Automap",       "bytes": "F0 00 20 29 03 03 12 01 F7" },
       { "label": "LCD Line 1: Hello",  "bytes": "F0 00 20 29 03 03 04 00 48 65 6C 6C 6F 00 F7" },
@@ -65,8 +65,8 @@ export const BUILT_IN_DEVICES: DeviceConfig[] = [
     "presets": 40,
     "description": "25-key controller — 8 encoders, 8 drum pads, LCD, transport, Automap",
     "controls": {
-      "pads": Array.from({length: 8}, (_, i) => ({ id: \`pad\${i+1}\`, label: \`Pad \${i+1}\`, note: 36+i, cc: 36+i, mode: "Momentary" })),
-      "knobs": Array.from({length: 8}, (_, i) => ({ id: \`enc\${i+1}\`, label: \`Enc \${i+1}\`, cc: 21+i, lo: 0, hi: 127 })),
+      "pads": Array.from({length: 8}, (_, i) => ({ id: `pad${i+1}`, label: `Pad ${i+1}`, note: 36+i, cc: 36+i, mode: "Momentary" })),
+      "knobs": Array.from({length: 8}, (_, i) => ({ id: `enc${i+1}`, label: `Enc ${i+1}`, cc: 21+i, lo: 0, hi: 127 })),
       "faders": [],
       "buttons": [
         { "id": "rewind", "label": "Rewind",  "note": 116, "color": "amber" },
@@ -77,7 +77,7 @@ export const BUILT_IN_DEVICES: DeviceConfig[] = [
         { "id": "record", "label": "Record",  "note": 119, "color": "red"   }
       ]
     },
-    "defaultPresets": Array.from({length: 8}, (_, i) => ({ name: \`Preset \${i+1}\`, channel: i })),
+    "defaultPresets": Array.from({length: 8}, (_, i) => ({ name: `Preset ${i+1}`, channel: i })),
     "quickSysEx": [
       { "label": "Init Automap",      "bytes": "F0 00 20 29 03 03 12 01 F7" },
       { "label": "LCD: Hi there!",    "bytes": "F0 00 20 29 03 03 04 00 48 69 20 74 68 65 72 65 21 00 F7" },
