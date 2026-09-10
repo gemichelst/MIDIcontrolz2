@@ -650,8 +650,8 @@ function triggerButton(bi) {
     setTimeout(() => { if(led) led.className = 'btn-surface led-off'; }, 150);
   }
   if (!State.midiOut) { toast('No MIDI Out connected', 'error'); return; }
-  State.midiOut.send([0x90 | ch, note, 127]);
-  setTimeout(() => State.midiOut.send([0x80 | ch, note, 0]), 100);
+  sendMidiOut([0x90 | ch, note, 127]);
+  setTimeout(() => sendMidiOut([0x80 | ch, note, 0]), 100);
 }
 
 // ============================================================
@@ -687,7 +687,7 @@ function knobMouseMove(e) {
   if (!kd) return;
   const ch = p?.channel ?? 0;
   State.liveValues[`cc_${ch}_${kd.cc}`] = newVal;
-  if (State.midiOut) State.midiOut.send([0xB0 | ch, kd.cc, newVal]);
+  if (State.midiOut) sendMidiOut([0xB0 | ch, kd.cc, newVal]);
 }
 
 function knobMouseUp() {
@@ -705,11 +705,15 @@ function startMidiLearn(type, index, btn) {
   if (_learnTarget) {
     // Cancel existing learn
     if (_learnTarget.btn) _learnTarget.btn.classList.remove('learning');
+    const oldSvg = document.getElementById('svg-' + _learnTarget.type + '-' + _learnTarget.index);
+    if (oldSvg) oldSvg.classList.remove('svg-learning');
     _learnTarget = null;
     return;
   }
   _learnTarget = { type, index: parseInt(index), btn };
   btn.classList.add('learning');
+  const svgEl = document.getElementById('svg-' + type + '-' + index);
+  if (svgEl) svgEl.classList.add('svg-learning');
   toast(`MIDI Learn active — press a pad/key on your hardware`, 'info');
 }
 
@@ -750,7 +754,10 @@ function handleMidiLearn(data) {
 }
 
 function cancelLearn() {
-  if (_learnTarget?.btn) _learnTarget.btn.classList.remove('learning');
+  if (!_learnTarget) return;
+  if (_learnTarget.btn) _learnTarget.btn.classList.remove('learning');
+  const oldSvg = document.getElementById('svg-' + _learnTarget.type + '-' + _learnTarget.index);
+  if (oldSvg) oldSvg.classList.remove('svg-learning');
   _learnTarget = null;
 }
 
@@ -831,9 +838,9 @@ function onMidiMessage(event) {
   const data = event.data;
   const ts   = event.timeStamp || Date.now();
 
-  flashActivity();
+  flashActivity('in');
 
-  if (State.settings.thru && State.midiOut) State.midiOut.send(data);
+  if (State.settings.thru && State.midiOut) sendMidiOut(data);
 
   if (_learnTarget) { handleMidiLearn(data); return; }
 
@@ -914,7 +921,7 @@ function readFromDevice() {
   if (!State.midiOut) { toast('No MIDI Out connected', 'error'); return; }
   if (dev.id === 'akai_lpd8_v1') {
     const pn = State.activePresetIndex + 1;
-    State.midiOut.send([0xF0,0x47,0x7F,0x75,0x61,0x00,0x01, pn, 0xF7]);
+    sendMidiOut([0xF0,0x47,0x7F,0x75,0x61,0x00,0x01, pn, 0xF7]);
     toast(`Reading Preset ${pn} from LPD8…`, 'info');
   } else {
     toast(`Read not implemented for ${dev.name} — use SysEx panel`, 'info');
@@ -949,19 +956,31 @@ function writeLPD8Preset() {
     const k = knobs[i] || {}; msg.push(k.cc??i+1, k.lo??0, k.hi??127);
   }
   msg.push(0xF7);
-  State.midiOut.send(msg);
+  sendMidiOut(msg);
   toast(`Preset ${pn} written to LPD8 ✓`, 'success');
 }
 
 // ============================================================
 //  LIVE UI HIGHLIGHT
 // ============================================================
-function flashActivity() {
+
+function flashActivity(type = 'in') {
   const dot = document.getElementById('midi-dot');
-  dot.classList.add('activity');
+  if (!dot) return;
+  if (type === 'in') {
+    dot.style.backgroundColor = '#22c55e';
+    dot.style.boxShadow = '0 0 10px #22c55e';
+  } else if (type === 'out') {
+    dot.style.backgroundColor = '#3b82f6';
+    dot.style.boxShadow = '0 0 10px #3b82f6';
+  }
   clearTimeout(flashActivity._t);
-  flashActivity._t = setTimeout(() => dot.classList.remove('activity'), 120);
+  flashActivity._t = setTimeout(() => {
+    dot.style.backgroundColor = '';
+    dot.style.boxShadow = '';
+  }, 150);
 }
+
 
 function highlightPad(ch, note, on) {
   const dev = getActiveDev(); if (!dev?.controls?.pads) return;
@@ -1071,7 +1090,7 @@ function sendSysEx() {
     const bytes = parseHexBytes(raw);
     if (bytes[0] !== 0xF0 || bytes[bytes.length-1] !== 0xF7)
       throw new Error('Must start with F0 and end with F7');
-    State.midiOut.send(bytes);
+    sendMidiOut(bytes);
     toast(`SysEx sent — ${bytes.length} bytes ✓`, 'success');
     logMonitor({ type:'sysex', bytes, timestamp: Date.now() });
   } catch(e) { toast('SysEx error: ' + e.message, 'error'); }
@@ -1101,7 +1120,7 @@ function sendRawMidi() {
     case 'pc':       msg = [0xC0|ch, num];       break;
     default: return;
   }
-  State.midiOut.send(msg);
+  sendMidiOut(msg);
   toast(`Sent: ${msg.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')} ✓`, 'success');
 }
 
@@ -1122,7 +1141,7 @@ function sendQuickSysEx(bytesStr) {
   if (!State.midiOut) { toast('No MIDI Out connected', 'error'); return; }
   try {
     const bytes = parseHexBytes(bytesStr);
-    State.midiOut.send(bytes);
+    sendMidiOut(bytes);
     toast(`Quick cmd sent — ${bytes.length}B ✓`, 'success');
   } catch(e) { toast('Error: ' + e.message, 'error'); }
 }
@@ -1699,14 +1718,15 @@ function vkSendNoteOn(note) {
   highlightKey(note, true);
   if (State.midiOut) {
     const ch = State.activePresetIndex !== undefined && getActiveDev()?.defaultPresets?.[State.activePresetIndex]?.channel || 0;
-    State.midiOut.send([0x90 + ch, note, 100]);
+    const vel = document.getElementById('vk-velocity') ? parseInt(document.getElementById('vk-velocity').value) : 100;
+    sendMidiOut([0x90 + ch, note, vel]);
   }
 }
 function vkSendNoteOff(note) {
   highlightKey(note, false);
   if (State.midiOut) {
     const ch = State.activePresetIndex !== undefined && getActiveDev()?.defaultPresets?.[State.activePresetIndex]?.channel || 0;
-    State.midiOut.send([0x80 + ch, note, 0]);
+    sendMidiOut([0x80 + ch, note, 0]);
   }
 }
 
@@ -1744,9 +1764,9 @@ function midiPanic() {
     return;
   }
   for (let ch = 0; ch < 16; ch++) {
-    State.midiOut.send([0xB0 + ch, 0x7B, 0]); // All Notes Off (B0 7B 00)
-    State.midiOut.send([0xB0 + ch, 120, 0]); // All Sound Off
-    State.midiOut.send([0xB0 + ch, 64, 0]);  // Sustain off
+    sendMidiOut([0xB0 + ch, 0x7B, 0]); // All Notes Off (B0 7B 00)
+    sendMidiOut([0xB0 + ch, 120, 0]); // All Sound Off
+    sendMidiOut([0xB0 + ch, 64, 0]);  // Sustain off
   }
   toast("MIDI Panic: All Notes Off (B0 7B 00) sent", "info");
 }
@@ -1781,7 +1801,7 @@ async function sendSysexQueue() {
     const file = sysexQueue[i];
     const buffer = await file.arrayBuffer();
     const data = new Uint8Array(buffer);
-    State.midiOut.send(data);
+    sendMidiOut(data);
     await new Promise(r => setTimeout(r, 200)); // Delay for buffer
   }
   toast("SysEx Queue sent successfully!", "success");
@@ -1812,7 +1832,7 @@ function renderReceivedTemplates() {
 
 function sendCapturedTemplate(i) {
   if (!State.midiOut) return toast("No MIDI Out selected", "error");
-  State.midiOut.send(receivedTemplates[i]);
+  sendMidiOut(receivedTemplates[i]);
   toast("Template sent", "info");
 }
 
@@ -1933,5 +1953,13 @@ function saveJsonEditor() {
     }
   } catch(e) {
     toast('Cannot save invalid JSON', 'error');
+  }
+}
+
+
+function sendMidiOut(data) {
+  if (State.midiOut) {
+    flashActivity('out');
+    sendMidiOut(data);
   }
 }
