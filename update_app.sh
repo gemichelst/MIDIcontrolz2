@@ -1,0 +1,1 @@
+sed -i 's/import { Settings, Save, Upload, Monitor, Edit3, Type, Layers, Send, Target, DownloadCloud, Menu, X, AlertOctagon } from '"'"'lucide-react'"'"';/import { Settings, Save, Upload, Monitor, Edit3, Type, Layers, Send, Target, DownloadCloud, Menu, X, AlertOctagon, Eye, Search, Filter } from '"'"'lucide-react'"'"';/g' src/App.tsx

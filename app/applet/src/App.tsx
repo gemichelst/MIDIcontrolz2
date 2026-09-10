@@ -35,6 +35,11 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [customDevices, setCustomDevices] = useState<DeviceConfig[]>([]);
+  
+  const [activeNotes, setActiveNotes] = useState<number[]>([]);
+  const [previewDevice, setPreviewDevice] = useState<DeviceConfig | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
   const [previewDevice, setPreviewDevice] = useState<DeviceConfig | null>(null);
   
