@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+*.cjs
+*.bak
+update_app.sh
+update_readme.sh

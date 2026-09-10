@@ -873,7 +873,7 @@ function connectMidiPorts() {
   State.midiIn  = inId  ? State.midiAccess.inputs.get(inId)   : null;
   State.midiOut = outId ? State.midiAccess.outputs.get(outId) : null;
   if (State.midiIn) {
-    State.midiIn.onmidimessage = onMidiMessage;
+    State.midiIn.onmidimessage = (e) => { if(window.onMidiMessage) window.onMidiMessage(e); else onMidiMessage(e); };
     document.getElementById('midi-dot').classList.add('connected');
     document.getElementById('midi-status-text').textContent = State.midiIn.name;
   }
@@ -1347,7 +1347,7 @@ function renderDeviceManager() {
     const tagsHtml = (dev.tags || []).map(t => `<span style="background:var(--surface3);padding:2px 6px;border-radius:4px;font-size:0.65rem;margin-right:4px;">${t}</span>`).join('');
     
     return `
-    <div class="dm-card">
+    <div class="dm-card" onmouseenter="showDmCardPreview(event, '${dev.id}')" onmouseleave="hideDmCardPreview()" onmousemove="showDmCardPreview(event, '${dev.id}')">
       <div class="dm-card-header">
         <div class="icon">${dev.icon || '🎹'}</div>
         <div>
@@ -2331,34 +2331,42 @@ window.onMidiMessage = function(event) {
 
 
 // ============================================================
-//  VELOCITY VISUALIZATION (RECHARTS)
+
 // ============================================================
-window.velocityData = [
-  { name: '0-20', count: 0 },
-  { name: '21-40', count: 0 },
-  { name: '41-60', count: 0 },
-  { name: '61-80', count: 0 },
-  { name: '81-100', count: 0 },
-  { name: '101-127', count: 0 }
-];
+//  VELOCITY HEATMAP (RECHARTS)
+// ============================================================
+window.velocityHeatmapData = [];
+window.heatmapNoteSequence = 0;
 
 window.renderVelocityChart = function() {
   const container = document.getElementById('velocity-chart-container');
   if (!container || !window.React || !window.Recharts) return;
   
   const e = React.createElement;
-  const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } = window.Recharts;
+  const { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } = window.Recharts;
   
+  // We plot the last 50 notes. X = Sequence, Y = Velocity. Color = Intensity
   const chart = e(ResponsiveContainer, { width: '100%', height: '100%' },
-    e(BarChart, { data: window.velocityData },
+    e(ScatterChart, { margin: { top: 10, right: 10, bottom: 0, left: -20 } },
       e(CartesianGrid, { strokeDasharray: '3 3', stroke: '#334155' }),
-      e(XAxis, { dataKey: 'name', stroke: '#94a3b8', fontSize: 10 }),
-      e(YAxis, { stroke: '#94a3b8', fontSize: 10, allowDecimals: false }),
+      e(XAxis, { type: 'number', dataKey: 'seq', hide: true, domain: ['dataMin', 'dataMax'] }),
+      e(YAxis, { type: 'number', dataKey: 'vel', domain: [0, 127], stroke: '#94a3b8', fontSize: 10 }),
+      e(ZAxis, { type: 'number', dataKey: 'vel', range: [20, 200] }), // Size of the dot based on velocity
       e(Tooltip, { 
+        cursor: { strokeDasharray: '3 3' },
         contentStyle: { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '4px', fontSize: '12px' },
-        itemStyle: { color: '#3b82f6' }
+        formatter: (value, name) => [value, name === 'vel' ? 'Velocity' : name]
       }),
-      e(Bar, { dataKey: 'count', fill: '#3b82f6', radius: [4, 4, 0, 0] })
+      e(Scatter, { data: window.velocityHeatmapData },
+        window.velocityHeatmapData.map((entry, index) => {
+          // Color heat: blue (low) -> green (mid) -> red (high)
+          const heat = entry.vel / 127;
+          const r = Math.round(255 * heat);
+          const b = Math.round(255 * (1 - heat));
+          const color = `rgb(${r}, 50, ${b})`;
+          return e(Cell, { key: `cell-${index}`, fill: color, opacity: 0.8 });
+        })
+      )
     )
   );
   
@@ -2368,7 +2376,6 @@ window.renderVelocityChart = function() {
   window.velocityChartRoot.render(chart);
 };
 
-// Hook into the original onMidiMessage to capture velocity data
 const originalProcessForVelocity = window.onMidiMessage;
 window.onMidiMessage = function(event) {
   const data = event.data;
@@ -2377,19 +2384,17 @@ window.onMidiMessage = function(event) {
   // Note On
   if (type === 0x9 && data[2] > 0) {
     const vel = data[2];
-    if (vel <= 20) window.velocityData[0].count++;
-    else if (vel <= 40) window.velocityData[1].count++;
-    else if (vel <= 60) window.velocityData[2].count++;
-    else if (vel <= 80) window.velocityData[3].count++;
-    else if (vel <= 100) window.velocityData[4].count++;
-    else window.velocityData[5].count++;
+    const note = data[1];
     
-    // throttle chart updates slightly or update on every note?
-    // Since it's local, update on every note is fine for now, but requestAnimationFrame is safer.
+    window.velocityHeatmapData.push({ seq: window.heatmapNoteSequence++, vel: vel, note: note });
+    if (window.velocityHeatmapData.length > 50) {
+      window.velocityHeatmapData.shift();
+    }
+    
     if (!window.velocityChartPending) {
       window.velocityChartPending = true;
       requestAnimationFrame(() => {
-        window.renderVelocityChart();
+        if(window.renderVelocityChart) window.renderVelocityChart();
         window.velocityChartPending = false;
       });
     }
@@ -2397,6 +2402,7 @@ window.onMidiMessage = function(event) {
   
   if (originalProcessForVelocity) originalProcessForVelocity(event);
 };
+
 
 // Call once on init to draw empty chart
 setTimeout(() => {
@@ -2451,3 +2457,109 @@ window.hidePresetPreview = function() {
   const tooltip = document.getElementById('preset-preview-tooltip');
   if (tooltip) tooltip.style.display = 'none';
 };
+
+
+window.showDmCardPreview = function(event, devId) {
+  const dev = State.devices.find(d => d.id === devId);
+  if (!dev) return;
+  
+  let tooltip = document.getElementById('dm-card-preview-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'dm-card-preview-tooltip';
+    tooltip.style.position = 'absolute';
+    tooltip.style.background = 'var(--surface2)';
+    tooltip.style.border = '1px solid var(--border)';
+    tooltip.style.borderRadius = '6px';
+    tooltip.style.padding = '10px 14px';
+    tooltip.style.color = 'var(--text)';
+    tooltip.style.zIndex = '99999';
+    tooltip.style.boxShadow = '0 8px 16px rgba(0,0,0,0.5)';
+    tooltip.style.pointerEvents = 'none';
+    tooltip.style.fontSize = '0.75rem';
+    tooltip.style.maxWidth = '250px';
+    document.body.appendChild(tooltip);
+  }
+  
+  let content = `<strong style="display:block;margin-bottom:6px;font-size:0.85rem;color:var(--accent);">${dev.name} Core Mappings</strong>`;
+  
+  if (dev.defaultPresets && dev.defaultPresets.length > 0) {
+    dev.defaultPresets.forEach((p, i) => {
+      if (i > 3) return; // Limit to 4 presets max to avoid huge tooltips
+      const pads = (p.pads || []).length || (dev.controls?.pads || []).length;
+      const knobs = (p.knobs || []).length || (dev.controls?.knobs || []).length;
+      const faders = (p.faders || []).length || (dev.controls?.faders || []).length;
+      content += `
+        <div style="margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom:4px;">
+          <strong style="color:var(--text2);">${p.name || 'Preset ' + (i+1)} (Ch ${(p.channel ?? 0) + 1})</strong><br>
+          <span style="color:var(--text3);font-size:0.7rem;">Pads: ${pads} | Knobs: ${knobs} | Faders: ${faders}</span>
+        </div>
+      `;
+    });
+    if(dev.defaultPresets.length > 4) {
+      content += `<div style="color:var(--text3);font-size:0.7rem;">+ ${dev.defaultPresets.length - 4} more presets</div>`;
+    }
+  } else {
+    content += `<div style="color:var(--text3);">No customized presets defined. Uses default mappings.</div>`;
+  }
+  
+  tooltip.innerHTML = content;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (event.pageX + 15) + 'px';
+  tooltip.style.top = (event.pageY + 15) + 'px';
+};
+
+window.hideDmCardPreview = function() {
+  const tooltip = document.getElementById('dm-card-preview-tooltip');
+  if (tooltip) tooltip.style.display = 'none';
+};
+
+
+// ============================================================
+//  SYSEX BULK QUEUE & SAFETY
+// ============================================================
+window.sysexQueue = [];
+window.sysexQueueActive = false;
+
+window.handleSysexQueueFiles = function(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  
+  window.sysexQueue = files;
+  const list = document.getElementById('sysex-queue-list');
+  if (list) {
+    list.innerHTML = files.map(f => `<div>📄 ${f.name} (${f.size} bytes)</div>`).join('');
+  }
+};
+
+window.sendSysexQueue = async function() {
+  if (!State.midiOut) return toast('No MIDI Out connected', 'error');
+  if (!window.sysexQueue.length) return toast('No files queued', 'error');
+  
+  window.sysexQueueActive = true;
+  for (let i = 0; i < window.sysexQueue.length; i++) {
+    const file = window.sysexQueue[i];
+    try {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      sendMidiOut(bytes);
+      toast(`Sent ${file.name}`, 'info');
+      // Wait a bit between files to not overwhelm hardware
+      await new Promise(r => setTimeout(r, 200));
+    } catch(e) {
+      toast(`Error sending ${file.name}`, 'error');
+    }
+  }
+  toast('SysEx Queue finished', 'success');
+  window.sysexQueueActive = false;
+};
+
+window.addEventListener('beforeunload', (e) => {
+  const isRecording = window.midiRecorder && window.midiRecorder.isRecording;
+  const isSysEx = window.sysexQueueActive;
+  
+  if (isRecording || isSysEx) {
+    e.preventDefault();
+    e.returnValue = ''; // Required for modern browsers
+  }
+});
