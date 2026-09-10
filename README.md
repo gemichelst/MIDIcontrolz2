@@ -42,4 +42,4 @@ Welcome to **MIDIcontrolz2** – an offline-first, highly advanced MIDI mapping 
 This tool intentionally avoids complex build steps where possible, relying on a clean HTML/JS architecture to guarantee extreme performance and direct low-level DOM access.
 
 ---
-*Built iteratively via Google AI Studio Build.*
+*Built with pure ♥️ by gemichelst.*
