@@ -7,7 +7,7 @@
   "midiName": ["SL Compact", "Remote 25", "SL MkII"],
   "sysex": true,
   "presets": 40,
-  "description": "25-key controller — 8 encoders, 8 drum pads, LCD, transport, Automap",
+  "description": "25-key controller — 8 encoders, 8 Buttons, 8 drum pads, LCD, transport, Automap",
   "controls": {
     "pads": [
       { "id": "pad1", "label": "Pad 1", "note": 36, "cc": 36, "mode": "Momentary" },
@@ -27,7 +27,34 @@
       { "id": "enc5", "label": "Enc 5", "cc": 25, "lo": 0, "hi": 127 },
       { "id": "enc6", "label": "Enc 6", "cc": 26, "lo": 0, "hi": 127 },
       { "id": "enc7", "label": "Enc 7", "cc": 27, "lo": 0, "hi": 127 },
-      { "id": "enc8", "label": "Enc 8", "cc": 28, "lo": 0, "hi": 127 }
+      { "id": "enc8", "label": "Enc 8", "cc": 28, "lo": 0, "hi": 127 },
+
+      { "id": "enc9", "label": "Enc 9", "cc": 21, "lo": 0, "hi": 127 },
+      { "id": "enc10", "label": "Enc 10", "cc": 22, "lo": 0, "hi": 127 },
+      { "id": "enc11", "label": "Enc 11", "cc": 23, "lo": 0, "hi": 127 },
+      { "id": "enc12", "label": "Enc 12", "cc": 24, "lo": 0, "hi": 127 },
+      { "id": "enc13", "label": "Enc 13", "cc": 25, "lo": 0, "hi": 127 },
+      { "id": "enc14", "label": "Enc 14", "cc": 26, "lo": 0, "hi": 127 },
+      { "id": "enc15", "label": "Enc 15", "cc": 27, "lo": 0, "hi": 127 },
+      { "id": "enc16", "label": "Enc 16", "cc": 28, "lo": 0, "hi": 127 },
+
+      { "id": "enc17", "label": "Enc 17", "cc": 21, "lo": 0, "hi": 127 },
+      { "id": "enc18", "label": "Enc 18", "cc": 22, "lo": 0, "hi": 127 },
+      { "id": "enc19", "label": "Enc 19", "cc": 23, "lo": 0, "hi": 127 },
+      { "id": "enc20", "label": "Enc 20", "cc": 24, "lo": 0, "hi": 127 },
+      { "id": "enc21", "label": "Enc 21", "cc": 25, "lo": 0, "hi": 127 },
+      { "id": "enc22", "label": "Enc 22", "cc": 26, "lo": 0, "hi": 127 },
+      { "id": "enc23", "label": "Enc 23", "cc": 27, "lo": 0, "hi": 127 },
+      { "id": "enc24", "label": "Enc 24", "cc": 28, "lo": 0, "hi": 127 },
+
+      { "id": "enc25", "label": "Enc 25", "cc": 21, "lo": 0, "hi": 127 },
+      { "id": "enc26", "label": "Enc 26", "cc": 22, "lo": 0, "hi": 127 },
+      { "id": "enc27", "label": "Enc 27", "cc": 23, "lo": 0, "hi": 127 },
+      { "id": "enc28", "label": "Enc 28", "cc": 24, "lo": 0, "hi": 127 },
+      { "id": "enc29", "label": "Enc 29", "cc": 25, "lo": 0, "hi": 127 },
+      { "id": "enc30", "label": "Enc 30", "cc": 26, "lo": 0, "hi": 127 },
+      { "id": "enc31", "label": "Enc 31", "cc": 27, "lo": 0, "hi": 127 },
+      { "id": "enc32", "label": "Enc 32", "cc": 28, "lo": 0, "hi": 127 }
     ],
     "faders": [],
     "buttons": [
@@ -40,14 +67,14 @@
     ]
   },
   "defaultPresets": [
-    { "name": "Preset 1", "channel": 0 },
-    { "name": "Preset 2", "channel": 1 },
-    { "name": "Preset 3", "channel": 2 },
-    { "name": "Preset 4", "channel": 3 },
-    { "name": "Preset 5", "channel": 4 },
-    { "name": "Preset 6", "channel": 5 },
-    { "name": "Preset 7", "channel": 6 },
-    { "name": "Preset 8", "channel": 7 }
+    { "name": "Preset 1", "channel": 8 },
+    { "name": "Preset 2", "channel": 8 },
+    { "name": "Preset 3", "channel": 8 },
+    { "name": "Preset 4", "channel": 8 },
+    { "name": "Preset 5", "channel": 8 },
+    { "name": "Preset 6", "channel": 8 },
+    { "name": "Preset 7", "channel": 8 },
+    { "name": "Preset 8", "channel": 8 }
   ],
   "quickSysEx": [
     { "label": "Init Automap",      "bytes": "F0 00 20 29 03 03 12 01 F7" },

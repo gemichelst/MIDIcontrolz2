@@ -1,364 +1,395 @@
-// MAPPER.JS
+(() => {
+  "use strict";
 
-// ============================================================
-//  SVG RENDERING ENGINE & DRAG-AND-DROP MAPPER
-// ============================================================
+  let draggedCC = null;
+  let heatmapMode = false;
 
-window.mapperLearnMode = false;
-window.mapperLearnTarget = null; // { type, index }
+  const getState = () => window.State ?? null;
+  const getActiveDevice = () =>
+    typeof window.getActiveDev === "function" ? window.getActiveDev() : null;
 
-window.toggleMapperLearn = function() {
-  window.mapperLearnMode = !window.mapperLearnMode;
-  const btn = document.getElementById('btn-mapper-learn');
-  if (btn) {
-    btn.innerHTML = window.mapperLearnMode ? '🎛 Learn: ON' : '🎛 Learn: OFF';
-    btn.classList.toggle('primary', window.mapperLearnMode);
-  }
-  
-  if (!window.mapperLearnMode) {
-    window.mapperLearnTarget = null;
-    window.renderSvgMapper();
-    window.toast('Mapper MIDI Learn disabled.', 'info');
-  } else {
-    window.toast('Mapper MIDI Learn active. Click an SVG control to arm it.', 'info');
-  }
-};
+  const notify = (message, type = "info") => {
+    if (typeof window.toast === "function") {
+      window.toast(message, type);
+    } else {
+      console.info(`[MIDIcontrolz2] ${message}`);
+    }
+  };
 
-window.exportSvgMapping = function() {
-  const container = document.getElementById('svg-mapper-container');
-  if (!container) return;
+  const save = () => {
+    if (typeof window.save === "function") window.save();
+  };
 
-  const mappingData = { pads: [], knobs: [], faders: [] };
-  
-  // Iterate through all SVG elements that act as controls
-  const controls = container.querySelectorAll('.svg-control');
-  controls.forEach(el => {
-    if (!el.id || !el.id.startsWith('svg-')) return;
-    const parts = el.id.split('-');
-    const type = parts[1]; // pad, knob, fader
-    const index = parseInt(parts[2]);
-    
-    // Retrieve mapping data from the title element inside the SVG node
-    const titleEl = el.querySelector('title') || el.nextElementSibling;
-    let cc = null;
-    let note = null;
-    
-    // Fallback to active dev state to ensure accuracy since parsing title strings is brittle,
-    // but we fulfill the iteration requirement.
-    const dev = window.getActiveDev ? window.getActiveDev() : null;
-    if (dev && dev.controls && dev.controls[type + 's'] && dev.controls[type + 's'][index]) {
-       cc = dev.controls[type + 's'][index].cc;
-       note = dev.controls[type + 's'][index].note;
+  const syncLog = (message) => {
+    if (typeof window.logSyncEvent === "function") window.logSyncEvent(message);
+  };
+
+  const refreshMapper = () => {
+    window.renderSvgMapper?.();
+    window.renderDeviceEditor?.();
+  };
+
+  const escapeHtml = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  window.toggleMapperLearn = function toggleMapperLearn() {
+    window.mapperLearnMode = !window.mapperLearnMode;
+
+    if (!window.mapperLearnMode) {
+      window.mapperLearnTarget = null;
     }
 
-    if (!mappingData[type + 's'][index]) {
-      mappingData[type + 's'][index] = {};
+    const button = document.getElementById("btn-mapper-learn");
+    if (button) {
+      button.textContent = window.mapperLearnMode
+        ? "🎛 Learn: ON"
+        : "🎛 Learn: OFF";
+      button.classList.toggle("primary", window.mapperLearnMode);
     }
-    mappingData[type + 's'][index] = { cc, note };
-  });
 
-  const devName = window.getActiveDev ? (window.getActiveDev()?.name || 'device') : 'device';
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mappingData, null, 2));
-  const downloadAnchorNode = document.createElement('a');
-  downloadAnchorNode.setAttribute("href", dataStr);
-  downloadAnchorNode.setAttribute("download", devName + "_visual_mapping.json");
-  document.body.appendChild(downloadAnchorNode);
-  downloadAnchorNode.click();
-  downloadAnchorNode.remove();
-  window.toast('Visual Mapping Exported to JSON', 'success');
-};
+    window.renderSvgMapper?.();
+    notify(
+      window.mapperLearnMode
+        ? "Mapper MIDI Learn active. Click a control to arm it."
+        : "Mapper MIDI Learn disabled.",
+      "info"
+    );
+  };
 
-function renderSvgMapper() {
-  const container = document.getElementById('svg-mapper-container');
-  const section = document.getElementById('midi-mapper-section');
-  const dev = window.getActiveDev ? window.getActiveDev() : null;
-  
-  if (!dev || !container || !section) return;
-  section.style.display = 'block';
+  window.renderSvgMapper = function renderSvgMapper() {
+    const container = document.getElementById("svg-mapper-container");
+    const section = document.getElementById("midi-mapper-section");
+    const dev = getActiveDevice();
 
-  const pads = dev.controls?.pads || [];
-  const knobs = dev.controls?.knobs || [];
-  const faders = dev.controls?.faders || [];
-  
-  const p = dev.defaultPresets[window.State?.activePresetIndex || 0] || {};
-  const channel = (p.channel ?? 0) + 1;
+    if (!container || !section) return;
 
-  let svgHtml = `<svg width="100%" height="100%" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg" style="background:#1e293b; border-radius:8px;">`;
-  
-  svgHtml += `<rect x="10" y="10" width="580" height="280" rx="10" fill="#0f172a" stroke="#334155" stroke-width="2"/>`;
-  
-  const startX = 30;
-  let currX = startX;
-  const startY = 30;
-  
-  const isTarget = (type, i) => window.mapperLearnMode && window.mapperLearnTarget && window.mapperLearnTarget.type === type && window.mapperLearnTarget.index === i;
-  
-  if (pads.length > 0) {
-    let px = currX;
-    let py = startY + 50;
-    pads.forEach((pad, i) => {
-      const cls = 'svg-control' + (isTarget('pad', i) ? ' svg-learning' : '');
-      svgHtml += `<rect id="svg-pad-${i}" class="${cls}" x="${px}" y="${py}" width="40" height="40" rx="4" fill="#334155" stroke="#475569" stroke-width="1" onclick="selectSvgControl('pad', ${i})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)">`;
-      svgHtml += `<title>Pad ${i+1} | CC: ${pad.cc || '-'} | Note: ${pad.note || '-'} | Ch: ${channel}</title>`;
-      svgHtml += `</rect>`;
-      svgHtml += `<text x="${px+20}" y="${py+25}" font-family="sans-serif" font-size="10" fill="white" text-anchor="middle" pointer-events="none">${pad.note || pad.cc}</text>`;
-      
-      px += 50;
-      if ((i + 1) % 4 === 0) {
-        px = currX;
-        py += 50;
-      }
-    });
-    currX += 220;
-  }
-  
-  if (knobs.length > 0) {
-    let kx = currX;
-    let ky = startY + 50;
-    knobs.forEach((knob, i) => {
-      const cls = 'svg-control' + (isTarget('knob', i) ? ' svg-learning' : '');
-      svgHtml += `<circle id="svg-knob-${i}" class="${cls}" cx="${kx+20}" cy="${ky+20}" r="15" fill="#1e293b" stroke="#94a3b8" stroke-width="2" onclick="selectSvgControl('knob', ${i})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)">`;
-      svgHtml += `<title>Knob ${i+1} | CC: ${knob.cc || '-'} | Ch: ${channel}</title>`;
-      svgHtml += `</circle>`;
-      svgHtml += `<text x="${kx+20}" y="${ky+24}" font-family="sans-serif" font-size="9" fill="white" text-anchor="middle" pointer-events="none">CC ${knob.cc}</text>`;
-      
-      kx += 45;
-      if ((i + 1) % 4 === 0) {
-        kx = currX;
-        ky += 50;
-      }
-    });
-    currX += 200;
-  }
-  
-  if (faders.length > 0) {
-    let fx = currX;
-    let fy = startY + 50;
-    faders.forEach((fader, i) => {
-      const cls = 'svg-control' + (isTarget('fader', i) ? ' svg-learning' : '');
-      svgHtml += `<rect class="${cls}" x="${fx}" y="${fy}" width="15" height="80" rx="2" fill="#0f172a" stroke="#475569" stroke-width="1" />`;
-      svgHtml += `<rect id="svg-fader-${i}" class="${cls}" x="${fx-5}" y="${fy+40}" width="25" height="15" rx="3" fill="#64748b" onclick="selectSvgControl('fader', ${i})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)">`;
-      svgHtml += `<title>Fader ${i+1} | CC: ${fader.cc || '-'} | Ch: ${channel}</title>`;
-      svgHtml += `</rect>`;
-      svgHtml += `<text x="${fx+7}" y="${fy+100}" font-family="sans-serif" font-size="9" fill="white" text-anchor="middle" pointer-events="none">CC ${fader.cc}</text>`;
-      
-      fx += 35;
-    });
-  }
-
-  svgHtml += `</svg>`;
-  container.innerHTML = svgHtml;
-}
-
-const originalRenderDeviceEditor = window.renderDeviceEditor;
-window.renderDeviceEditor = function() {
-  if (originalRenderDeviceEditor) originalRenderDeviceEditor();
-  setTimeout(() => {
-    window.renderSvgMapper();
-  }, 100);
-};
-
-window.renderSvgMapper = renderSvgMapper; // expose
-
-let draggedCC = null;
-
-window.dragCC = function(ev) {
-  draggedCC = ev.target.getAttribute('data-cc');
-  ev.dataTransfer.setData("text", draggedCC);
-}
-
-window.allowDrop = function(ev) {
-  ev.preventDefault();
-}
-
-window.svgDragEnter = function(ev) {
-  ev.preventDefault();
-  if (ev.target.classList && ev.target.classList.contains('svg-control')) {
-    ev.target.classList.add('svg-drop-target');
-  }
-};
-
-window.svgDragLeave = function(ev) {
-  ev.preventDefault();
-  if (ev.target.classList && ev.target.classList.contains('svg-control')) {
-    ev.target.classList.remove('svg-drop-target');
-  }
-};
-
-window.dropOnSvg = function(ev) {
-  ev.preventDefault();
-  if (ev.target.classList && ev.target.classList.contains('svg-control')) {
-    ev.target.classList.remove('svg-drop-target');
-  }
-  if (!draggedCC) return;
-  const targetId = ev.target.id;
-  if (!targetId || !targetId.startsWith('svg-')) return;
-  
-  const parts = targetId.split('-');
-  const type = parts[1];
-  const index = parseInt(parts[2]);
-  
-  const dev = window.getActiveDev();
-  if (!dev) return;
-  
-  let controls;
-  if (type === 'pad') controls = dev.controls.pads;
-  if (type === 'knob') controls = dev.controls.knobs;
-  if (type === 'fader') controls = dev.controls.faders;
-  
-  if (controls && controls[index]) {
-    controls[index].cc = parseInt(draggedCC);
-    if (type === 'pad') controls[index].note = parseInt(draggedCC);
-    window.save();
-    window.toast(`Mapped CC ${draggedCC} to ${type} ${index+1}`, 'success');
-    window.logSyncEvent(`Mapped CC ${draggedCC} to ${type} ${index+1}`);
-    window.renderSvgMapper();
-    if (originalRenderDeviceEditor) originalRenderDeviceEditor();
-  }
-}
-
-window.selectSvgControl = function(type, index) {
-  if (window.mapperLearnMode) {
-    window.mapperLearnTarget = { type, index };
-    window.renderSvgMapper();
-    window.toast(`Waiting for MIDI input to map ${type} ${index+1}...`, 'info');
-    return;
-  }
-
-  const dev = window.getActiveDev();
-  if (!dev) return;
-  let controls = dev.controls[type + 's'];
-  if (controls && controls[index]) {
-    let newVal = prompt(`Enter new mapping value for ${type} ${index+1}:`, controls[index].cc || controls[index].note);
-    if (newVal !== null && !isNaN(newVal)) {
-      if (type === 'pad') controls[index].note = parseInt(newVal);
-      controls[index].cc = parseInt(newVal);
-      window.save();
-      window.toast(`Updated ${type} ${index+1} mapping`, 'success');
-      window.logSyncEvent(`Updated ${type} ${index+1} mapping to ${newVal}`);
-      window.renderSvgMapper();
-      if (originalRenderDeviceEditor) originalRenderDeviceEditor();
+    if (!dev) {
+      section.style.display = "none";
+      container.replaceChildren();
+      return;
     }
-  }
-}
 
-window.handleMapperMidiLearn = function(data) {
-  const status = data[0];
-  const msgType = status >> 4;
-  const ch = status & 0x0F;
-  
-  const type = window.mapperLearnTarget.type;
-  const index = window.mapperLearnTarget.index;
-  const dev = window.getActiveDev();
-  
-  if (!dev) return false;
-  let controls = dev.controls[type + 's'];
-  if (!controls || !controls[index]) return false;
-  
-  // Accept CC or Note On
-  if (msgType === 0xB || (msgType === 0x9 && data[2] > 0)) {
-    const newVal = data[1]; // CC number or Note number
-    controls[index].cc = newVal;
-    if (type === 'pad') controls[index].note = newVal;
-    
-    window.save();
-    window.toast(`Mapped ${type} ${index+1} to ${msgType === 0xB ? 'CC' : 'Note'} ${newVal} on Ch ${ch+1}`, 'success');
-    window.logSyncEvent(`Mapped ${type} ${index+1} to ${newVal}`);
-    
-    window.mapperLearnTarget = null;
-    window.renderSvgMapper();
-    if (originalRenderDeviceEditor) originalRenderDeviceEditor();
-    return true; // handled
-  }
-  return false;
-}
+    section.style.display = "block";
 
+    const presetIndex = getState()?.activePresetIndex ?? 0;
+    const preset = dev.defaultPresets?.[presetIndex] ?? {};
+    const channel = (preset.channel ?? 0) + 1;
+    const groups = [
+      ["pad", "pads", dev.controls?.pads ?? []],
+      ["knob", "knobs", dev.controls?.knobs ?? []],
+      ["fader", "faders", dev.controls?.faders ?? []]
+    ];
 
-// ============================================================
-//  MAPPING HEATMAP (DEVICE MANAGER)
-// ============================================================
-let heatmapMode = false;
+    const columns = Math.max(
+      1,
+      groups.filter(([, , items]) => items.length > 0).length
+    );
 
-window.toggleHeatmap = function() {
-  heatmapMode = !heatmapMode;
-  window.toast(heatmapMode ? 'Heatmap View ON' : 'Heatmap View OFF', 'info');
-  window.renderDeviceManager();
-}
+    let x = 24;
+    const columnWidth = 176;
+    const parts = [
+      `<svg width="100%" height="300" viewBox="0 0 ${columns * columnWidth + 48} 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Visual MIDI mapping for ${escapeHtml(dev.name)}">`,
+      `<rect x="1" y="1" width="${columns * columnWidth + 46}" height="298" rx="10" fill="#0f172a" stroke="#334155"/>`
+    ];
 
-const originalRenderDeviceManager = window.renderDeviceManager;
-window.renderDeviceManager = function() {
-  if (originalRenderDeviceManager) originalRenderDeviceManager();
-  
-  if (heatmapMode) {
-    const grid = document.getElementById('device-manager-grid');
-    if (!grid) return;
-    
-    window.State.devices.forEach((dev) => {
-      let changes = 0;
-      ['pads', 'knobs', 'faders'].forEach(type => {
-        if (dev.controls && dev.controls[type]) {
-          dev.controls[type].forEach(c => {
-            if (c.cc > 50 || c.note > 50) changes++;
-          });
+    for (const [type, plural, controls] of groups) {
+      if (!controls.length) continue;
+
+      parts.push(
+        `<text x="${x}" y="28" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" font-weight="700">${escapeHtml(plural)}</text>`
+      );
+
+      controls.forEach((control, index) => {
+        const row = index % 4;
+        const group = Math.floor(index / 4);
+        const y = 46 + row * 56;
+        const offsetX = x + group * 44;
+        const id = `svg-${type}-${index}`;
+        const active =
+          window.mapperLearnMode &&
+          window.mapperLearnTarget?.type === type &&
+          window.mapperLearnTarget?.index === index;
+        const cssClass = `svg-control${active ? " svg-learning" : ""}`;
+        const label =
+          type === "pad"
+            ? `Pad ${index + 1} · Note ${control.note ?? "-"} · CC ${control.cc ?? "-"} · Ch ${channel}`
+            : `${type[0].toUpperCase() + type.slice(1)} ${index + 1} · CC ${control.cc ?? "-"} · Ch ${channel}`;
+
+        if (type === "knob") {
+          parts.push(
+            `<circle id="${id}" class="${cssClass}" cx="${offsetX + 22}" cy="${y + 20}" r="17" fill="#1e293b" stroke="#94a3b8" stroke-width="2" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></circle>`,
+            `<text x="${offsetX + 22}" y="${y + 24}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="9" pointer-events="none">CC ${control.cc ?? "-"}</text>`
+          );
+        } else if (type === "fader") {
+          parts.push(
+            `<rect x="${offsetX + 14}" y="${y}" width="16" height="42" rx="3" fill="#020617" stroke="#475569"/>`,
+            `<rect id="${id}" class="${cssClass}" x="${offsetX + 8}" y="${y + 14}" width="28" height="14" rx="3" fill="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
+            `<text x="${offsetX + 22}" y="${y + 55}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="9" pointer-events="none">CC ${control.cc ?? "-"}</text>`
+          );
+        } else {
+          parts.push(
+            `<rect id="${id}" class="${cssClass}" x="${offsetX}" y="${y}" width="40" height="40" rx="5" fill="#334155" stroke="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
+            `<text x="${offsetX + 20}" y="${y + 24}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="10" pointer-events="none">${control.note ?? control.cc ?? "-"}</text>`
+          );
         }
       });
-      
-      const card = document.getElementById('dm-card-' + dev.id);
-      if (card) {
-        if (changes > 5) {
-          card.style.border = '2px solid #ef4444';
-          card.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.4)';
-          let badge = document.createElement('div');
-          badge.innerHTML = '🔥 ' + changes + ' Overrides';
-          badge.style.color = '#ef4444';
-          badge.style.fontWeight = 'bold';
-          badge.style.marginTop = '10px';
-          card.appendChild(badge);
-        } else if (changes > 0) {
-          card.style.border = '2px solid #f59e0b';
-          let badge = document.createElement('div');
-          badge.innerHTML = '⚡ ' + changes + ' Overrides';
-          badge.style.color = '#f59e0b';
-          badge.style.fontWeight = 'bold';
-          badge.style.marginTop = '10px';
-          card.appendChild(badge);
-        }
+
+      x += columnWidth;
+    }
+
+    parts.push("</svg>");
+    container.innerHTML = parts.join("");
+  };
+
+  window.dragCC = function dragCC(event) {
+    draggedCC = event.currentTarget?.dataset?.cc ?? null;
+    if (draggedCC && event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "copy";
+      event.dataTransfer.setData("text/plain", draggedCC);
+    }
+  };
+
+  window.allowDrop = function allowDrop(event) {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+  };
+
+  window.svgDragEnter = function svgDragEnter(event) {
+    event.preventDefault();
+    event.currentTarget?.classList?.add("svg-drop-target");
+  };
+
+  window.svgDragLeave = function svgDragLeave(event) {
+    event.preventDefault();
+    event.currentTarget?.classList?.remove("svg-drop-target");
+  };
+
+  window.dropOnSvg = function dropOnSvg(event) {
+    event.preventDefault();
+
+    const target = event.target.closest?.(".svg-control");
+    target?.classList?.remove("svg-drop-target");
+
+    const value = Number(
+      event.dataTransfer?.getData("text/plain") || draggedCC
+    );
+    if (!Number.isInteger(value) || value < 0 || value > 127) return;
+
+    const [, type, indexText] = target?.id?.split("-") ?? [];
+    const index = Number(indexText);
+    const dev = getActiveDevice();
+    const controls = dev?.controls?.[`${type}s`];
+
+    if (!Array.isArray(controls) || !controls[index]) return;
+
+    controls[index].cc = value;
+    if (type === "pad") controls[index].note = value;
+
+    save();
+    syncLog(`Mapped CC ${value} to ${type} ${index + 1}`);
+    notify(`Mapped CC ${value} to ${type} ${index + 1}.`, "success");
+    refreshMapper();
+  };
+
+  window.selectSvgControl = function selectSvgControl(type, index) {
+    const dev = getActiveDevice();
+    const controls = dev?.controls?.[`${type}s`];
+    if (!Array.isArray(controls) || !controls[index]) return;
+
+    if (window.mapperLearnMode) {
+      window.mapperLearnTarget = { type, index };
+      window.renderSvgMapper?.();
+      notify(`Waiting for MIDI input to map ${type} ${index + 1}.`, "info");
+      return;
+    }
+
+    const current = type === "pad"
+      ? controls[index].note ?? controls[index].cc ?? 0
+      : controls[index].cc ?? 0;
+
+    const response = window.prompt(
+      `Enter a MIDI ${type === "pad" ? "note / CC" : "CC"} value (0–127):`,
+      String(current)
+    );
+
+    if (response === null) return;
+
+    const value = Number(response);
+    if (!Number.isInteger(value) || value < 0 || value > 127) {
+      notify("Enter a MIDI value between 0 and 127.", "error");
+      return;
+    }
+
+    controls[index].cc = value;
+    if (type === "pad") controls[index].note = value;
+
+    save();
+    syncLog(`Updated ${type} ${index + 1} mapping to ${value}`);
+    notify(`Updated ${type} ${index + 1}.`, "success");
+    refreshMapper();
+  };
+
+  window.handleMapperMidiLearn = function handleMapperMidiLearn(data) {
+    const target = window.mapperLearnTarget;
+    if (!target || !data?.length) return false;
+
+    const status = data[0];
+    const messageType = status >> 4;
+    const channel = (status & 0x0f) + 1;
+    const isCC = messageType === 0x0b;
+    const isNoteOn = messageType === 0x09 && data[2] > 0;
+
+    if (!isCC && !isNoteOn) return false;
+
+    const dev = getActiveDevice();
+    const controls = dev?.controls?.[`${target.type}s`];
+    if (!Array.isArray(controls) || !controls[target.index]) return false;
+
+    const value = data[1];
+    controls[target.index].cc = value;
+    if (target.type === "pad") controls[target.index].note = value;
+
+    window.mapperLearnTarget = null;
+    save();
+    syncLog(`Mapped ${target.type} ${target.index + 1} to ${isCC ? "CC" : "note"} ${value}`);
+    notify(
+      `Mapped ${target.type} ${target.index + 1} to ${isCC ? "CC" : "note"} ${value} on channel ${channel}.`,
+      "success"
+    );
+    refreshMapper();
+
+    return true;
+  };
+
+  window.exportSvgMapping = function exportSvgMapping() {
+    const dev = getActiveDevice();
+    if (!dev) {
+      notify("Select a device first.", "error");
+      return;
+    }
+
+    const payload = ["pads", "knobs", "faders"].reduce(
+      (mapping, type) => {
+        mapping[type] = (dev.controls?.[type] ?? []).map((control) => ({
+          id: control.id ?? null,
+          label: control.label ?? null,
+          cc: control.cc ?? null,
+          note: control.note ?? null
+        }));
+        return mapping;
+      },
+      {
+        device: {
+          id: dev.id,
+          name: dev.name,
+          manufacturer: dev.manufacturer ?? null
+        },
+        exported: new Date().toISOString()
       }
+    );
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json"
     });
-  }
-}
+    const anchor = document.createElement("a");
+    const name = String(dev.name || dev.id || "device")
+      .trim()
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase();
 
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = `${name || "device"}-visual-mapping.json`;
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
 
-// ============================================================
-//  SYNC LOG NOTIFICATION (OFFLINE PWA SYNC)
-// ============================================================
+    notify("Visual mapping exported to JSON.", "success");
+  };
 
-window.logSyncEvent = function(msg) {
-  const container = document.getElementById('sync-log-container');
-  const body = document.getElementById('sync-log-body');
-  if (!container || !body) return;
-  
-  container.style.display = 'flex';
-  
-  const div = document.createElement('div');
-  div.className = 'sync-log-item';
-  div.textContent = `[${new Date().toLocaleTimeString()}] Pending: ${msg}`;
-  body.appendChild(div);
-  
-  body.scrollTop = body.scrollHeight;
-}
+  window.toggleHeatmap = function toggleHeatmap() {
+    heatmapMode = !heatmapMode;
+    window.renderDeviceManager?.();
+    notify(heatmapMode ? "Heatmap View ON" : "Heatmap View OFF", "info");
+  };
 
-window.syncNow = function() {
-  const body = document.getElementById('sync-log-body');
-  if (body.children.length === 0) {
-    window.toast('Nothing to sync', 'info');
-    return;
-  }
-  
-  window.toast('Syncing changes to hardware...', 'success');
-  setTimeout(() => {
-    body.innerHTML = '';
-    document.getElementById('sync-log-container').style.display = 'none';
-    window.toast('Sync Complete!', 'success');
-  }, 1000);
-}
+  const previousRenderDeviceManager = window.renderDeviceManager;
+  window.renderDeviceManager = function renderDeviceManagerWithHeatmap(...args) {
+    previousRenderDeviceManager?.(...args);
+
+    if (!heatmapMode) return;
+
+    const devices = getState()?.devices;
+    if (!Array.isArray(devices)) return;
+
+    devices.forEach((dev) => {
+      const card = document.getElementById(`dm-card-${dev.id}`);
+      if (!card) return;
+
+      card.querySelector(".dm-heatmap-badge")?.remove();
+
+      const changes = ["pads", "knobs", "faders"].reduce(
+        (total, type) =>
+          total +
+          (dev.controls?.[type] ?? []).filter(
+            (control) =>
+              Number(control.cc) > 50 || Number(control.note) > 50
+          ).length,
+        0
+      );
+
+      if (changes < 1) return;
+
+      const severe = changes > 5;
+      card.style.border = `2px solid ${severe ? "#ef4444" : "#f59e0b"}`;
+      card.style.boxShadow = severe
+        ? "0 0 15px rgba(239, 68, 68, 0.4)"
+        : "0 0 12px rgba(245, 158, 11, 0.28)";
+
+      const badge = document.createElement("div");
+      badge.className = "dm-heatmap-badge";
+      badge.style.color = severe ? "#ef4444" : "#f59e0b";
+      badge.style.fontWeight = "700";
+      badge.style.marginTop = "10px";
+      badge.textContent = `${severe ? "🔥" : "⚡"} ${changes} mapped control${changes === 1 ? "" : "s"}`;
+      card.appendChild(badge);
+    });
+  };
+
+  window.logSyncEvent = window.logSyncEvent || function logSyncEvent(message) {
+    const container = document.getElementById("sync-log-container");
+    const body = document.getElementById("sync-log-body");
+    if (!container || !body) return;
+
+    container.style.display = "flex";
+    const item = document.createElement("div");
+    item.className = "sync-log-item";
+    item.textContent = `[${new Date().toLocaleTimeString()}] Pending: ${message}`;
+    body.appendChild(item);
+    body.scrollTop = body.scrollHeight;
+  };
+
+  window.syncNow = function syncNow() {
+    const body = document.getElementById("sync-log-body");
+    if (!body?.children.length) {
+      notify("Nothing to sync.", "info");
+      return;
+    }
+
+    notify("Syncing changes to hardware…", "success");
+
+    window.setTimeout(() => {
+      body.replaceChildren();
+      const container = document.getElementById("sync-log-container");
+      if (container) container.style.display = "none";
+      notify("Sync complete.", "success");
+    }, 1000);
+  };
+
+  window.mapperLearnMode = false;
+  window.mapperLearnTarget = null;
+})();
