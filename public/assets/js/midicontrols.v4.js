@@ -1685,27 +1685,7 @@ function showHelp() {
 // ============================================================
 //  PWA — inline service worker via blob URL
 // ============================================================
-if ('serviceWorker' in navigator) {
-  const sw = `
-    const CACHE='mc-v1';
-    self.addEventListener('install', () => self.skipWaiting());
-    self.addEventListener('activate', e => e.waitUntil(
-      caches.keys().then(ks => Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-    ));
-    self.addEventListener('fetch', e => {
-      if (e.request.method !== 'GET') return;
-      e.respondWith(caches.open(CACHE).then(c =>
-        c.match(e.request).then(r => r || fetch(e.request).then(res => {
-          c.put(e.request, res.clone()); return res;
-        }))
-      ));
-    });`;
-  try {
-    const blob = new Blob([sw], { type:'application/javascript' });
-    navigator.serviceWorker.register(URL.createObjectURL(blob))
-      .catch(() => {}); // silent fail — blob SW blocked in some contexts
-  } catch(e) {}
-}
+
 
 // ============================================================
 //  INIT — async entry point

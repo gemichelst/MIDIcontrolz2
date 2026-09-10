@@ -1,6 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head>\n
+  <script>
+    // CACHE BUSTER FOR DEVELOPMENT
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (let name of names)
+          caches.delete(name);
+      });
+    }
+  </script>
+
 <!-- ═══════════════════════════════════════════════════════
      CORE
 ════════════════════════════════════════════════════════ -->
