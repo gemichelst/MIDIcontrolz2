@@ -353,7 +353,7 @@ function renderDeviceEditor() {
   if (presets.length > 1) {
     html += `<div class="preset-tabs">`;
     presets.forEach((p, i) => {
-      html += `<button class="preset-tab ${i === State.activePresetIndex ? 'active' : ''}"
+      html += `<button class="preset-tab ${i === State.activePresetIndex ? 'active' : ''}" onmouseenter="showPresetPreview(event, ${i})" onmouseleave="hidePresetPreview()" onmousemove="showPresetPreview(event, ${i})" 
         onclick="selectPreset(${i})">${p.name || `Preset ${i+1}`}</button>`;
     });
     html += `</div>`;
@@ -1839,51 +1839,6 @@ function showHelp() {
 // ============================================================
 //  INIT — async entry point
 // ============================================================
-async function init() {
-  // Setup Virtual Keyboard
-  renderVirtualKeyboard();
-  // Auto-save every 5 seconds
-  setInterval(() => {
-    saveState();
-  }, 5000);
-  await loadDevices();
-  populateDeviceDropdown();   // ← add this
-  renderSettings();
-  renderBackupList();
-  initMidi();
-  if (State.devices.length) selectDevice(State.devices[0].id);
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init(); // DOM already parsed (e.g. script is at bottom of <body>)
-}
-
-window.vkIsDragging = false;
-document.addEventListener('mouseup', () => { window.vkIsDragging = false; });
-
-function vkSendNoteOn(note) {
-  window.vkIsDragging = true;
-  highlightKey(note, true);
-  if (State.midiOut) {
-    const ch = State.activePresetIndex !== undefined && getActiveDev()?.defaultPresets?.[State.activePresetIndex]?.channel || 0;
-    sendMidiOut([0x90 + ch, note, 100]);
-  }
-}
-function vkSendNoteOff(note) {
-  highlightKey(note, false);
-  if (State.midiOut) {
-    const ch = State.activePresetIndex !== undefined && getActiveDev()?.defaultPresets?.[State.activePresetIndex]?.channel || 0;
-    sendMidiOut([0x80 + ch, note, 0]);
-  }
-}
-function vkMouseEnter(note) {
-  if (window.vkIsDragging) {
-    vkSendNoteOn(note);
-  }
-}
-
 
 window.vkOctaveShift = 0;
 
@@ -1917,7 +1872,7 @@ function renderVirtualKeyboard() {
   }
   vk.innerHTML = html;
   
-  drawVkCurve();
+  if (typeof drawVkCurve === 'function') drawVkCurve();
   const display = document.getElementById('vk-octave-display');
   if(display) {
     display.textContent = noteName(startNote) + ' - ' + noteName(startNote + 24);
@@ -1927,631 +1882,572 @@ function renderVirtualKeyboard() {
 function highlightKey(note, state) {
   if(state) activeKeys.add(note);
   else activeKeys.delete(note);
-  
-  // Update DOM directly to prevent destroying dragging mouse events
   const el = document.getElementById('vk-' + note);
-  if (el) {
-    const isBlack = [1, 3, 6, 8, 10].includes((note - 48) % 12);
-    if (state) {
-      el.style.background = isBlack ? '#ef4444' : '#f87171';
-    } else {
-      el.style.background = isBlack ? '#1e293b' : '#f1f5f9';
-    }
-  }
+  if(!el) return;
+  const isBlack = el.style.width === '20px';
+  if(state) el.style.background = isBlack ? '#ef4444' : '#f87171';
+  else      el.style.background = isBlack ? '#1e293b' : '#f1f5f9';
+}
+
+async function init() {
+  // Setup Virtual Keyboard
+  renderVirtualKeyboard();
+  // Auto-save every 5 seconds
+  setInterval(() => {
+    saveState();
+  }, 5000);
+  await loadDevices();
+  populateDeviceDropdown();   // ← add this
+  renderSettings();
+  renderBackupList();
+  initMidi();
+  if (State.devices.length) selectDevice(State.devices[0].id);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init(); // DOM already parsed (e.g. script is at bottom of <body>)
 }
 
 
-function midiPanic() {
-  if (!State.midiOut) {
-    toast("No MIDI Out selected", "error");
-    return;
+window.vkIsDragging = false;
+document.addEventListener('mouseup', () => { window.vkIsDragging = false; });
+
+window.vkSendNoteOnRaw = function(note) {
+  window.vkIsDragging = true;
+  const qNote = typeof quantizeNote === 'function' ? quantizeNote(note) : note;
+  if (State.midiOut) {
+    const ch = State.activePresetIndex !== undefined && getActiveDev()?.defaultPresets?.[State.activePresetIndex]?.channel || 0;
+    const velRaw = parseInt(document.getElementById('vk-velocity')?.value || 100);
+    const vel = typeof applyVelocityCurve === 'function' ? applyVelocityCurve(velRaw) : velRaw;
+    sendMidiOut([0x90 + ch, qNote, vel]);
   }
-  for (let ch = 0; ch < 16; ch++) {
-    sendMidiOut([0xB0 + ch, 0x7B, 0]); // All Notes Off (B0 7B 00)
-    sendMidiOut([0xB0 + ch, 120, 0]); // All Sound Off
-    sendMidiOut([0xB0 + ch, 64, 0]);  // Sustain off
-  }
-  toast("MIDI Panic: All Notes Off (B0 7B 00) sent", "info");
-}
-
-let sysexQueue = [];
-let receivedTemplates = [];
-
-function handleSysexQueueFiles(evt) {
-  const files = Array.from(evt.target.files);
-  if(files.length > 0) {
-    sysexQueue = files;
-    renderSysexQueue();
-  }
-}
-
-function renderSysexQueue() {
-  const container = document.getElementById('sysex-queue-list');
-  if(!container) return;
-  if(sysexQueue.length === 0) {
-    container.innerHTML = '<span style="color:var(--text3);">No files queued.</span>';
-    return;
-  }
-  container.innerHTML = sysexQueue.map(f => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:4px 0;"><span>${f.name}</span><span style="opacity:0.6">${(f.size/1024).toFixed(1)} KB</span></div>`).join('');
-}
-
-
-async function sendSysexQueue() {
-  if (!State.midiOut) return toast("No MIDI Out selected", "error");
-  if (sysexQueue.length === 0) return toast("No files queued", "error");
-  
-  toast(`Sending ${sysexQueue.length} files...`, "info");
-  
-  const pContainer = document.getElementById('sysex-progress-container');
-  const pBar = document.getElementById('sysex-progress-bar');
-  if (pContainer && pBar) {
-    pContainer.style.display = 'block';
-    pBar.style.width = '0%';
-  }
-
-  for (let i=0; i<sysexQueue.length; i++) {
-    const file = sysexQueue[i];
-    const buffer = await file.arrayBuffer();
-    const data = new Uint8Array(buffer);
-    sendMidiOut(data);
-    
-    if (pBar) {
-      const pct = Math.round(((i + 1) / sysexQueue.length) * 100);
-      pBar.style.width = pct + '%';
-    }
-
-    await new Promise(r => setTimeout(r, 200)); // Delay for buffer
-  }
-  
-  if (pContainer) {
-    setTimeout(() => { pContainer.style.display = 'none'; }, 1000);
-  }
-
-  toast("SysEx Queue sent successfully!", "success");
-  sysexQueue = [];
-  renderSysexQueue();
-}
-
-
-function renderReceivedTemplates() {
-  const container = document.getElementById('sysex-receive-list');
-  if(!container) return;
-  if(receivedTemplates.length === 0) {
-    container.innerHTML = '<span style="color:var(--text3);text-align:center;padding-top:10px;">Waiting for dumps...</span>';
-    return;
-  }
-  container.innerHTML = receivedTemplates.map((tmpl, i) => `
-    <div style="background:var(--surface2);border:1px solid var(--border);padding:6px;border-radius:4px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-weight:bold;">
-        <span>Captured Template ${i+1}</span>
-        <span style="opacity:0.6">${tmpl.length} bytes</span>
-      </div>
-      <div style="display:flex;gap:4px;">
-        <button class="btn sm" style="flex:1;" onclick="sendCapturedTemplate(${i})">▶ Send Back</button>
-        <button class="btn sm" style="flex:1;" onclick="downloadCapturedTemplate(${i})">💾 Save .syx</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function sendCapturedTemplate(i) {
-  if (!State.midiOut) return toast("No MIDI Out selected", "error");
-  sendMidiOut(receivedTemplates[i]);
-  toast("Template sent", "info");
-}
-
-function downloadCapturedTemplate(i) {
-  const data = receivedTemplates[i];
-  const blob = new Blob([data], { type: "application/octet-stream" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; 
-  a.download = `captured_template_${i+1}.syx`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// Hook into SysEx listener to capture templates (like Novation Dumps)
-const originalOnMidiMessage = onMidiMessage;
-onMidiMessage = function(event) {
-  const data = event.data;
-  if(data[0] === 0xF0 && data.length > 8) {
-    // Looks like a bulk dump
-    receivedTemplates.push(data);
-    if(typeof renderReceivedTemplates === 'function') renderReceivedTemplates();
-    toast("SysEx Template Captured", "info");
-  }
-  originalOnMidiMessage(event);
+  highlightKey(note, true);
 };
 
-function exportDeviceSyx(id) {
-  const dev = State.devices.find(d => d.id === id);
-  if (!dev) return;
-  const jsonStr = JSON.stringify(dev);
-  const jsonBytes = new TextEncoder().encode(jsonStr);
-  
-  // Custom non-commercial SysEx header: F0 7D (Educational)
-  const syx = new Uint8Array(jsonBytes.length + 3);
-  syx[0] = 0xF0; 
-  syx[1] = 0x7D;
-  syx.set(jsonBytes, 2);
-  syx[syx.length - 1] = 0xF7;
-  
-  const blob = new Blob([syx], { type: "application/octet-stream" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; 
-  a.download = (dev.name || "preset").replace(/\s+/g, '_') + ".syx";
-  a.click();
-  URL.revokeObjectURL(url);
+window.vkSendNoteOffRaw = function(note) {
+  const qNote = typeof quantizeNote === 'function' ? quantizeNote(note) : note;
+  if (State.midiOut && activeKeys.has(note)) {
+    const ch = State.activePresetIndex !== undefined && getActiveDev()?.defaultPresets?.[State.activePresetIndex]?.channel || 0;
+    sendMidiOut([0x80 + ch, qNote, 0]);
+  }
+  highlightKey(note, false);
+};
+
+window.vkMouseEnterRaw = function(note) {
+  if (window.vkIsDragging && !activeKeys.has(note)) {
+    window.vkSendNoteOnRaw(note);
+  }
+};
+
+
+// CHORD GENERATOR
+const CHORD_INTERVALS = {
+  maj: [0, 4, 7],
+  min: [0, 3, 7],
+  maj7: [0, 4, 7, 11],
+  min7: [0, 3, 7, 10],
+  dim: [0, 3, 6]
+};
+
+let activeUtilityChords = [];
+
+function playUtilityChordQuick(root, type) {
+  playChordRaw(root, type);
 }
 
-function previewPresetFromManager(id) {
-  const dev = State.devices.find(d => d.id === id);
-  if (!dev) return;
-  
-  const preset = dev.defaultPresets?.[0] || {};
-  const tags = dev.tags && dev.tags.length > 0 ? dev.tags.join(', ') : 'None';
-  
-  let knobsHtml = (preset.knobs || dev.controls?.knobs || []).map(k => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--surface3);padding:2px 0;"><span>${k.label || 'Knob'}</span><span>CC ${k.cc}</span></div>`).join('');
-  let padsHtml = (preset.pads || dev.controls?.pads || []).map(p => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--surface3);padding:2px 0;"><span>${p.label || 'Pad'}</span><span>Note ${p.note}</span></div>`).join('');
-  
-  const html = `
-    <h3 style="margin-top:0;font-size:1.2rem;border-bottom:1px solid var(--border);padding-bottom:8px;">Preview: ${dev.name}</h3>
-    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;">${dev.description||'No description provided.'}</p>
-    <div style="font-size:0.85rem;margin-bottom:12px;background:var(--surface2);padding:6px;border-radius:4px;"><strong>Tags:</strong> ${tags}</div>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:200px;">
-        <h4 style="border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:8px;font-size:1rem;">Mapped Knobs</h4>
-        <div style="font-size:0.8rem;height:140px;overflow-y:auto;background:var(--surface2);padding:8px;border-radius:6px;border:1px solid var(--border);">
-          ${knobsHtml || '<span style="color:var(--text3);">No knobs mapped</span>'}
-        </div>
-      </div>
-      <div style="flex:1;min-width:200px;">
-        <h4 style="border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:8px;font-size:1rem;">Mapped Pads</h4>
-        <div style="font-size:0.8rem;height:140px;overflow-y:auto;background:var(--surface2);padding:8px;border-radius:6px;border:1px solid var(--border);">
-          ${padsHtml || '<span style="color:var(--text3);">No pads mapped</span>'}
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
-      <button class="btn" onclick="closeModal()">Close Preview</button>
-      <button class="btn primary" onclick="closeModal(); selectDevice('${dev.id}'); showPanel('editor');">Load in Editor</button>
-    </div>
-  `;
-  openModal(html);
+function playUtilityChord() {
+  const root = parseInt(document.getElementById('chord-root').value);
+  const type = document.getElementById('chord-type').value;
+  playChordRaw(root, type);
 }
 
-function validateJsonEditor() {
+function playChordRaw(root, type) {
+  if (!State.midiOut) return toast('No MIDI Out connected', 'error');
+  const intervals = CHORD_INTERVALS[type];
+  const notes = intervals.map(i => root + i);
+  const ch = 0; // Default to ch 1
+  notes.forEach(n => {
+    if (n <= 127) {
+      sendMidiOut([0x90 | ch, n, 100]);
+      activeUtilityChords.push({note: n, ch});
+    }
+  });
+}
+
+function stopUtilityChord() {
+  stopAllChords();
+}
+
+function stopAllChords() {
+  activeUtilityChords.forEach(c => {
+    sendMidiOut([0x80 | c.ch, c.note, 0]);
+  });
+  activeUtilityChords = [];
+}
+
+// MIDI CLOCK
+window.internalClockTimer = null;
+window.internalClockBpm = 120;
+
+function updateInternalClockBPM(val) {
+  window.internalClockBpm = parseInt(val);
+  document.getElementById('clock-bpm-val').textContent = window.internalClockBpm;
+  if (window.internalClockTimer) {
+    toggleInternalClock(); 
+    toggleInternalClock();
+  }
+}
+
+function toggleInternalClock() {
+  const btn = document.getElementById('btn-clock-toggle');
+  if (window.internalClockTimer) {
+    clearInterval(window.internalClockTimer);
+    window.internalClockTimer = null;
+    btn.textContent = 'Start Clock';
+    btn.classList.remove('danger');
+    btn.classList.add('primary');
+  } else {
+    // MIDI clock is 24 PPQN (Pulses Per Quarter Note)
+    const msPerBeat = 60000 / window.internalClockBpm;
+    const msPerPulse = msPerBeat / 24;
+    
+    sendMidiOut([0xFA]); // Start
+    window.internalClockTimer = setInterval(() => {
+      sendMidiOut([0xF8]); // Clock
+    }, msPerPulse);
+    
+    btn.textContent = 'Stop Clock';
+    btn.classList.remove('primary');
+    btn.classList.add('danger');
+  }
+}
+
+// LFO GENERATOR
+window.lfoTimer = null;
+window.lfoPhase = 0;
+
+function toggleLFO() {
+  const btn = document.getElementById('btn-lfo-toggle');
+  if (window.lfoTimer) {
+    cancelAnimationFrame(window.lfoTimer);
+    window.lfoTimer = null;
+    btn.textContent = 'Start LFO';
+    btn.classList.remove('danger');
+    btn.classList.add('primary');
+    document.getElementById('lfo-visualizer').style.width = '0%';
+  } else {
+    window.lfoLastTime = performance.now();
+    window.lfoPhase = 0;
+    lfoTick(performance.now());
+    btn.textContent = 'Stop LFO';
+    btn.classList.remove('primary');
+    btn.classList.add('danger');
+  }
+}
+
+function lfoTick(time) {
+  if (!window.lfoTimer && document.getElementById('btn-lfo-toggle').textContent === 'Stop LFO') {
+     // Safety catch for React-like unmounts, though we use vanilla
+  }
+  
+  const dt = time - window.lfoLastTime;
+  window.lfoLastTime = time;
+  
+  const speed = parseFloat(document.getElementById('lfo-speed').value) || 1.0;
+  const cc = parseInt(document.getElementById('lfo-cc').value) || 74;
+  
+  // dt is in ms. speed is Hz. 
+  window.lfoPhase += (speed * (dt / 1000.0)) * Math.PI * 2;
+  
+  // sine wave -1 to 1 -> 0 to 1 -> 0 to 127
+  const val01 = (Math.sin(window.lfoPhase) + 1) / 2;
+  const ccVal = Math.round(val01 * 127);
+  
+  if (State.midiOut) {
+    sendMidiOut([0xB0, cc, ccVal]);
+  }
+  
+  const vis = document.getElementById('lfo-visualizer');
+  if (vis) vis.style.width = (val01 * 100) + '%';
+  
+  window.lfoTimer = requestAnimationFrame(lfoTick);
+}
+
+// LATENCY TESTER (Loopback)
+window.latencyTestActive = false;
+window.latencyTestStart = 0;
+
+function runLatencyTest() {
+  if (!State.midiIn || !State.midiOut) {
+    toast('Please connect both MIDI In and MIDI Out to run loopback test', 'error');
+    return;
+  }
+  
+  const res = document.getElementById('latency-results');
+  res.innerHTML = 'Testing... (Ensure MIDI Out is cabled directly to MIDI In)';
+  
+  window.latencyTestActive = true;
+  window.latencyTestStart = performance.now();
+  
+  // Send a specific CC sequence that we can uniquely identify
+  // Let's send CC 111 with value 111
+  sendMidiOut([0xB0, 111, 111]);
+  
+  setTimeout(() => {
+    if (window.latencyTestActive) {
+      window.latencyTestActive = false;
+      res.innerHTML = '<span style="color:#ef4444;">Timeout. No loopback detected. Is the cable connected?</span>';
+    }
+  }, 1000);
+}
+
+// Hook loopback detect into onMidiMessage
+const origMidiMsgUtils = window.onMidiMessage;
+window.onMidiMessage = function(event) {
+  const data = event.data;
+  
+  if (window.latencyTestActive && data[0] === 0xB0 && data[1] === 111 && data[2] === 111) {
+    const ms = (performance.now() - window.latencyTestStart).toFixed(2);
+    document.getElementById('latency-results').innerHTML = `Loopback successful! Latency: <strong>${ms} ms</strong>`;
+    window.latencyTestActive = false;
+    return; // consume it
+  }
+  
+  origMidiMsgUtils(event);
+};
+
+
+
+function vkSendNoteOn(note) { window.vkSendNoteOnRaw(note); }
+function vkSendNoteOff(note) { window.vkSendNoteOffRaw(note); }
+function vkMouseEnter(note) { window.vkMouseEnterRaw(note); }
+
+
+window.validateJsonEditor = function() {
   const ta = document.getElementById('json-editor-textarea');
   const err = document.getElementById('json-editor-error');
   const btn = document.getElementById('json-editor-save-btn');
-  if(!ta || !err || !btn) return;
+  if (!ta || !err || !btn) return;
   try {
     JSON.parse(ta.value);
-    ta.style.borderColor = 'var(--border)';
-    ta.style.backgroundColor = 'var(--surface2)';
     err.textContent = '';
     btn.disabled = false;
-    btn.style.opacity = '1';
-  } catch(e) {
-    ta.style.borderColor = 'var(--accent)';
-    ta.style.backgroundColor = 'rgba(255, 60, 60, 0.05)';
-    err.textContent = 'Syntax Error: ' + e.message;
+  } catch (e) {
+    err.textContent = 'Invalid JSON: ' + e.message;
     btn.disabled = true;
-    btn.style.opacity = '0.5';
   }
-}
+};
 
-function saveJsonEditor() {
+window.saveJsonEditor = function() {
   const ta = document.getElementById('json-editor-textarea');
+  if (!ta) return;
   try {
-    const parsed = JSON.parse(ta.value);
-    const activeId = State.activeDeviceId;
-    const idx = State.devices.findIndex(d => d.id === activeId);
-    if (idx !== -1) {
-      State.devices[idx] = parsed;
+    const data = JSON.parse(ta.value);
+    const dev = State.devices.find(d => d.id === data.id);
+    if (dev) {
+      Object.assign(dev, data);
       save();
       renderDeviceEditor();
-      toast('JSON Configuration Saved ✓', 'success');
+      toast('JSON Config Saved', 'success');
     }
-  } catch(e) {
-    toast('Cannot save invalid JSON', 'error');
+  } catch (e) {
+    toast('Error saving JSON: ' + e.message, 'error');
   }
-}
+};
 
 
+// ============================================================
+//  MIDI RECORDER
+// ============================================================
+window.midiRecorder = {
+  isRecording: false,
+  isPlaying: false,
+  startTime: 0,
+  events: [], // { offset: ms, data: [bytes] }
+  timers: []
+};
 
-
-let midiOutQueue = [];
-let isFlushingMidi = false;
-
-function flushMidiQueue() {
-  if (midiOutQueue.length === 0) {
-    isFlushingMidi = false;
-    return;
-  }
-  // take up to 20 messages at once
-  const batch = midiOutQueue.splice(0, 20);
-  batch.forEach(data => {
-    try {
-      State.midiOut.send(data);
-    } catch(e) {
-      console.error('MIDI Send Error:', e);
-    }
-  });
-  if (midiOutQueue.length > 0) {
-    setTimeout(flushMidiQueue, 10);
+window.toggleMidiRecord = function() {
+  const r = window.midiRecorder;
+  if (r.isRecording) {
+    r.isRecording = false;
+    document.getElementById('btn-recorder-rec').textContent = '🔴 Record';
+    document.getElementById('btn-recorder-rec').classList.remove('danger');
+    document.getElementById('recorder-status').textContent = 'Stopped';
   } else {
-    isFlushingMidi = false;
+    // Stop playback if running
+    if (r.isPlaying) window.toggleMidiPlayback();
+    
+    r.events = [];
+    r.isRecording = true;
+    r.startTime = performance.now();
+    document.getElementById('btn-recorder-rec').textContent = '⏹ Stop Rec';
+    document.getElementById('btn-recorder-rec').classList.add('danger');
+    document.getElementById('recorder-status').textContent = 'Recording...';
+    document.getElementById('recorder-count').textContent = '0';
   }
-}
-
-function sendMidiOut(data) {
-  if (State.midiOut) {
-    flashActivity('out');
-    midiOutQueue.push(data);
-    if (!isFlushingMidi) {
-      isFlushingMidi = true;
-      flushMidiQueue();
-    }
-  }
-}
-
-
-window.sendFactoryReset = function() {
-  if (!State.midiOut) return toast("No MIDI Out selected", "error");
-  // F0 7E 7F 09 01 F7
-  sendMidiOut([0xF0, 0x7E, 0x7F, 0x09, 0x01, 0xF7]);
-  toast('Factory Reset (All-System-Reset) Sent', 'warning');
 };
 
+window.clearMidiRecord = function() {
+  const r = window.midiRecorder;
+  if (r.isRecording) window.toggleMidiRecord();
+  if (r.isPlaying) window.toggleMidiPlayback();
+  r.events = [];
+  document.getElementById('recorder-count').textContent = '0';
+  document.getElementById('recorder-status').textContent = 'Cleared';
+};
 
-let recentCCs = [];
-window.trackRecentCC = function(cc, ch) {
-  const label = `CC ${cc} (Ch ${ch+1})`;
-  // remove if exists
-  recentCCs = recentCCs.filter(x => x !== label);
-  recentCCs.unshift(label);
-  if (recentCCs.length > 5) recentCCs.pop();
+window.toggleMidiPlayback = function() {
+  const r = window.midiRecorder;
+  if (r.isRecording) window.toggleMidiRecord();
   
-  const container = document.getElementById('recent-cc-monitor');
-  if (container) {
-    container.innerHTML = recentCCs.map(r => `
-      <span style="background:var(--surface3); border:1px solid var(--border); padding:2px 8px; border-radius:12px; font-size:0.75rem; color:var(--text2); display:inline-block;">
-        ${r}
-      </span>
-    `).join('');
-  }
-};
-
-window.pingDevice = function() {
-  const span = document.getElementById('ping-result');
-  if (!State.midiOut || !State.midiIn) {
-    if (span) span.innerHTML = '<span style="color:#ef4444;">Err: Connect In & Out</span>';
-    return;
-  }
-  if (span) span.innerHTML = 'Pinging...';
-  window.pingStartTime = performance.now();
-  sendMidiOut([0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]);
-  setTimeout(() => {
-    if (window.pingStartTime !== 0 && span && span.innerHTML === 'Pinging...') {
-      span.innerHTML = '<span style="color:#ef4444;">Timeout (No Reply)</span>';
-      window.pingStartTime = 0;
-    }
-  }, 2000);
-};
-
-function updateSignalFlow() {
-  const sfInd = document.getElementById('signal-flow-indicator');
-  const sfIn = document.getElementById('sf-in');
-  const sfOut = document.getElementById('sf-out');
-  if (!sfInd) return;
-  
-  if (State.settings.thru && State.midiIn && State.midiOut) {
-    sfInd.style.display = 'flex';
-    sfIn.textContent = State.midiIn.name || 'Unknown';
-    sfOut.textContent = State.midiOut.name || 'Unknown';
+  if (r.isPlaying) {
+    r.isPlaying = false;
+    r.timers.forEach(t => clearTimeout(t));
+    r.timers = [];
+    document.getElementById('btn-recorder-play').textContent = '▶ Play';
+    document.getElementById('btn-recorder-play').classList.remove('primary');
+    document.getElementById('recorder-status').textContent = 'Stopped';
   } else {
-    sfInd.style.display = 'none';
+    if (r.events.length === 0) return toast('No events to play', 'error');
+    r.isPlaying = true;
+    document.getElementById('btn-recorder-play').textContent = '⏹ Stop Play';
+    document.getElementById('btn-recorder-play').classList.add('primary');
+    document.getElementById('recorder-status').textContent = 'Playing...';
+    
+    // Schedule all events
+    r.events.forEach(ev => {
+      const t = setTimeout(() => {
+        if (State.midiOut) sendMidiOut(ev.data);
+      }, ev.offset);
+      r.timers.push(t);
+    });
+    
+    // Auto-stop when done
+    const maxOffset = Math.max(...r.events.map(e => e.offset));
+    const t = setTimeout(() => {
+      if (window.midiRecorder.isPlaying) window.toggleMidiPlayback();
+    }, maxOffset + 100);
+    r.timers.push(t);
   }
-}
+};
 
+// ============================================================
+//  CHORD MEMORY
+// ============================================================
+window.chordMemory = {
+  active: false,
+  triggerNote: null,
+  chordNotes: [],
+  learnState: 'idle' // 'idle', 'trigger', 'chord'
+};
 
+window.toggleChordMemory = function() {
+  window.chordMemory.active = !window.chordMemory.active;
+  const btn = document.getElementById('btn-cm-active');
+  btn.textContent = window.chordMemory.active ? 'Enable: ON' : 'Enable: OFF';
+  btn.classList.toggle('primary', window.chordMemory.active);
+  if (!window.chordMemory.active) window.chordMemory.learnState = 'idle';
+};
 
+window.learnCmTrigger = function() {
+  window.chordMemory.learnState = 'trigger';
+  toast('Play a note to set as trigger', 'info');
+};
 
+window.learnCmChord = function() {
+  window.chordMemory.learnState = 'chord';
+  window.chordMemory.chordNotes = [];
+  toast('Play notes to build the chord. Stop playing when done.', 'info');
+};
+
+// Modify onMidiMessage to hook into these tools
+const origMidiProcess = window.onMidiMessage;
+window.onMidiMessage = function(event) {
+  const data = event.data;
+  const type = data[0] >> 4;
+  const ch = data[0] & 0x0F;
   
-
-
-function openBatchRenameModal(id) {
-  const dev = State.devices.find(d => d.id === id);
-  if (!dev) return;
+  // 1. MIDI Recorder Hook
+  if (window.midiRecorder && window.midiRecorder.isRecording) {
+    window.midiRecorder.events.push({
+      offset: performance.now() - window.midiRecorder.startTime,
+      data: Array.from(data)
+    });
+    const countEl = document.getElementById('recorder-count');
+    if (countEl) countEl.textContent = window.midiRecorder.events.length;
+  }
   
-  const presets = dev.defaultPresets || [];
-  let checkboxes = presets.map((p, i) => `
-    <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;margin-bottom:4px;">
-      <input type="checkbox" class="batch-rename-cb" value="${i}" checked>
-      Preset ${i+1}: ${p.name || 'Preset ' + (i+1)}
-    </label>
-  `).join('');
-
-  openModal(`
-    <h2>✏️ Batch Rename Presets</h2>
-    <div style="font-size:0.8rem;color:var(--text2);margin-bottom:12px;">${dev.name} (${presets.length} presets)</div>
-    
-    <div style="max-height:150px;overflow-y:auto;background:var(--surface2);padding:8px;border-radius:4px;margin-bottom:12px;border:1px solid var(--border);">
-      ${checkboxes}
-    </div>
-    
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="form-group">
-        <label>Search for (optional)</label>
-        <input type="text" id="br-search" placeholder="e.g. Preset">
-      </div>
-      <div class="form-group">
-        <label>Replace with</label>
-        <input type="text" id="br-replace" placeholder="e.g. Patch">
-      </div>
-    </div>
-    
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="form-group">
-        <label>Prefix</label>
-        <input type="text" id="br-prefix" placeholder="e.g. [Live] ">
-      </div>
-      <div class="form-group">
-        <label>Suffix</label>
-        <input type="text" id="br-suffix" placeholder="e.g. V1">
-      </div>
-    </div>
-    
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn primary" onclick="applyBatchRename('${dev.id}')">Apply Rename</button>
-    </div>
-  `);
-}
-
-function applyBatchRename(id) {
-  const dev = State.devices.find(d => d.id === id);
-  if (!dev) return;
-  
-  const search = document.getElementById('br-search').value;
-  const replace = document.getElementById('br-replace').value;
-  const prefix = document.getElementById('br-prefix').value;
-  const suffix = document.getElementById('br-suffix').value;
-  
-  const checkboxes = document.querySelectorAll('.batch-rename-cb');
-  let renamedCount = 0;
-  
-  checkboxes.forEach(cb => {
-    if (cb.checked) {
-      const idx = parseInt(cb.value);
-      const p = dev.defaultPresets[idx];
-      let currentName = p.name || 'Preset ' + (idx + 1);
+  // 2. Chord Memory Hook
+  if (window.chordMemory) {
+    if (type === 0x9 && data[2] > 0) { // Note On
+      const note = data[1];
       
-      if (search) {
-        // use regex globally, case insensitive if possible
-        try {
-          const re = new RegExp(search, 'g');
-          currentName = currentName.replace(re, replace);
-        } catch(e) {
-          // fallback string replace
-          currentName = currentName.split(search).join(replace);
-        }
+      if (window.chordMemory.learnState === 'trigger') {
+        window.chordMemory.triggerNote = note;
+        document.getElementById('cm-trigger-note').textContent = noteName(note) + ' (' + note + ')';
+        window.chordMemory.learnState = 'idle';
+        toast('Trigger note learned', 'success');
+        return; // Consume
       }
       
-      if (prefix) currentName = prefix + currentName;
-      if (suffix) currentName = currentName + suffix;
+      if (window.chordMemory.learnState === 'chord') {
+        if (!window.chordMemory.chordNotes.includes(note)) {
+          window.chordMemory.chordNotes.push(note);
+          document.getElementById('cm-chord-notes').textContent = window.chordMemory.chordNotes.map(n => noteName(n)).join(', ');
+        }
+        return; // Consume
+      }
       
-      p.name = currentName;
-      renamedCount++;
+      if (window.chordMemory.active && window.chordMemory.triggerNote === note) {
+        // Play the chord instead
+        window.chordMemory.chordNotes.forEach(n => {
+          if (State.midiOut) sendMidiOut([0x90 | ch, n, data[2]]);
+        });
+        return; // Consume original note
+      }
     }
-  });
-  
-  if (renamedCount > 0) {
-    save();
-    if (State.activeDeviceId === dev.id) renderDeviceEditor();
-    toast('Renamed ' + renamedCount + ' presets ✓', 'success');
-  }
-  closeModal();
-}
-
-
-function renderMacros() {
-  const container = document.getElementById('macro-list');
-  if (!container) return;
-  const dev = getActiveDev();
-  if (!dev) return;
-  const p = dev.defaultPresets[State.activePresetIndex];
-  if (!p) return;
-  p.macros = p.macros || [];
-  
-  if (p.macros.length === 0) {
-    container.innerHTML = '<div style="font-size:0.8rem;color:var(--text3);">No macros defined.</div>';
-    return;
-  }
-  
-  container.innerHTML = p.macros.map((m, i) => `
-    <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);padding:8px;border-radius:6px;border:1px solid var(--border);">
-      <label style="font-size:0.8rem;font-weight:bold;">Source CC:</label>
-      <input type="number" min="0" max="127" value="${m.source ?? 0}" onchange="updateMacro(${i}, 'source', this.value)" style="width:60px;">
-      
-      <label style="font-size:0.8rem;font-weight:bold;margin-left:12px;">Targets (comma-separated CCs):</label>
-      <input type="text" value="${(m.targets || []).join(',')}" onchange="updateMacro(${i}, 'targets', this.value)" style="flex:1;" placeholder="e.g. 74, 71, 10">
-      
-      <button class="btn sm danger" onclick="deleteMacro(${i})">🗑</button>
-    </div>
-  `).join('');
-}
-
-function addMacro() {
-  const dev = getActiveDev(); if (!dev) return;
-  const p = dev.defaultPresets[State.activePresetIndex];
-  p.macros = p.macros || [];
-  p.macros.push({ source: 1, targets: [] });
-  save();
-  renderMacros();
-}
-
-function updateMacro(i, field, val) {
-  const dev = getActiveDev(); if (!dev) return;
-  const p = dev.defaultPresets[State.activePresetIndex];
-  if (field === 'source') {
-    p.macros[i].source = parseInt(val);
-  } else if (field === 'targets') {
-    p.macros[i].targets = val.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-  }
-  save();
-}
-
-function deleteMacro(i) {
-  const dev = getActiveDev(); if (!dev) return;
-  const p = dev.defaultPresets[State.activePresetIndex];
-  p.macros.splice(i, 1);
-  save();
-  renderMacros();
-}
-
-
-window.vkCurveType = 'linear';
-
-function updateVkCurve() {
-  const select = document.getElementById('vk-curve-type');
-  if (select) window.vkCurveType = select.value;
-  drawVkCurve();
-}
-
-function drawVkCurve() {
-  const canvas = document.getElementById('vk-curve-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width;
-  const h = canvas.height;
-  
-  ctx.clearRect(0, 0, w, h);
-  
-  // Draw grid
-  ctx.strokeStyle = '#334155';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
-  ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h);
-  ctx.stroke();
-  
-  // Draw curve
-  ctx.strokeStyle = '#3b82f6';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let x = 0; x <= w; x++) {
-    const normX = x / w; // 0 to 1
-    let normY = normX;
-    if (window.vkCurveType === 'exp') normY = Math.pow(normX, 2);
-    else if (window.vkCurveType === 'log') normY = Math.sqrt(normX);
     
-    const y = h - (normY * h);
-    if (x === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    if (type === 0x8 || (type === 0x9 && data[2] === 0)) { // Note Off
+      const note = data[1];
+      if (window.chordMemory.learnState === 'chord') return; // consume
+      
+      if (window.chordMemory.active && window.chordMemory.triggerNote === note) {
+        // Stop the chord
+        window.chordMemory.chordNotes.forEach(n => {
+          if (State.midiOut) sendMidiOut([0x80 | ch, n, 0]);
+        });
+        return; // Consume
+      }
+    }
   }
-  ctx.stroke();
-}
 
-function applyVelocityCurve(vel) {
-  const normX = vel / 127;
-  let normY = normX;
-  if (window.vkCurveType === 'exp') normY = Math.pow(normX, 2);
-  else if (window.vkCurveType === 'log') normY = Math.sqrt(normX);
-  return Math.round(normY * 127);
-}
+  // Fallback to original
+  if (origMidiProcess) origMidiProcess(event);
+};
 
 
-function renderBackupTags() {
-  const container = document.getElementById('backup-tags-container');
-  if (!container) return;
-  const allTags = new Set();
-  State.devices.forEach(d => {
-    if (d.tags && Array.isArray(d.tags)) d.tags.forEach(t => allTags.add(t));
-  });
+
+// ============================================================
+//  VELOCITY VISUALIZATION (RECHARTS)
+// ============================================================
+window.velocityData = [
+  { name: '0-20', count: 0 },
+  { name: '21-40', count: 0 },
+  { name: '41-60', count: 0 },
+  { name: '61-80', count: 0 },
+  { name: '81-100', count: 0 },
+  { name: '101-127', count: 0 }
+];
+
+window.renderVelocityChart = function() {
+  const container = document.getElementById('velocity-chart-container');
+  if (!container || !window.React || !window.Recharts) return;
   
-  if (allTags.size === 0) {
-    container.innerHTML = '<span style="font-size:0.75rem;color:var(--text3);">No tags found across any devices.</span>';
-    return;
+  const e = React.createElement;
+  const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } = window.Recharts;
+  
+  const chart = e(ResponsiveContainer, { width: '100%', height: '100%' },
+    e(BarChart, { data: window.velocityData },
+      e(CartesianGrid, { strokeDasharray: '3 3', stroke: '#334155' }),
+      e(XAxis, { dataKey: 'name', stroke: '#94a3b8', fontSize: 10 }),
+      e(YAxis, { stroke: '#94a3b8', fontSize: 10, allowDecimals: false }),
+      e(Tooltip, { 
+        contentStyle: { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '4px', fontSize: '12px' },
+        itemStyle: { color: '#3b82f6' }
+      }),
+      e(Bar, { dataKey: 'count', fill: '#3b82f6', radius: [4, 4, 0, 0] })
+    )
+  );
+  
+  if (!window.velocityChartRoot) {
+    window.velocityChartRoot = ReactDOM.createRoot(container);
+  }
+  window.velocityChartRoot.render(chart);
+};
+
+// Hook into the original onMidiMessage to capture velocity data
+const originalProcessForVelocity = window.onMidiMessage;
+window.onMidiMessage = function(event) {
+  const data = event.data;
+  const type = data[0] >> 4;
+  
+  // Note On
+  if (type === 0x9 && data[2] > 0) {
+    const vel = data[2];
+    if (vel <= 20) window.velocityData[0].count++;
+    else if (vel <= 40) window.velocityData[1].count++;
+    else if (vel <= 60) window.velocityData[2].count++;
+    else if (vel <= 80) window.velocityData[3].count++;
+    else if (vel <= 100) window.velocityData[4].count++;
+    else window.velocityData[5].count++;
+    
+    // throttle chart updates slightly or update on every note?
+    // Since it's local, update on every note is fine for now, but requestAnimationFrame is safer.
+    if (!window.velocityChartPending) {
+      window.velocityChartPending = true;
+      requestAnimationFrame(() => {
+        window.renderVelocityChart();
+        window.velocityChartPending = false;
+      });
+    }
   }
   
-  let html = '';
-  Array.from(allTags).sort().forEach(tag => {
-    html += `<label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;background:var(--surface3);padding:4px 8px;border-radius:4px;"><input type="checkbox" class="backup-tag-cb" value="${tag}"> ${tag}</label>`;
-  });
-  container.innerHTML = html;
-}
+  if (originalProcessForVelocity) originalProcessForVelocity(event);
+};
 
-function backupFiltered() {
-  const checkboxes = document.querySelectorAll('.backup-tag-cb');
-  const selectedTags = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+// Call once on init to draw empty chart
+setTimeout(() => {
+  if (document.getElementById('velocity-chart-container')) {
+    window.renderVelocityChart();
+  }
+}, 1000);
+
+
+window.showPresetPreview = function(event, presetIndex) {
+  const dev = getActiveDev();
+  if (!dev || !dev.defaultPresets || !dev.defaultPresets[presetIndex]) return;
+  const p = dev.defaultPresets[presetIndex];
   
-  let devicesToExport = State.devices;
-  
-  if (selectedTags.length > 0) {
-    devicesToExport = State.devices.filter(dev => {
-      if (!dev.tags) return false;
-      return selectedTags.some(tag => dev.tags.includes(tag));
-    });
+  let tooltip = document.getElementById('preset-preview-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'preset-preview-tooltip';
+    tooltip.style.position = 'absolute';
+    tooltip.style.background = 'var(--surface2)';
+    tooltip.style.border = '1px solid var(--border)';
+    tooltip.style.borderRadius = '6px';
+    tooltip.style.padding = '8px 12px';
+    tooltip.style.color = 'var(--text)';
+    tooltip.style.zIndex = '9999';
+    tooltip.style.boxShadow = '0 8px 16px rgba(0,0,0,0.5)';
+    tooltip.style.pointerEvents = 'none';
+    tooltip.style.fontSize = '0.75rem';
+    document.body.appendChild(tooltip);
   }
   
-  if (devicesToExport.length === 0) {
-    toast('No devices match the selected tags.', 'error');
-    return;
-  }
+  const pads = (p.pads || []).length || (dev.controls?.pads || []).length;
+  const knobs = (p.knobs || []).length || (dev.controls?.knobs || []).length;
+  const faders = (p.faders || []).length || (dev.controls?.faders || []).length;
   
-  const bundle = {
-    version: '2.6.0',
-    date: new Date().toISOString(),
-    devices: devicesToExport
-  };
+  tooltip.innerHTML = `
+    <strong style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--accent);">${p.name || 'Preset ' + (presetIndex+1)} Preview</strong>
+    <div style="display:grid;grid-template-columns:auto auto;gap:4px 12px;color:var(--text2);">
+      <span>Pads Mapped:</span> <strong>${pads}</strong>
+      <span>Knobs Mapped:</span> <strong>${knobs}</strong>
+      <span>Faders Mapped:</span> <strong>${faders}</strong>
+      <span>MIDI Channel:</span> <strong>${(p.channel ?? 0) + 1}</strong>
+    </div>
+  `;
   
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle, null, 2));
-  const el = document.createElement('a');
-  el.setAttribute("href", dataStr);
-  el.setAttribute("download", selectedTags.length > 0 ? "midi_backup_" + selectedTags.join('_') + ".json" : "midi_backup_all.json");
-  document.body.appendChild(el);
-  el.click();
-  el.remove();
-  toast('Exported ' + devicesToExport.length + ' devices ✓', 'success');
-}
+  tooltip.style.display = 'block';
+  tooltip.style.left = (event.pageX + 15) + 'px';
+  tooltip.style.top = (event.pageY + 15) + 'px';
+};
 
-
-function savePresetVersion() {
-  const dev = getActiveDev(); if (!dev) return;
-  const p = dev.defaultPresets[State.activePresetIndex];
-  
-  const snapshot = JSON.parse(JSON.stringify(p));
-  delete snapshot.history; // don't infinitely nest history
-  delete snapshot.lastSavedState; // clean up old system
-  
-  p.history = p.history || [];
-  p.history.unshift({
-    version: (p.version || 1),
-    timestamp: new Date().toISOString(),
-    state: snapshot
-  });
-  
-  p.version = (p.version || 1) + 1;
-  save();
-  renderDeviceEditor();
-  toast('Preset version ' + p.version + ' saved ✓', 'success');
-}
-
-function restoreHistoryVersion(idx) {
-  const dev = getActiveDev(); if (!dev) return;
-  const p = dev.defaultPresets[State.activePresetIndex];
-  if (!p || !p.history || !p.history[idx]) return;
-  
-  const restore = JSON.parse(JSON.stringify(p.history[idx].state));
-  restore.history = p.history;
-  restore.version = p.history[idx].version;
-  
-  dev.defaultPresets[State.activePresetIndex] = restore;
-  save();
-  renderDeviceEditor();
-  toast('Reverted to version ' + restore.version + ' ✓', 'info');
-}
+window.hidePresetPreview = function() {
+  const tooltip = document.getElementById('preset-preview-tooltip');
+  if (tooltip) tooltip.style.display = 'none';
+};
