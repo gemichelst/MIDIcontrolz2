@@ -136,7 +136,7 @@ const State = {
   backups:    [],
   liveValues: {}   // { "cc_CH_NUM": 0-127, "note_CH_NUM": 0-127 }
 };
-
+window.State = State;
 // ============================================================
 //  NOTE NAMES
 // ============================================================
@@ -681,6 +681,31 @@ function setButtonColor(bi, color) {
   save();
   renderDeviceEditor();
 }
+
+function sendMidiOut(message) {
+  const bytes = message instanceof Uint8Array
+    ? message
+    : Array.isArray(message)
+      ? message
+      : [message];
+
+  if (!State.midiOut || typeof State.midiOut.send !== "function") {
+    toast("No MIDI Out connected.", "error");
+    return false;
+  }
+
+  try {
+    State.midiOut.send(bytes);
+    flashActivity("out");
+    return true;
+  } catch (error) {
+    console.error("MIDI output failed:", error);
+    toast(`MIDI output failed: ${error.message}`, "error");
+    return false;
+  }
+}
+
+window.sendMidiOut = sendMidiOut;
 
 // Trigger button — send Note On then Note Off
 function triggerButton(bi) {
@@ -2586,6 +2611,11 @@ window.addEventListener('beforeunload', (e) => {
     e.returnValue = ''; // Required for modern browsers
   }
 });
+
+window.savePresetVersion = savePresetVersion;
+window.pingDevice = pingDevice;
+window.backupFiltered = backupFiltered;
+window.exportDeviceJSON = exportDeviceJSON;
 
 
 window.applyMonitorQuickFilter = function() {
