@@ -1093,6 +1093,59 @@ function flashActivity(type = 'in') {
   }, 100);
 }
 
+function exportDeviceJSON(deviceId) {
+  const dev = State.devices.find((item) => item.id === deviceId);
+
+  if (!dev) {
+    toast("Device not found.", "error");
+    return;
+  }
+
+  const safeName = (dev.name || dev.id)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  downloadJSON(dev, `${safeName || "midicontrolz-device"}.json`);
+  toast(`${dev.name} exported as JSON.`, "success");
+}
+
+function backupFiltered() {
+  const checkedTags = Array.from(
+    document.querySelectorAll(
+      '#backup-tags-container input[type="checkbox"]:checked'
+    )
+  ).map((input) => input.value);
+
+  const devices = checkedTags.length
+    ? State.devices.filter((device) =>
+        Array.isArray(device.tags) &&
+        device.tags.some((tag) => checkedTags.includes(tag))
+      )
+    : State.devices;
+
+  const data = {
+    version: "2.12.0",
+    exported: new Date().toISOString(),
+    filterTags: checkedTags,
+    devices: JSON.parse(JSON.stringify(devices)),
+    backups: JSON.parse(JSON.stringify(State.backups))
+  };
+
+  downloadJSON(data, `midicontrolz-backup-${Date.now()}.json`);
+
+  toast(
+    checkedTags.length
+      ? `Exported ${devices.length} filtered device(s).`
+      : `Exported ${devices.length} device(s).`,
+    "success"
+  );
+}
+
+window.savePresetVersion = savePresetVersion;
+window.exportDeviceJSON = exportDeviceJSON;
+window.backupFiltered = backupFiltered;
+
 
 
 function highlightPad(ch, note, on) {
@@ -1192,6 +1245,49 @@ function toggleMonitorPause() {
   const btn = document.getElementById('btn-monitor-pause');
   if (btn) btn.textContent = State.monitorPaused ? '▶ Resume' : '⏸ Pause';
 }
+
+function pingDevice() {
+  if (!State.midiOut) {
+    toast("Connect a MIDI Out port before pinging.", "error");
+    return;
+  }
+
+  const result = document.getElementById("ping-result");
+
+  try {
+    window.pingStartTime = performance.now();
+
+    // Universal Non-Realtime Identity Request:
+    // F0 7E 7F 06 01 F7
+    sendMidiOut([0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]);
+
+    if (result) {
+      result.textContent = "Ping sent — waiting for Identity Reply…";
+    }
+
+    window.clearTimeout(window.pingTimeout);
+    window.pingTimeout = window.setTimeout(() => {
+      if (!window.pingStartTime) return;
+
+      window.pingStartTime = 0;
+
+      if (result) {
+        result.textContent =
+          "No reply received. The device may not support MIDI Identity Request.";
+      }
+    }, 1500);
+  } catch (error) {
+    console.error("Device ping failed:", error);
+
+    if (result) {
+      result.textContent = `Ping failed: ${error.message}`;
+    }
+
+    toast(`Device ping failed: ${error.message}`, "error");
+  }
+}
+
+window.pingDevice = pingDevice;
 
 // ============================================================
 //  SYSEX PANEL
@@ -1351,6 +1447,95 @@ function exportPresetJSON() {
   downloadJSON({ device: dev.id, preset: p }, `${dev.id}-preset${State.activePresetIndex+1}.json`);
   toast('Preset JSON exported ✓', 'success');
 }
+
+function savePresetVersion() {
+  const dev = getActiveDev();
+  const preset = getActivePreset();
+
+  if (!dev || !preset) {
+    toast("Select a device and preset first.", "error");
+    return;
+  }
+
+  preset.history ??= [];
+
+  const snapshot = JSON.parse(JSON.stringify({
+    ...preset,
+    history: undefined
+  }));
+
+  const nextVersion = Math.max(
+    1,
+    Number(preset.version || 1) + 1
+  );
+
+  preset.version = nextVersion;
+  preset.history.unshift({
+    version: nextVersion,
+    timestamp: Date.now(),
+    preset: snapshot
+  });
+
+  // Bound history so localStorage cannot grow without limit.
+  preset.history = preset.history.slice(0, 50);
+
+  save();
+  renderDeviceEditor();
+  toast(`Preset version ${nextVersion} saved.`, "success");
+}
+
+function exportDeviceJSON(deviceId) {
+  const dev = State.devices.find((item) => item.id === deviceId);
+
+  if (!dev) {
+    toast("Device not found.", "error");
+    return;
+  }
+
+  const safeName = (dev.name || dev.id)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  downloadJSON(dev, `${safeName || "midicontrolz-device"}.json`);
+  toast(`${dev.name} exported as JSON.`, "success");
+}
+
+function backupFiltered() {
+  const checkedTags = Array.from(
+    document.querySelectorAll(
+      '#backup-tags-container input[type="checkbox"]:checked'
+    )
+  ).map((input) => input.value);
+
+  const devices = checkedTags.length
+    ? State.devices.filter((device) =>
+        Array.isArray(device.tags) &&
+        device.tags.some((tag) => checkedTags.includes(tag))
+      )
+    : State.devices;
+
+  const data = {
+    version: "2.12.0",
+    exported: new Date().toISOString(),
+    filterTags: checkedTags,
+    devices: JSON.parse(JSON.stringify(devices)),
+    backups: JSON.parse(JSON.stringify(State.backups))
+  };
+
+  downloadJSON(data, `midicontrolz-backup-${Date.now()}.json`);
+
+  toast(
+    checkedTags.length
+      ? `Exported ${devices.length} filtered device(s).`
+      : `Exported ${devices.length} device(s).`,
+    "success"
+  );
+}
+
+window.savePresetVersion = savePresetVersion;
+window.exportDeviceJSON = exportDeviceJSON;
+window.backupFiltered = backupFiltered;
 
 // ============================================================
 //  DEVICE MANAGER
