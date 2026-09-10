@@ -1081,6 +1081,7 @@ function renderMonitor() {
       case 'note_off': return `${ts}<span class="msg-note">◼ Note Off Ch${m.ch+1} ${noteName(m.note)} (${m.note})</span>`;
       case 'cc':       return `${ts}<span class="msg-cc">◈ CC ${hexV(m.cc)} = ${hexV(m.val)}  Ch${m.ch+1}</span>`;
       case 'pc':       return `${ts}<span class="msg-pc">⬡ PC ${m.pc}  Ch${m.ch+1}</span>`;
+      case 'panic':    return `${ts}<span style="color:#ef4444;font-weight:bold;">🚨 ${m.message}</span>`;
       case 'sysex':    return `${ts}<span class="msg-sysex">⚡ SysEx [${m.bytes.length}B] ${m.bytes.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')}</span>`;
       default:         return `${ts}<span style="color:var(--text3)">${(m.raw||[]).map(b=>b.toString(16).toUpperCase()).join(' ')}</span>`;
     }
@@ -1187,11 +1188,23 @@ function renderBackupList() {
     el.innerHTML = '<div style="color:var(--text3);font-size:0.82rem;">No backups yet. Select a device and click 💾 Backup.</div>';
     return;
   }
-  el.innerHTML = [...State.backups].reverse().map(b => `
+  
+  const searchInput = document.getElementById('backup-search');
+  const term = searchInput ? searchInput.value.toLowerCase() : '';
+  
+  const filtered = State.backups.filter(b => 
+    (b.name || '').toLowerCase().includes(term) ||
+    (b.date || '').toLowerCase().includes(term)
+  );
+
+  el.innerHTML = [...filtered].reverse().map(b => `
     <div class="backup-item">
       <div class="bname">${b.name} — ${b.presets?.length ?? 0} preset(s)</div>
       <div class="bdate">${b.date}</div>
       <button class="btn sm success" onclick="restoreBackupById(${b.id})">↩ Restore</button>
+      <button class="btn sm danger"  onclick="deleteBackup(${b.id})">🗑</button>
+    </div>`).join('');
+}">↩ Restore</button>
       <button class="btn sm danger"  onclick="deleteBackup(${b.id})">🗑</button>
     </div>`).join('');
 }
@@ -1398,9 +1411,13 @@ function openAddDeviceModal() {
       <label>Device ID (unique, no spaces)</label>
       <input type="text" id="new-dev-id" placeholder="my_controller_v1">
     </div>
-    <div class="form-group">
+        <div class="form-group">
       <label>Name</label>
       <input type="text" id="new-dev-name" placeholder="My Controller">
+    </div>
+    <div class="form-group">
+      <label>Tags (comma-separated)</label>
+      <input type="text" id="new-dev-tags" placeholder="synth, live, studio">
     </div>
     <div class="form-group">
       <label>Manufacturer</label>
@@ -1448,9 +1465,13 @@ function createNewDevice() {
   if (!id || !name) { toast('ID and Name are required', 'error'); return; }
   if (State.devices.find(d => d.id === id)) { toast('Device ID already exists', 'error'); return; }
 
+    const tagsInput = document.getElementById('new-dev-tags')?.value || '';
+  const tags = tagsInput.split(',').map(s => s.trim()).filter(Boolean);
+
   const dev = {
     id,
     name,
+    tags,
     manufacturer: document.getElementById('new-dev-mfr')?.value.trim() || '',
     icon:  document.getElementById('new-dev-icon')?.value  || '🎹',
     color: document.getElementById('new-dev-color')?.value || '#6c63ff',

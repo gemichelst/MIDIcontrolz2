@@ -516,6 +516,9 @@
         <button class="btn" onclick="document.getElementById('restore-input').click()">⬆ Restore from File</button>
         <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreBackup(event)">
       </div>
+      <div style="margin-bottom: 16px;">
+        <input type="text" id="backup-search" placeholder="Search backups..." oninput="renderBackupList()" style="background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:4px;outline:none;font-size:0.85rem;width:100%;max-width:300px;">
+      </div>
       <div class="backup-list" id="backup-list"></div>
     </div>
 
@@ -601,7 +604,7 @@
         <div class="settings-card">
           <h3>ℹ About</h3>
           <div style="font-size:0.82rem;color:var(--text2);line-height:1.9;">
-            <strong>MIDIcontrolz2</strong> v2.4.0<br>
+            <strong>MIDIcontrolz2</strong> v2.5.0<br>
             WebMIDI API · No backend · No install<br>
             Device configs: JSON templates<br>
             <a href="https://midicontrols.doerd.de" target="_blank"
