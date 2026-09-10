@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWebMidi } from './useWebMidi';
 import { BUILT_IN_DEVICES } from './devices';
-import { Settings, Save, Upload, Monitor, Edit3, Type, Layers, Send, Target, DownloadCloud } from 'lucide-react';
+import { Settings, Save, Upload, Monitor, Edit3, Type, Layers, Send, Target, DownloadCloud, Menu, X, AlertOctagon } from 'lucide-react';
 import { DeviceConfig } from './types';
 
 const VirtualKeyboard = ({ onPlayNote, onStopNote }: { onPlayNote: (n: number) => void, onStopNote: (n: number) => void }) => {
@@ -32,6 +32,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'editor' | 'monitor' | 'sysex' | 'settings' | 'devices'>('editor');
   const [activeDevice, setActiveDevice] = useState<DeviceConfig | null>(BUILT_IN_DEVICES[0]);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [customDevices, setCustomDevices] = useState<DeviceConfig[]>([]);
   
   // Hardware Mapping State
@@ -155,6 +156,13 @@ export default function App() {
     }
   }, [selectedOutput, sendMidi]);
 
+  const sendPanic = () => {
+    for (let ch = 0; ch < 16; ch++) {
+      sendMidi([0xB0 + ch, 0x7B, 0]); // All Notes Off
+      sendMidi([0xB0 + ch, 0x78, 0]); // All Sound Off
+    }
+  };
+
   const sendSysEx = (hexString: string) => {
     const bytes = hexString.split(' ').map(x => parseInt(x, 16));
     sendMidi(bytes);
@@ -211,6 +219,26 @@ export default function App() {
     e.target.value = '';
   };
 
+  const exportSyx = () => {
+    if (!activeDevice || jsonError) return;
+    const text = jsonDraft;
+    const bytes = [0xF0, 0x7D]; // 7D is non-commercial/educational SysEx ID
+    for (let i = 0; i < text.length; i++) {
+      let c = text.charCodeAt(i);
+      if (c > 127) c = 63; // clamp to 7-bit ASCII (?)
+      bytes.push(c);
+    }
+    bytes.push(0xF7);
+    
+    const blob = new Blob([new Uint8Array(bytes)], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeDevice.name.replace(/\s+/g, '_')}_mapping.syx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleSysexFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setSysexQueue(Array.from(e.target.files));
@@ -244,53 +272,72 @@ export default function App() {
   return (
     <div className={`flex h-screen w-full flex-col ${isDarkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {/* TOPBAR */}
-      <div className={`flex items-center justify-between p-4 ${isDarkMode ? 'bg-slate-800' : 'bg-white shadow-sm'} shrink-0 z-10`}>
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold tracking-tight">MIDIcontrolz2</h1>
+      <div className={`flex items-center justify-between p-4 ${isDarkMode ? 'bg-slate-800' : 'bg-white shadow-sm'} shrink-0 z-20 relative`}>
+        <div className="flex items-center gap-2 md:gap-4">
+          <button 
+            className="md:hidden p-2 rounded hover:bg-slate-700/50 transition-all active:scale-95"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+          
+          <h1 className="text-xl font-bold tracking-tight hidden sm:block">MIDIcontrolz2</h1>
           
           <select 
-            className={`p-2 rounded ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'} outline-none border-none`}
+            className={`p-2 rounded ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'} outline-none border-none text-sm md:text-base cursor-pointer hover:opacity-90 transition-opacity`}
             value={selectedInput} 
             onChange={(e) => setSelectedInput(e.target.value)}
           >
-            <option value="">Select MIDI In...</option>
+            <option value="">MIDI In...</option>
             {inputs.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
           </select>
           
           <select 
-            className={`p-2 rounded ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'} outline-none border-none`}
+            className={`p-2 rounded ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'} outline-none border-none text-sm md:text-base cursor-pointer hover:opacity-90 transition-opacity`}
             value={selectedOutput} 
             onChange={(e) => setSelectedOutput(e.target.value)}
           >
-            <option value="">Select MIDI Out...</option>
+            <option value="">MIDI Out...</option>
             {outputs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm font-medium transition-colors">
-            Toggle {isDarkMode ? 'Light' : 'Dark'} Mode
+          <button onClick={sendPanic} className="flex items-center gap-1 px-3 py-2 bg-red-600/90 text-white rounded hover:bg-red-500 text-sm font-bold transition-all active:scale-95 shadow-sm">
+            <AlertOctagon size={16} /> <span className="hidden sm:inline">Panic</span>
+          </button>
+          <button onClick={() => setIsDarkMode(!isDarkMode)} className="px-3 py-2 bg-blue-600/90 text-white rounded hover:bg-blue-500 text-sm font-medium transition-all active:scale-95 shadow-sm">
+            <span className="hidden sm:inline">{isDarkMode ? 'Light' : 'Dark'} Mode</span>
+            <span className="sm:hidden">{isDarkMode ? 'Light' : 'Dark'}</span>
           </button>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* MOBILE BACKDROP */}
+        {isSidebarOpen && (
+          <div 
+            className="absolute inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm transition-opacity" 
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* SIDEBAR */}
-        <div className={`w-64 p-4 border-r ${isDarkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-100/50'} overflow-y-auto shrink-0`}>
+        <div className={`absolute md:static inset-y-0 left-0 z-40 w-64 p-4 border-r ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-100'} overflow-y-auto shrink-0 transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
           <div className="flex flex-col gap-2">
-            <button onClick={() => setActiveTab('editor')} className={`flex items-center gap-2 p-2 rounded ${activeTab === 'editor' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700/50'}`}>
+            <button onClick={() => { setActiveTab('editor'); setIsSidebarOpen(false); }} className={`flex items-center gap-2 p-2 rounded transition-all active:scale-95 ${activeTab === 'editor' ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-slate-700/50'}`}>
               <Edit3 size={18} /> Editor
             </button>
-            <button onClick={() => setActiveTab('monitor')} className={`flex items-center gap-2 p-2 rounded ${activeTab === 'monitor' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700/50'}`}>
+            <button onClick={() => { setActiveTab('monitor'); setIsSidebarOpen(false); }} className={`flex items-center gap-2 p-2 rounded transition-all active:scale-95 ${activeTab === 'monitor' ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-slate-700/50'}`}>
               <Monitor size={18} /> Monitor
             </button>
-            <button onClick={() => setActiveTab('devices')} className={`flex items-center gap-2 p-2 rounded ${activeTab === 'devices' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700/50'}`}>
+            <button onClick={() => { setActiveTab('devices'); setIsSidebarOpen(false); }} className={`flex items-center gap-2 p-2 rounded transition-all active:scale-95 ${activeTab === 'devices' ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-slate-700/50'}`}>
               <Type size={18} /> Hardware Mapping
             </button>
-            <button onClick={() => setActiveTab('sysex')} className={`flex items-center gap-2 p-2 rounded ${activeTab === 'sysex' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700/50'}`}>
+            <button onClick={() => { setActiveTab('sysex'); setIsSidebarOpen(false); }} className={`flex items-center gap-2 p-2 rounded transition-all active:scale-95 ${activeTab === 'sysex' ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-slate-700/50'}`}>
               <Layers size={18} /> SysEx Bulk
             </button>
-            <button onClick={() => setActiveTab('settings')} className={`flex items-center gap-2 p-2 rounded ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700/50'}`}>
+            <button onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }} className={`flex items-center gap-2 p-2 rounded transition-all active:scale-95 ${activeTab === 'settings' ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-slate-700/50'}`}>
               <Settings size={18} /> Settings
             </button>
           </div>
@@ -300,8 +347,8 @@ export default function App() {
             {[...BUILT_IN_DEVICES, ...customDevices].map((d, i) => (
               <button 
                 key={`${d.id}-${i}`}
-                onClick={() => setActiveDevice(d)}
-                className={`w-full text-left p-2 rounded text-sm mb-1 ${activeDevice?.id === d.id ? 'bg-slate-700 text-white font-medium' : 'hover:bg-slate-700/30'} truncate`}
+                onClick={() => { setActiveDevice(d); setIsSidebarOpen(false); }}
+                className={`w-full text-left p-2 rounded text-sm mb-1 transition-all active:scale-95 ${activeDevice?.id === d.id ? 'bg-slate-700 text-white font-medium shadow-sm' : 'hover:bg-slate-700/30'} truncate`}
               >
                 <span className="mr-2">{d.icon}</span> {d.name}
               </button>
@@ -310,7 +357,7 @@ export default function App() {
         </div>
 
         {/* MAIN CONTENT */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-4 md:p-6 overflow-auto">
           
           {/* EDITOR TAB */}
           {activeTab === 'editor' && activeDevice && (
@@ -319,12 +366,12 @@ export default function App() {
                 <h2 className="text-2xl font-bold">{activeDevice.name} Editor</h2>
               </div>
               
-              <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="mb-8 grid gap-4 grid-cols-2 lg:grid-cols-4">
                 {activeDevice.quickSysEx.map((sysex, i) => (
                   <button 
                     key={i} 
                     onClick={() => sendSysEx(sysex.bytes)}
-                    className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded shadow-sm text-sm font-medium transition-colors"
+                    className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded shadow-sm text-sm font-medium transition-all active:scale-95"
                   >
                     {sysex.label}
                   </button>
@@ -394,14 +441,15 @@ export default function App() {
           {/* HARDWARE MAPPING TAB */}
           {activeTab === 'devices' && (
             <div className="max-w-6xl">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                 <h2 className="text-2xl font-bold">Custom Hardware Mapping Editor</h2>
-                <div className="flex gap-2">
-                  <button onClick={savePreset} disabled={!!jsonError} className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><Save size={16}/> Save Preset</button>
-                  <label className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 text-white text-sm font-medium rounded hover:bg-slate-600 cursor-pointer transition-colors">
-                    <Upload size={16}/> Import Preset
+                <div className="flex gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+                  <button onClick={savePreset} disabled={!!jsonError} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"><Save size={16}/> Save</button>
+                  <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-slate-700 text-white text-sm font-medium rounded hover:bg-slate-600 cursor-pointer transition-all active:scale-95">
+                    <Upload size={16}/> Import
                     <input type="file" accept=".json" className="hidden" onChange={importPreset} />
                   </label>
+                  <button onClick={exportSyx} disabled={!!jsonError} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"><DownloadCloud size={16}/> Export .syx</button>
                 </div>
               </div>
               <p className="mb-6 opacity-80 leading-relaxed">
@@ -504,7 +552,7 @@ export default function App() {
 
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-sm">Queue Files</h3>
-                  <label className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-500 cursor-pointer transition-colors">
+                  <label className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-500 cursor-pointer transition-all active:scale-95">
                     <Upload size={16}/> Select Files
                     <input type="file" multiple accept=".syx,.sys" className="hidden" onChange={handleSysexFiles} />
                   </label>
@@ -528,7 +576,7 @@ export default function App() {
                 <button 
                   onClick={sendSysexQueue} 
                   disabled={sysexQueue.length === 0 || isSendingQueue}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                 >
                   <Send size={16}/> {isSendingQueue ? 'Sending...' : 'Send Queue Sequential'}
                 </button>
@@ -557,10 +605,10 @@ export default function App() {
                             {tmpl.hex.substring(0, 45)}...
                           </div>
                           <div className="flex gap-2 mt-1">
-                            <button onClick={() => sendMidi(tmpl.data)} className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium text-white transition-colors">
+                            <button onClick={() => sendMidi(tmpl.data)} className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium text-white transition-all active:scale-95">
                               <Send size={12}/> Send Back
                             </button>
-                            <button onClick={() => downloadTemplate(tmpl)} className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium text-white transition-colors">
+                            <button onClick={() => downloadTemplate(tmpl)} className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium text-white transition-all active:scale-95">
                               <DownloadCloud size={12}/> Save .syx
                             </button>
                           </div>
