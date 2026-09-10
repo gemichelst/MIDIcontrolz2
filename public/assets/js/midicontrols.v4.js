@@ -1201,11 +1201,8 @@ function renderBackupList() {
     <div class="backup-item">
       <div class="bname">${b.name} — ${b.presets?.length ?? 0} preset(s)</div>
       <div class="bdate">${b.date}</div>
-      <button class="btn sm success" onclick="restoreBackupById(${b.id})">↩ Restore</button>
-      <button class="btn sm danger"  onclick="deleteBackup(${b.id})">🗑</button>
-    </div>`).join('');
-}">↩ Restore</button>
-      <button class="btn sm danger"  onclick="deleteBackup(${b.id})">🗑</button>
+      <button class="btn sm success" onclick="restoreBackupById('${b.id}')">↩ Restore</button>
+      <button class="btn sm danger"  onclick="deleteBackup('${b.id}')">🗑</button>
     </div>`).join('');
 }
 
