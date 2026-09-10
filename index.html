@@ -60,24 +60,24 @@
 <!-- ═══════════════════════════════════════════════════════
      FAVICON — PNG fallbacks (older browsers / bookmark icons)
 ════════════════════════════════════════════════════════ -->
-<link rel="icon" type="image/png" sizes="16x16"  href="assets/icon-16.png">
-<link rel="icon" type="image/png" sizes="32x32"  href="assets/icon-32.png">
-<link rel="icon" type="image/png" sizes="48x48"  href="assets/icon-48.png">
-<link rel="icon" type="image/png" sizes="96x96"  href="assets/icon-96.png">
+<link rel="icon" type="image/png" sizes="16x16"  href="/assets/icon-16.png">
+<link rel="icon" type="image/png" sizes="32x32"  href="/assets/icon-32.png">
+<link rel="icon" type="image/png" sizes="48x48"  href="/assets/icon-48.png">
+<link rel="icon" type="image/png" sizes="96x96"  href="/assets/icon-96.png">
 
 <!-- ═══════════════════════════════════════════════════════
      APPLE TOUCH ICONS (iOS home screen · Safari pinned tab)
 ════════════════════════════════════════════════════════ -->
-<link rel="apple-touch-icon"                href="assets/apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="57x57"  href="assets/icon-57.png">
-<link rel="apple-touch-icon" sizes="60x60"  href="assets/icon-60.png">
-<link rel="apple-touch-icon" sizes="72x72"  href="assets/icon-72.png">
-<link rel="apple-touch-icon" sizes="76x76"  href="assets/icon-76.png">
-<link rel="apple-touch-icon" sizes="114x114" href="assets/icon-114.png">
-<link rel="apple-touch-icon" sizes="120x120" href="assets/icon-120.png">
-<link rel="apple-touch-icon" sizes="144x144" href="assets/icon-144.png">
-<link rel="apple-touch-icon" sizes="152x152" href="assets/icon-152.png">
-<link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
+<link rel="apple-touch-icon"                href="/assets/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="57x57"  href="/assets/icon-57.png">
+<link rel="apple-touch-icon" sizes="60x60"  href="/assets/icon-60.png">
+<link rel="apple-touch-icon" sizes="72x72"  href="/assets/icon-72.png">
+<link rel="apple-touch-icon" sizes="76x76"  href="/assets/icon-76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/assets/icon-114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/assets/icon-120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/assets/icon-144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/assets/icon-152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-180.png">
 
 <!-- ═══════════════════════════════════════════════════════
      PWA MANIFEST
@@ -88,7 +88,7 @@
      WINDOWS TILES
 ════════════════════════════════════════════════════════ -->
 <meta name="msapplication-TileColor" content="#6c63ff">
-<meta name="msapplication-TileImage" content="assets/icon-144.png">
+<meta name="msapplication-TileImage" content="/assets/icon-144.png">
 <meta name="msapplication-config"    content="none">
 
 <!-- ═══════════════════════════════════════════════════════
@@ -130,7 +130,7 @@
 <!-- ═══════════════════════════════════════════════════════
      STYLESHEET
 ════════════════════════════════════════════════════════ -->
-<link rel="stylesheet" href="assets/css/midicontrols.v2.css">
+<link rel="stylesheet" href="/assets/css/midicontrols.v2.css">
   <style>
     @media (max-width: 768px) {
       #mobile-menu-btn { display: inline-block !important; }
@@ -207,13 +207,14 @@
   </div>
 
   <!-- Port selects -->
-  <div id="port-selects">
+  <div id="port-selects" style="display:flex;align-items:center;">
     <select id="sel-in" onchange="connectMidiPorts()">
       <option value="">— MIDI In —</option>
     </select>
     <select id="sel-out" onchange="connectMidiPorts()">
       <option value="">— MIDI Out —</option>
     </select>
+    <button class="btn sm danger" onclick="midiPanic()" style="margin-left:8px;" title="Send All Notes Off / All Sound Off">🛑 Panic</button>
   </div>
 
   <!-- PWA Install button — hidden until beforeinstallprompt fires -->
@@ -370,8 +371,8 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn primary" onclick="openAddDeviceModal()">＋ Add Device</button>
-          <button class="btn" onclick="importDeviceJSON()">📂 Import JSON</button>
-          <input type="file" id="import-device-input" accept=".json" style="display:none" onchange="handleImportDevice(event)">
+          <button class="btn" onclick="importDeviceJSON()">📂 Import (.json/.syx)</button>
+          <input type="file" id="import-device-input" accept=".json,.syx" style="display:none" onchange="handleImportDevice(event)">
         </div>
       </div>
       <div class="device-manager-grid" id="device-manager-grid"></div>
@@ -479,6 +480,6 @@
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
-<script type="text/javascript" src="assets/js/midicontrols.v4.js" defer></script>
+<script type="text/javascript" src="/assets/js/midicontrols.v4.js" defer></script>
 </body>
 </html>
