@@ -2824,3 +2824,48 @@ window.applyMonitorQuickFilter = function() {
 };
 
 window.renderDeviceManager = renderDeviceManager;
+
+window.vkCurve = 'linear';
+window.updateVkCurve = function() {
+  const sel = document.getElementById('vk-curve-type');
+  if (sel) window.vkCurve = sel.value;
+  if (typeof drawVkCurve === 'function') drawVkCurve();
+};
+
+window.drawVkCurve = function() {
+  const canvas = document.getElementById('vk-curve-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  
+  for (let x = 0; x < w; x++) {
+    const t = x / (w - 1);
+    let yVal = t;
+    if (window.vkCurve === 'exp') {
+      yVal = t * t;
+    } else if (window.vkCurve === 'log') {
+      yVal = Math.sqrt(t);
+    }
+    const y = h - (yVal * (h - 4)) - 2;
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+};
+
+window.applyVelocityCurve = function(velRaw) {
+  const t = velRaw / 127;
+  let yVal = t;
+  if (window.vkCurve === 'exp') {
+    yVal = t * t;
+  } else if (window.vkCurve === 'log') {
+    yVal = Math.sqrt(t);
+  }
+  return Math.min(127, Math.max(1, Math.round(yVal * 127)));
+};

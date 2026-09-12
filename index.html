@@ -211,6 +211,15 @@
 
   <style>
     /* New styles for SVG Map and Drag & Drop */
+    .container-glow {
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
+      border-color: #3b82f6 !important;
+      transform: scale(1.005);
+    }
+    #svg-mapper-container {
+      transition: all 0.2s ease;
+    }
+
     #svg-mapper-container {
       width: 100%;
       min-height: 250px;
@@ -481,13 +490,13 @@
         <p style="font-size:0.85rem;color:var(--text3);margin-bottom:10px;">Drag CC numbers onto the SVG controls to map them instantly. Click a control to edit.</p>
 
         <div id="draggable-ccs" style="margin-bottom:10px; background:var(--surface3); padding:10px; border-radius:6px; min-height:40px;">
-          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="1">CC 1 (Mod)</span>
-          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="7">CC 7 (Vol)</span>
-          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="10">CC 10 (Pan)</span>
-          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="74">CC 74 (Cutoff)</span>
-          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="71">CC 71 (Reso)</span>
+          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="1" title="CC 1: Modulation Wheel">CC 1 (Mod)</span>
+          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="7" title="CC 7: Volume">CC 7 (Vol)</span>
+          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="10" title="CC 10: Pan">CC 10 (Pan)</span>
+          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="74" title="CC 74: Brightness (Cutoff)">CC 74 (Cutoff)</span>
+          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="71" title="CC 71: Resonance (Timbre)">CC 71 (Reso)</span>
         </div>
-        <div id="svg-mapper-container" ondrop="dropOnSvg(event)" ondragover="allowDrop(event)">
+        <div id="svg-mapper-container" ondrop="dropOnSvg(event); this.classList.remove('container-glow')" ondragover="allowDrop(event)" ondragenter="this.classList.add('container-glow')" ondragleave="this.classList.remove('container-glow')">
           <!-- SVG rendered by JS -->
         </div>
       </div>

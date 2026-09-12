@@ -46,8 +46,8 @@
 
     const button = document.getElementById("btn-mapper-learn");
     if (button) {
-      button.textContent = window.mapperLearnMode
-        ? "🎛 Learn: ON"
+      button.innerHTML = window.mapperLearnMode
+        ? "<span class='svg-learning' style='display:inline-block; border-radius:50%;'>🔴</span> Learn: ON"
         : "🎛 Learn: OFF";
       button.classList.toggle("primary", window.mapperLearnMode);
     }
@@ -122,18 +122,18 @@
 
         if (type === "knob") {
           parts.push(
-            `<circle id="${id}" class="${cssClass}" cx="${offsetX + 22}" cy="${y + 20}" r="17" fill="#1e293b" stroke="#94a3b8" stroke-width="2" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></circle>`,
+            `<circle id="${id}" class="${cssClass}" cx="${offsetX + 22}" cy="${y + 20}" r="17" fill="#1e293b" stroke="#94a3b8" stroke-width="2" tabindex="0" role="button" aria-label="${escapeHtml(label)}" oncontextmenu="handleSvgRightClick(event)" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></circle>`,
             `<text x="${offsetX + 22}" y="${y + 24}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="9" pointer-events="none">CC ${control.cc ?? "-"}</text>`
           );
         } else if (type === "fader") {
           parts.push(
             `<rect x="${offsetX + 14}" y="${y}" width="16" height="42" rx="3" fill="#020617" stroke="#475569"/>`,
-            `<rect id="${id}" class="${cssClass}" x="${offsetX + 8}" y="${y + 14}" width="28" height="14" rx="3" fill="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
+            `<rect id="${id}" class="${cssClass}" x="${offsetX + 8}" y="${y + 14}" width="28" height="14" rx="3" fill="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" oncontextmenu="handleSvgRightClick(event)" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
             `<text x="${offsetX + 22}" y="${y + 55}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="9" pointer-events="none">CC ${control.cc ?? "-"}</text>`
           );
         } else {
           parts.push(
-            `<rect id="${id}" class="${cssClass}" x="${offsetX}" y="${y}" width="40" height="40" rx="5" fill="#334155" stroke="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
+            `<rect id="${id}" class="${cssClass}" x="${offsetX}" y="${y}" width="40" height="40" rx="5" fill="#334155" stroke="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" oncontextmenu="handleSvgRightClick(event)" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
             `<text x="${offsetX + 20}" y="${y + 24}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="10" pointer-events="none">${control.note ?? control.cc ?? "-"}</text>`
           );
         }
@@ -157,6 +157,8 @@
   window.allowDrop = function allowDrop(event) {
     event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    const container = document.getElementById('svg-mapper-container');
+    if (container) container.classList.add('container-glow');
   };
 
   window.svgDragEnter = function svgDragEnter(event) {
@@ -392,4 +394,25 @@
 
   window.mapperLearnMode = false;
   window.mapperLearnTarget = null;
+
+  window.handleSvgRightClick = function handleSvgRightClick(event) {
+    event.preventDefault();
+    const target = event.target.closest?.(".svg-control");
+    if (!target) return;
+    const [, type, indexText] = target.id?.split("-") ?? [];
+    const index = Number(indexText);
+    const dev = getActiveDevice();
+    const controls = dev?.controls?.[type + "s"];
+    if (!Array.isArray(controls) || !controls[index]) return;
+
+    if (confirm("Remove mapping for " + type + " " + (index + 1) + "?")) {
+      controls[index].cc = null;
+      if (type === 'pad') controls[index].note = null;
+      save();
+      syncLog("Mapping removed for " + type + " " + (index + 1));
+      notify("Mapping removed for " + type + " " + (index + 1) + ".", "success");
+      refreshMapper();
+    }
+  };
+
 })();
