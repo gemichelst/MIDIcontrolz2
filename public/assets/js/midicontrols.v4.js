@@ -1543,7 +1543,11 @@ window.backupFiltered = backupFiltered;
 
 function renderDeviceManager() {
   const grid = document.getElementById('device-manager-grid');
-  if (!grid) return;
+  if (!grid) {
+    console.warn("[MidiControls] renderDeviceManager: #device-manager-grid not found in DOM");
+    return;
+  }
+  console.log("[MidiControls] renderDeviceManager: rendering", State.devices.length, "devices");
   const searchInput = document.getElementById('dm-search');
   const term = searchInput ? searchInput.value.toLowerCase() : '';
   
@@ -2818,3 +2822,5 @@ window.applyMonitorQuickFilter = function() {
   
   if (typeof renderMonitor === "function") renderMonitor();
 };
+
+window.renderDeviceManager = renderDeviceManager;
