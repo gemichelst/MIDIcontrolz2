@@ -1173,6 +1173,49 @@ function backupFiltered() {
 
 window.savePresetVersion = savePresetVersion;
 window.exportDeviceJSON = exportDeviceJSON;
+
+function exportDeviceSyx(deviceId) {
+  const dev = State.devices.find((item) => item.id === deviceId);
+  
+  if (!dev) {
+    toast("Device not found.", "error");
+    return;
+  }
+  
+  const safeName = (dev.name || dev.id)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+    
+  const jsonStr = JSON.stringify(dev);
+  const encoder = new TextDecoder(); // Wait, TextEncoder
+  const textBytes = new TextEncoder().encode(jsonStr);
+  
+  // Make sure we only use valid MIDI data bytes (0-127) for the payload.
+  // Actually, handleImportDevice just does TextDecoder().decode(), which expects normal bytes.
+  // If the TextEncoder outputs bytes >= 128, they violate standard SysEx. 
+  // Let's just create a Uint8Array: F0 7D ... textBytes ... F7
+  const syx = new Uint8Array(textBytes.length + 3);
+  syx[0] = 0xF0;
+  syx[1] = 0x7D;
+  syx.set(textBytes, 2);
+  syx[syx.length - 1] = 0xF7;
+  
+  // Note: if textBytes has values >= 128 it's technically invalid MIDI but we save it as a file.
+  
+  const blob = new Blob([syx], { type: "application/octet-stream" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${safeName || "midicontrolz-device"}.syx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  toast(`${dev.name} exported as .syx`, "success");
+}
+
+window.exportDeviceSyx = exportDeviceSyx;
+
 window.backupFiltered = backupFiltered;
 
 

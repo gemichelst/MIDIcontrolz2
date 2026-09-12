@@ -2,7 +2,7 @@
 
 Welcome to **MIDIcontrolz2** – an offline-first, highly advanced MIDI mapping and diagnostic tool built purely with WebMIDI, HTML5, and vanilla JavaScript. No external dependencies, no server backends required. Runs directly in any modern browser.
 
-## 🚀 Features (v2.10.0)
+## 🚀 Features (v2.13.0)
 
 ### 1. Advanced MIDI Utilities
 *   **MIDI Multi-Track Recorder:** Capture incoming MIDI events in real-time. Hit record, play your sequence, and loop or play it back instantly out to your active MIDI port using internal scheduling.
