@@ -988,6 +988,18 @@ function onMidiMessage(event) {
 //  SYSEX INCOMING — parse LPD8 preset dump
 // ============================================================
 function handleSysExIn(data) {
+  // Push to Template Importer Panel if visible or existing
+  if (data.length > 8) { // Skip short pings
+    const ta = document.getElementById('sysex-panel-textarea');
+    if (ta) {
+      let hex = '';
+      data.forEach(b => hex += b.toString(16).padStart(2, '0').toUpperCase() + ' ');
+      ta.value = hex.trim();
+      if (typeof window.updateSysExPanelVisualizer === 'function') {
+        window.updateSysExPanelVisualizer();
+      }
+    }
+  }
   if (data[0] === 0xF0 && data[1] === 0x7E && data[3] === 0x06 && data[4] === 0x02) {
     if (window.pingStartTime) {
       const ms = Math.round(performance.now() - window.pingStartTime);
@@ -3200,3 +3212,105 @@ window.applySysExInspector = function() {
   closeModal();
 };
 
+
+
+
+window.loadSyxFileIntoPanel = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const buffer = new Uint8Array(evt.target.result);
+    let hex = '';
+    buffer.forEach(b => hex += b.toString(16).padStart(2, '0').toUpperCase() + ' ');
+    const ta = document.getElementById('sysex-panel-textarea');
+    if (ta) {
+      ta.value = hex.trim();
+      updateSysExPanelVisualizer();
+      toast('Loaded .syx file into panel importer.', 'info');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+window.updateSysExPanelVisualizer = function() {
+  const ta = document.getElementById('sysex-panel-textarea');
+  const vis = document.getElementById('sysex-panel-visualizer');
+  if (!ta || !vis) return;
+  
+  const text = ta.value.replace(/[^a-fA-F0-9]/g, '');
+  if (text.length === 0) {
+    vis.innerHTML = '<em style="color:var(--text3);">Waiting for SysEx dump, paste, or file...</em>';
+    return;
+  }
+  
+  const bytes = [];
+  for (let i = 0; i < text.length; i += 2) {
+    bytes.push(parseInt(text.substr(i, 2), 16));
+  }
+  
+  let out = '';
+  // Generic structural visualization
+  if (bytes[0] === 0xF0) {
+    out += `<div style="color:var(--accent); margin-bottom:4px;"><strong>[SysEx Header]</strong> ${bytes.slice(0, 4).map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ')}</div>`;
+    
+    // Novation specifics (F0 00 20 29)
+    if (bytes[1] === 0x00 && bytes[2] === 0x20 && bytes[3] === 0x29) {
+      out += `<div style="color:#10b981; margin-bottom:4px;">✓ Novation Protocol Detected</div>`;
+      out += `<div style="color:var(--text2); margin-bottom:8px;">Device Type: <strong>0x${(bytes[4]||0).toString(16).padStart(2,'0')}</strong> | Command: <strong>0x${(bytes[5]||0).toString(16).padStart(2,'0')}</strong></div>`;
+    }
+    
+    out += `<div style="margin-bottom:8px; border-top:1px solid var(--border); padding-top:4px;"><strong>Payload Bytes (${bytes.length}):</strong></div>`;
+    
+    out += `<div style="display:grid; grid-template-columns:repeat(16, 1fr); gap:2px; font-size:0.7rem;">`;
+    const payload = bytes.slice(4, bytes.length - (bytes[bytes.length-1] === 0xF7 ? 1 : 0));
+    
+    // Cap rendering size for massive dumps to avoid freezing UI
+    const maxRender = 1024;
+    const renderPayload = payload.slice(0, maxRender);
+    
+    renderPayload.forEach((b, i) => {
+      let bg = 'transparent';
+      let title = 'Byte';
+      if (b >= 32 && b <= 126) { bg = '#334155'; title = String.fromCharCode(b); }
+      out += `<div style="background:${bg}; padding:2px; text-align:center; border-radius:2px;" title="${title}">${b.toString(16).padStart(2,'0').toUpperCase()}</div>`;
+    });
+    out += `</div>`;
+    
+    if (payload.length > maxRender) {
+      out += `<div style="color:var(--text3); margin-top:8px;"><em>... plus ${payload.length - maxRender} more bytes ...</em></div>`;
+    }
+    
+    if (bytes[bytes.length-1] === 0xF7) {
+       out += `<div style="color:var(--accent); margin-top:8px;"><strong>[End of Exclusive (F7)]</strong></div>`;
+    } else {
+       out += `<div style="color:#ef4444; margin-top:8px;"><strong>[WARNING: Missing F7 Terminator]</strong></div>`;
+    }
+  } else {
+    out += `<div style="color:#ef4444;">Invalid SysEx: Must start with F0.</div>`;
+  }
+  
+  vis.innerHTML = out;
+};
+
+window.applySysExPanelImport = function() {
+  const text = document.getElementById('sysex-panel-textarea').value;
+  const hexes = text.replace(/[^a-fA-F0-9]/g, '');
+  if (hexes.length % 2 !== 0) {
+    toast('Invalid HEX string length.', 'error');
+    return;
+  }
+  
+  const bytes = [];
+  for (let i = 0; i < hexes.length; i += 2) {
+    bytes.push(parseInt(hexes.substr(i, 2), 16));
+  }
+  
+  if (bytes[0] !== 0xF0 || (bytes.length > 0 && bytes[bytes.length-1] !== 0xF7)) {
+    toast('SysEx must start with F0 and end with F7', 'error');
+    return;
+  }
+  
+  toast(`Parsed & Imported ${bytes.length} bytes of Template Data.`, 'success');
+  handleSysExIn(new Uint8Array(bytes));
+};

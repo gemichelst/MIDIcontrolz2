@@ -619,10 +619,22 @@
         </div>
         
         <div style="flex:1;min-width:300px;border:1px solid var(--border);border-radius:6px;padding:12px;background:var(--surface2);">
-          <h3 style="margin-top:0;font-size:1rem;">Template Receive Manager</h3>
-          <p style="font-size:0.8rem;color:var(--text3);margin-bottom:12px;">Incoming bulk SysEx templates from devices like Novation SL will appear here.</p>
-          <div id="sysex-receive-list" style="display:flex;flex-direction:column;gap:8px;font-size:0.8rem;background:var(--surface3);padding:8px;border-radius:4px;min-height:95px;max-height:150px;overflow-y:auto;">
-            <span style="color:var(--text3);text-align:center;padding-top:10px;">Waiting for dumps...</span>
+          <h3 style="margin-top:0;font-size:1rem;display:flex;justify-content:space-between;align-items:center;">
+            Template Importer
+            <label class="btn sm" style="cursor:pointer; background:var(--surface3);">
+              📂 Load .syx File
+              <input type="file" accept=".syx" style="display:none;" onchange="loadSyxFileIntoPanel(event)">
+            </label>
+          </h3>
+          <p style="font-size:0.8rem;color:var(--text3);margin-bottom:12px;">Manually dump SysEx from devices (e.g. Novation SL), paste HEX bytes below, or load a .syx file to import and visualize.</p>
+          <div style="display:flex; gap:8px;">
+            <textarea id="sysex-panel-textarea" oninput="updateSysExPanelVisualizer()" style="flex:1; height:120px; font-family:monospace; font-size:0.8rem; padding:8px; background:var(--surface3); color:var(--text); border:1px solid var(--border); border-radius:4px; outline:none; resize:vertical;" placeholder="Paste raw HEX bytes (e.g. F0 00 20 29 ... F7)"></textarea>
+          </div>
+          <div id="sysex-panel-visualizer" style="margin-top:8px; overflow-y:auto; background:var(--surface3); border:1px solid var(--border); border-radius:4px; padding:8px; font-family:monospace; font-size:0.75rem; min-height:100px; max-height:200px;">
+            <em style="color:var(--text3);">Waiting for SysEx dump, paste, or file...</em>
+          </div>
+          <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+            <button class="btn primary" onclick="applySysExPanelImport()">Parse & Import Template</button>
           </div>
         </div>
       </div>
@@ -889,7 +901,7 @@
         <div class="settings-card">
           <h3>ℹ About</h3>
           <div style="font-size:0.82rem;color:var(--text2);line-height:1.9;">
-            <strong>MIDIcontrolz2</strong> v2.17.0<br>
+            <strong>MIDIcontrolz2</strong> v2.17.1<br>
             WebMIDI API · No backend · No install<br>
             Device configs: JSON templates<br>
             <a href="https://midicontrolz.doerd.de" target="_blank"
