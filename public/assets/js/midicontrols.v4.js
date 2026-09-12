@@ -996,6 +996,21 @@ function handleSysExIn(data) {
   }
 
 
+  // Novation Template Dump (Remote SL / Nocturn etc)
+  if (data[0] === 0xF0 && data[1] === 0x00 && data[2] === 0x20 && data[3] === 0x29) {
+    const dev = State.devices.find(d => d.id.includes('novation'));
+    if (dev) {
+      toast(`Received SysEx template from ${dev.name}`, 'success');
+      const pn = data[7] || 0;
+      if (!dev.defaultPresets[pn]) {
+        dev.defaultPresets[pn] = { name: `SysEx Preset ${pn + 1}` };
+      }
+      dev.defaultPresets[pn].lastDump = Date.now();
+      save();
+      if (typeof renderDeviceEditor === 'function') renderDeviceEditor();
+    }
+  }
+
   // Akai LPD8 preset dump: F0 47 7F 75 63 ...
   if (data[0]===0xF0 && data[1]===0x47 && data[2]===0x7F &&
       data[3]===0x75 && data[4]===0x63) {
