@@ -2901,8 +2901,19 @@ window.vkCurve = 'linear';
 window.updateVkCurve = function() {
   const sel = document.getElementById('vk-curve-type');
   if (sel) window.vkCurve = sel.value;
-  if (typeof drawVkCurve === 'function') drawVkCurve();
+  if (typeof window.drawVkCurve === 'function') window.drawVkCurve();
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof window.drawVkCurve === 'function') {
+    setTimeout(window.drawVkCurve, 100);
+  }
+});
+
+
+setTimeout(() => {
+  if (typeof window.drawVkCurve === 'function') window.drawVkCurve();
+}, 100);
 
 window.drawVkCurve = function() {
   const canvas = document.getElementById('vk-curve-canvas');
