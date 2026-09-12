@@ -474,4 +474,88 @@ document.addEventListener('dragend', () => {
   if (container) container.classList.remove('container-glow');
 });
 
+
+window.renderMacros = function renderMacros() {
+  const container = document.getElementById("macro-list");
+  if (!container) return;
+
+  const dev = getActiveDevice();
+  if (!dev) {
+    container.innerHTML = "<div style='color:var(--text3);font-size:0.8rem;'>No device selected.</div>";
+    return;
+  }
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (!p) return;
+
+  if (!p.macros || p.macros.length === 0) {
+    container.innerHTML = "<div style='color:var(--text3);font-size:0.8rem;padding:8px;'>No macros defined. Click + Add Macro to start.</div>";
+    return;
+  }
+
+  let html = "";
+  p.macros.forEach((macro, i) => {
+    html += `
+      <div style="background:var(--surface2); border:1px solid var(--border); padding:10px; border-radius:6px; display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="font-size:0.9rem; color:var(--text2);">Macro ${i + 1}</strong>
+          <button class="btn sm danger" onclick="removeMacro(${i})" style="padding:2px 6px; font-size:0.75rem;">🗑 Delete</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem;">
+          <span style="color:var(--text3);">Source CC:</span>
+          <input type="number" min="0" max="127" value="${macro.source !== null && macro.source !== undefined ? macro.source : ''}" onchange="updateMacroSource(${i}, this.value)" style="width:60px; background:var(--surface1); color:var(--text); border:1px solid var(--border); border-radius:4px; padding:4px;" placeholder="CC" />
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem;">
+          <span style="color:var(--text3);">Targets CCs (comma sep):</span>
+          <input type="text" value="${(macro.targets || []).join(', ')}" onchange="updateMacroTargets(${i}, this.value)" style="flex:1; background:var(--surface1); color:var(--text); border:1px solid var(--border); border-radius:4px; padding:4px;" placeholder="e.g. 74, 71, 10" />
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+};
+
+window.addMacro = function addMacro() {
+  const dev = getActiveDevice();
+  if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (!p) return;
+  
+  if (!p.macros) p.macros = [];
+  p.macros.push({ source: null, targets: [] });
+  save();
+  renderMacros();
+};
+
+window.removeMacro = function removeMacro(index) {
+  const dev = getActiveDevice();
+  if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (!p || !p.macros) return;
+  
+  p.macros.splice(index, 1);
+  save();
+  renderMacros();
+};
+
+window.updateMacroSource = function updateMacroSource(index, val) {
+  const dev = getActiveDevice();
+  if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (!p || !p.macros) return;
+  
+  const intVal = parseInt(val, 10);
+  p.macros[index].source = isNaN(intVal) ? null : intVal;
+  save();
+};
+
+window.updateMacroTargets = function updateMacroTargets(index, val) {
+  const dev = getActiveDevice();
+  if (!dev) return;
+  const p = dev.defaultPresets[State.activePresetIndex];
+  if (!p || !p.macros) return;
+  
+  p.macros[index].targets = val.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+  save();
+};
+
 })();
