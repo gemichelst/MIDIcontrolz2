@@ -1032,8 +1032,12 @@ function readFromDevice() {
     const pn = State.activePresetIndex + 1;
     sendMidiOut([0xF0,0x47,0x7F,0x75,0x61,0x00,0x01, pn, 0xF7]);
     toast(`Reading Preset ${pn} from LPD8…`, 'info');
+  } else if (dev.dumpRequest) {
+    const req = dev.dumpRequest.map(x => typeof x === 'string' ? parseInt(x, 16) : x);
+    sendMidiOut(req);
+    toast(`Requested SysEx dump for ${dev.name}…`, 'info');
   } else {
-    toast(`Read not implemented for ${dev.name} — use SysEx panel`, 'info');
+    toast(`No automatic read supported for ${dev.name}. Please trigger a SysEx template dump manually from the device hardware. You can capture it in the Monitor/SysEx panel.`, 'info');
   }
 }
 
@@ -1043,9 +1047,11 @@ function writeToDevice() {
   if (dev.id === 'akai_lpd8_v1') {
     writeLPD8Preset();
   } else {
-    toast(`Write not implemented for ${dev.name} — use SysEx panel`, 'info');
+    toast(`No automatic write supported for ${dev.name}. You can export a SysEx dump or use the SysEx panel to send templates.`, 'info');
   }
 }
+
+undefined
 
 function writeLPD8Preset() {
   const dev    = getActiveDev();

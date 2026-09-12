@@ -44,10 +44,10 @@
       window.mapperLearnTarget = null;
     }
 
-    const button = document.getElementById("btn-mapper-learn");
+        const button = document.getElementById("btn-mapper-learn");
     if (button) {
       button.innerHTML = window.mapperLearnMode
-        ? "<span class='svg-learning' style='display:inline-block; border-radius:50%;'>🔴</span> Learn: ON"
+        ? "<span class='svg-learning' style='display:inline-block; border-radius:50%;'>🔴</span> Learning..."
         : "🎛 Learn: OFF";
       button.classList.toggle("primary", window.mapperLearnMode);
     }
@@ -114,7 +114,7 @@
           window.mapperLearnMode &&
           window.mapperLearnTarget?.type === type &&
           window.mapperLearnTarget?.index === index;
-        const cssClass = `svg-control${active ? " svg-learning" : ""}`;
+        const cssClass = `svg-control ${window.mapperLearnMode ? "svg-learning" : ""} ${active ? "svg-target" : ""}`.trim();
         const label =
           type === "pad"
             ? `Pad ${index + 1} · Note ${control.note ?? "-"} · CC ${control.cc ?? "-"} · Ch ${channel}`
@@ -405,14 +405,72 @@
     const controls = dev?.controls?.[type + "s"];
     if (!Array.isArray(controls) || !controls[index]) return;
 
-    if (confirm("Remove mapping for " + type + " " + (index + 1) + "?")) {
-      controls[index].cc = null;
-      if (type === 'pad') controls[index].note = null;
-      save();
-      syncLog("Mapping removed for " + type + " " + (index + 1));
-      notify("Mapping removed for " + type + " " + (index + 1) + ".", "success");
-      refreshMapper();
-    }
+    controls[index].cc = null;
+    if (type === 'pad') controls[index].note = null;
+    save();
+    syncLog("Mapping removed for " + type + " " + (index + 1));
+    notify("Mapping removed for " + type + " " + (index + 1) + ".", "success");
+    refreshMapper();
   };
+
+
+window.updateDraggableTooltips = function() {
+  const MIDI_CC_NAMES = {
+    1: "Modulation Wheel", 2: "Breath Controller", 4: "Foot Controller", 5: "Portamento Time",
+    7: "Volume", 8: "Balance", 10: "Pan", 11: "Expression", 64: "Sustain Pedal", 
+    65: "Portamento On/Off", 71: "Resonance (Timbre)", 72: "Release Time", 73: "Attack Time", 
+    74: "Cutoff (Brightness)", 91: "Reverb Level", 93: "Chorus Level"
+  };
+  const draggables = document.querySelectorAll("#draggable-ccs .draggable-cc");
+  draggables.forEach(el => {
+    const cc = parseInt(el.getAttribute("data-cc"), 10);
+    if (!isNaN(cc) && MIDI_CC_NAMES[cc]) {
+      el.setAttribute("title", `CC ${cc}: ${MIDI_CC_NAMES[cc]}`);
+    }
+  });
+};
+
+window.addEventListener("DOMContentLoaded", () => {
+  window.updateDraggableTooltips();
+  
+  let dragTargetCount = 0;
+  const svgContainer = document.getElementById('svg-mapper-container');
+  if (svgContainer) {
+    svgContainer.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      dragTargetCount++;
+      svgContainer.classList.add('container-glow');
+    });
+    svgContainer.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dragTargetCount--;
+      if (dragTargetCount <= 0) {
+        dragTargetCount = 0;
+        svgContainer.classList.remove('container-glow');
+      }
+    });
+    svgContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+    svgContainer.addEventListener('drop', (e) => {
+      dragTargetCount = 0;
+      svgContainer.classList.remove('container-glow');
+    });
+  }
+});
+
+let dragTargetCount = 0;
+window.dragCC = function dragCC(event) {
+  let draggedCC = event.currentTarget?.dataset?.cc ?? null;
+  if (draggedCC && event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("text/plain", draggedCC);
+  }
+};
+document.addEventListener('dragend', () => {
+  dragTargetCount = 0;
+  const container = document.getElementById('svg-mapper-container');
+  if (container) container.classList.remove('container-glow');
+});
 
 })();

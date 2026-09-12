@@ -1052,3 +1052,10 @@ input, select, textarea { font-family: inherit; }
     display: block !important;
   }
 }
+
+/* Target element for MIDI learn */
+.svg-target {
+  stroke: #ef4444 !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.8)) !important;
+}
