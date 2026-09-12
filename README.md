@@ -2,16 +2,17 @@
 
 Welcome to **MIDIcontrolz2** – an offline-first, highly advanced MIDI mapping and diagnostic tool built purely with WebMIDI, HTML5, and vanilla JavaScript. No external dependencies, no server backends required. Runs directly in any modern browser.
 
-## 🚀 Features (v2.15.0)
+## 🚀 Features (v2.16.0)
 
 ### 1. Advanced MIDI Utilities
 *   **MIDI Multi-Track Recorder:** Capture incoming MIDI events in real-time. Hit record, play your sequence, and loop or play it back instantly out to your active MIDI port using internal scheduling.
 *   **Chord Memory:** Transform your single-key physical triggers into massive, complex chord voicings. Simply "Learn" a trigger note, "Learn" the chord voicing, and the engine will intercept and output your custom chords on the fly.
-*   **MIDI Sync & Clock:** Send an internal Timing Clock (0xF8) directly from the browser at a customizable BPM, complete with Start/Continue/Stop transport controls for syncing hardware sequencers.
+*   **MIDI Sync & Clock (Auto/Host/Receive):** Advanced MIDI Clock routing. Run as the internal Host, receive and sync to an External clock, or use AUTO mode to dynamically switch based on active clock signals. Select exact port routing.
 *   **LFO Generator:** Continuously output mathematical sine-wave sweeps to modulate any CC parameter on your external hardware in real-time.
 *   **Chord Progression Creator:** Audition synthesizers rapidly using the interactive chord pads (Major, Minor, 7th, Diminished).
 *   **Latency & Connection Tester:** Use the built-in loopback tester. Plug a cable from your device's MIDI Out into its MIDI In, and the app calculates millisecond-accurate round-trip latency.
 
+*   **SysEx Template Inspector:** Analyze raw HEX strings and automatically import templates from received manual device dumps directly inside a dedicated inspector modal.
 ### 2. Deep Editor & Visual Mapper
 *   **Version History Engine:** Click "Save Version" to instantly snapshot your layout. The Version History sidebar allows you to rollback your layout to any timestamp if you make a mistake.
 *   **Visual SVG Mapper:** A drag-and-drop workspace! Drag CC numbers directly onto an interactive SVG graphic of your hardware. Click any control to arm MIDI Learn mode instantly.

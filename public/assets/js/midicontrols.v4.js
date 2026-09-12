@@ -391,6 +391,7 @@ function renderDeviceEditor() {
     <div style="width:1px;height:24px;background:var(--border);margin:0 4px;"></div>
     
     <button class="btn sm" onclick="savePresetVersion()">💾 Save Version</button>
+    <button class="btn sm" onclick="openSysExInspector()" style="margin-left:4px;" data-tooltip="View received template dump data">🔍 SysEx Template Data</button>
     
     
     <span style="font-size:0.8rem;color:var(--accent);margin-left:auto;font-weight:bold;">v${preset.version || 1}</span>
@@ -858,6 +859,7 @@ function cancelLearn() {
 //  WEBMIDI INIT
 // ============================================================
 function initMidi() {
+  setTimeout(() => { if (typeof renderClockUI==="function") renderClockUI(); }, 500);
   if (!navigator.requestMIDIAccess) {
     document.getElementById('midi-status-text').textContent = 'WebMIDI not supported';
     toast('WebMIDI not supported — use Chrome or Edge', 'error');
@@ -947,7 +949,7 @@ function onMidiMessage(event) {
   const ch     = status & 0x0F;
 
   // MIDI Clock — detect BPM
-  if (status === 0xF8) { handleMidiClock(ts); return; }
+  if (status === 0xF8) { handleMidiClock(ts, event.target.id); return; }
 
   // SysEx
   if (status === 0xF0) {
@@ -1006,14 +1008,15 @@ function handleSysExIn(data) {
         dev.defaultPresets[pn] = { name: `SysEx Preset ${pn + 1}` };
       }
       dev.defaultPresets[pn].lastDump = Date.now();
+      dev.defaultPresets[pn].sysexData = Array.from(data);
       save();
       if (typeof renderDeviceEditor === 'function') renderDeviceEditor();
+      return;
     }
   }
 
-  // Akai LPD8 preset dump: F0 47 7F 75 63 ...
-  if (data[0]===0xF0 && data[1]===0x47 && data[2]===0x7F &&
-      data[3]===0x75 && data[4]===0x63) {
+  // Akai LPD8 preset dump: F0 47 7F 75 ... (could be 63 or 61)
+  if (data[0]===0xF0 && data[1]===0x47 && data[2]===0x7F && data[3]===0x75) {
     const presetNum = data[7] - 1;
     const dev = State.devices.find(d => d.id === 'akai_lpd8_v1');
     if (!dev) return;
@@ -1034,6 +1037,19 @@ function handleSysExIn(data) {
     save();
     if (State.activeDeviceId === 'akai_lpd8_v1') renderDeviceEditor();
     toast(`LPD8 Preset ${presetNum+1} read from device ✓`, 'success');
+    return;
+  }
+  
+  // Catch-all for unknown SysEx
+  const dev = getActiveDev();
+  if (dev) {
+    const p = getActivePreset();
+    if (p) {
+      p.sysexData = Array.from(data);
+      p.lastDump = Date.now();
+      save();
+      toast(`Captured ${data.length} bytes of SysEx data. Use Inspector to view.`, 'info');
+    }
   }
 }
 
@@ -2951,4 +2967,146 @@ window.applyVelocityCurve = function(velRaw) {
     yVal = Math.sqrt(t);
   }
   return Math.min(127, Math.max(1, Math.round(yVal * 127)));
+};
+
+
+
+window.clockMode = 'auto'; // 'auto', 'internal', 'external'
+window.clockOutPorts = [];
+window.clockInPorts = [];
+window.lastClockRxTime = 0;
+window.clockAutoState = 'internal'; // defaults to internal if auto is active but no rx
+
+window.updateClockMode = function(mode) {
+  window.clockMode = mode;
+  renderClockUI();
+};
+
+window.renderClockUI = function() {
+  const intDiv = document.getElementById('clock-internal-settings');
+  const extDiv = document.getElementById('clock-external-settings');
+  const autoStatus = document.getElementById('clock-auto-status');
+  const sel = document.getElementById('clock-mode');
+  if (sel) sel.value = window.clockMode;
+  
+  if (window.clockMode === 'internal') {
+    intDiv.style.display = 'block';
+    extDiv.style.display = 'none';
+    autoStatus.style.display = 'none';
+  } else if (window.clockMode === 'external') {
+    intDiv.style.display = 'none';
+    extDiv.style.display = 'block';
+    autoStatus.style.display = 'none';
+  } else {
+    // AUTO
+    intDiv.style.display = 'block';
+    extDiv.style.display = 'block';
+    autoStatus.style.display = 'inline';
+    autoStatus.textContent = `[${window.clockAutoState.toUpperCase()} ACTIVE]`;
+  }
+  
+  // Render port checkboxes
+  if (window.midiAccess) {
+    const outPorts = document.getElementById('clock-out-ports');
+    if (outPorts) {
+      let outHtml = '';
+      for (let output of window.midiAccess.outputs.values()) {
+        const checked = window.clockOutPorts.includes(output.id) ? 'checked' : '';
+        outHtml += `<label style="font-size:0.75rem;"><input type="checkbox" onchange="toggleClockOutPort('${output.id}', this.checked)" ${checked}> ${output.name}</label>`;
+      }
+      outPorts.innerHTML = outHtml;
+    }
+    
+    const inPorts = document.getElementById('clock-in-ports');
+    if (inPorts) {
+      let inHtml = '';
+      for (let input of window.midiAccess.inputs.values()) {
+        const checked = window.clockInPorts.includes(input.id) ? 'checked' : '';
+        inHtml += `<label style="font-size:0.75rem;"><input type="checkbox" onchange="toggleClockInPort('${input.id}', this.checked)" ${checked}> ${input.name}</label>`;
+      }
+      inPorts.innerHTML = inHtml;
+    }
+  }
+};
+
+window.toggleClockOutPort = function(id, checked) {
+  if (checked) { if (!window.clockOutPorts.includes(id)) window.clockOutPorts.push(id); }
+  else window.clockOutPorts = window.clockOutPorts.filter(x => x !== id);
+};
+window.toggleClockInPort = function(id, checked) {
+  if (checked) { if (!window.clockInPorts.includes(id)) window.clockInPorts.push(id); }
+  else window.clockInPorts = window.clockInPorts.filter(x => x !== id);
+};
+
+window.sendClockTransport = function(byte) {
+  if (window.clockMode === 'external' || (window.clockMode === 'auto' && window.clockAutoState === 'external')) return;
+  window.clockOutPorts.forEach(id => {
+    const output = window.midiAccess.outputs.get(id);
+    if (output) output.send([byte]);
+  });
+};
+
+setInterval(() => {
+  if (window.clockMode === 'auto') {
+    const now = performance.now();
+    const newState = (now - window.lastClockRxTime < 2000) ? 'external' : 'internal';
+    if (newState !== window.clockAutoState) {
+      window.clockAutoState = newState;
+      renderClockUI();
+    }
+  }
+}, 1000);
+
+
+
+window.openSysExInspector = function() {
+  const dev = getActiveDev(); if (!dev) return;
+  const p = getActivePreset();
+  
+  let sysexContent = `<div style="color:var(--text3); font-size:0.8rem; margin-bottom:12px;">No SysEx data currently held in memory for this preset. You can initiate a dump from your device, or paste raw HEX bytes below.</div>`;
+  let hexString = '';
+  
+  if (p && p.sysexData && p.sysexData.length) {
+    hexString = p.sysexData.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    sysexContent = `<div style="margin-bottom:12px; font-size:0.8rem;">
+      Last dump received at: <strong>${new Date(p.lastDump || Date.now()).toLocaleTimeString()}</strong><br>
+      Total bytes: <strong>${p.sysexData.length}</strong>
+    </div>`;
+  }
+  
+  const html = `
+    <h2 style="margin-bottom:16px;">SysEx Template Importer / Inspector</h2>
+    ${sysexContent}
+    <textarea id="sysex-inspector-textarea" style="width:100%; height:200px; font-family:monospace; font-size:0.8rem; padding:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:4px; outline:none; resize:vertical; margin-bottom:12px;" placeholder="Paste raw HEX bytes (e.g. F0 00 20 29 ... F7)">${hexString}</textarea>
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn" onclick="closeModal()">Close</button>
+      <button class="btn primary" onclick="applySysExInspector()">Import / Parse Bytes</button>
+    </div>
+  `;
+  
+  openModal(html);
+};
+
+window.applySysExInspector = function() {
+  const dev = getActiveDev(); if (!dev) return;
+  const text = document.getElementById('sysex-inspector-textarea').value;
+  const hexes = text.replace(/[^a-fA-F0-9]/g, '');
+  if (hexes.length % 2 !== 0) {
+    toast('Invalid HEX string length.', 'error');
+    return;
+  }
+  
+  const bytes = [];
+  for (let i = 0; i < hexes.length; i += 2) {
+    bytes.push(parseInt(hexes.substr(i, 2), 16));
+  }
+  
+  if (bytes[0] !== 0xF0 || bytes[bytes.length-1] !== 0xF7) {
+    toast('SysEx must start with F0 and end with F7', 'error');
+    return;
+  }
+  
+  toast(`Parsed ${bytes.length} bytes.`, 'success');
+  handleSysExIn(new Uint8Array(bytes));
+  closeModal();
 };
