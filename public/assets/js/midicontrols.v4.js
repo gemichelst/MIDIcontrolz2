@@ -3059,11 +3059,12 @@ setInterval(() => {
 
 
 
+
 window.openSysExInspector = function() {
   const dev = getActiveDev(); if (!dev) return;
   const p = getActivePreset();
   
-  let sysexContent = `<div style="color:var(--text3); font-size:0.8rem; margin-bottom:12px;">No SysEx data currently held in memory for this preset. You can initiate a dump from your device, or paste raw HEX bytes below.</div>`;
+  let sysexContent = `<div style="color:var(--text3); font-size:0.8rem; margin-bottom:12px;">No SysEx data currently held in memory for this preset. You can initiate a dump from your device, upload a .syx file, or paste raw HEX bytes below.</div>`;
   let hexString = '';
   
   if (p && p.sysexData && p.sysexData.length) {
@@ -3075,16 +3076,104 @@ window.openSysExInspector = function() {
   }
   
   const html = `
-    <h2 style="margin-bottom:16px;">SysEx Template Importer / Inspector</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h2 style="margin:0;">SysEx Template Importer</h2>
+      <label class="btn sm" style="cursor:pointer; background:var(--surface3);">
+        📂 Load .syx File
+        <input type="file" accept=".syx" style="display:none;" onchange="loadSyxFileIntoInspector(event)">
+      </label>
+    </div>
     ${sysexContent}
-    <textarea id="sysex-inspector-textarea" style="width:100%; height:200px; font-family:monospace; font-size:0.8rem; padding:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:4px; outline:none; resize:vertical; margin-bottom:12px;" placeholder="Paste raw HEX bytes (e.g. F0 00 20 29 ... F7)">${hexString}</textarea>
+    <div style="display:flex; gap:12px; margin-bottom:12px;">
+      <div style="flex:1;">
+        <label style="font-size:0.8rem; font-weight:bold; color:var(--text2); display:block; margin-bottom:4px;">Raw HEX Data:</label>
+        <textarea id="sysex-inspector-textarea" oninput="updateSysExVisualizer()" style="width:100%; height:180px; font-family:monospace; font-size:0.8rem; padding:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:4px; outline:none; resize:vertical;" placeholder="Paste raw HEX bytes (e.g. F0 00 20 29 ... F7)">${hexString}</textarea>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <label style="font-size:0.8rem; font-weight:bold; color:var(--text2); display:block; margin-bottom:4px;">Template Structure Visualization:</label>
+        <div id="sysex-visualizer-container" style="flex:1; overflow-y:auto; background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:8px; font-family:monospace; font-size:0.75rem;">
+           <em style="color:var(--text3);">Paste or load hex data to visualize template structure...</em>
+        </div>
+      </div>
+    </div>
     <div style="display:flex; justify-content:flex-end; gap:8px;">
       <button class="btn" onclick="closeModal()">Close</button>
-      <button class="btn primary" onclick="applySysExInspector()">Import / Parse Bytes</button>
+      <button class="btn primary" onclick="applySysExInspector()">Parse & Import Template</button>
     </div>
   `;
   
   openModal(html);
+  setTimeout(updateSysExVisualizer, 50); // initial render
+};
+
+window.loadSyxFileIntoInspector = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const buffer = new Uint8Array(evt.target.result);
+    let hex = '';
+    buffer.forEach(b => hex += b.toString(16).padStart(2, '0').toUpperCase() + ' ');
+    const ta = document.getElementById('sysex-inspector-textarea');
+    if (ta) {
+      ta.value = hex.trim();
+      updateSysExVisualizer();
+      toast('Loaded .syx file into importer.', 'info');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+window.updateSysExVisualizer = function() {
+  const ta = document.getElementById('sysex-inspector-textarea');
+  const vis = document.getElementById('sysex-visualizer-container');
+  if (!ta || !vis) return;
+  
+  const text = ta.value.replace(/[^a-fA-F0-9]/g, '');
+  if (text.length === 0) {
+    vis.innerHTML = '<em style="color:var(--text3);">No data...</em>';
+    return;
+  }
+  
+  const bytes = [];
+  for (let i = 0; i < text.length; i += 2) {
+    bytes.push(parseInt(text.substr(i, 2), 16));
+  }
+  
+  let out = '';
+  // Generic structural visualization
+  if (bytes[0] === 0xF0) {
+    out += `<div style="color:var(--accent); margin-bottom:4px;"><strong>[SysEx Header]</strong> ${bytes.slice(0, 4).map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ')}</div>`;
+    
+    // Novation specifics (F0 00 20 29)
+    if (bytes[1] === 0x00 && bytes[2] === 0x20 && bytes[3] === 0x29) {
+      out += `<div style="color:#10b981; margin-bottom:4px;">✓ Novation Protocol Detected</div>`;
+      out += `<div style="color:var(--text2); margin-bottom:8px;">Device Type: <strong>0x${(bytes[4]||0).toString(16).padStart(2,'0')}</strong> | Command: <strong>0x${(bytes[5]||0).toString(16).padStart(2,'0')}</strong></div>`;
+    }
+    
+    out += `<div style="margin-bottom:8px; border-top:1px solid var(--border); padding-top:4px;"><strong>Payload Bytes:</strong></div>`;
+    
+    out += `<div style="display:grid; grid-template-columns:repeat(8, 1fr); gap:2px; font-size:0.7rem;">`;
+    const payload = bytes.slice(4, bytes.length - (bytes[bytes.length-1] === 0xF7 ? 1 : 0));
+    payload.forEach((b, i) => {
+      // Highlight standard CC ranges or ASCII text roughly
+      let bg = 'transparent';
+      let title = 'Byte';
+      if (b >= 32 && b <= 126) { bg = '#334155'; title = String.fromCharCode(b); }
+      out += `<div style="background:${bg}; padding:2px; text-align:center; border-radius:2px;" title="${title}">${b.toString(16).padStart(2,'0').toUpperCase()}</div>`;
+    });
+    out += `</div>`;
+    
+    if (bytes[bytes.length-1] === 0xF7) {
+       out += `<div style="color:var(--accent); margin-top:8px;"><strong>[End of Exclusive (F7)]</strong></div>`;
+    } else {
+       out += `<div style="color:#ef4444; margin-top:8px;"><strong>[WARNING: Missing F7 Terminator]</strong></div>`;
+    }
+  } else {
+    out += `<div style="color:#ef4444;">Invalid SysEx: Must start with F0.</div>`;
+  }
+  
+  vis.innerHTML = out;
 };
 
 window.applySysExInspector = function() {
@@ -3101,12 +3190,13 @@ window.applySysExInspector = function() {
     bytes.push(parseInt(hexes.substr(i, 2), 16));
   }
   
-  if (bytes[0] !== 0xF0 || bytes[bytes.length-1] !== 0xF7) {
+  if (bytes[0] !== 0xF0 || (bytes.length > 0 && bytes[bytes.length-1] !== 0xF7)) {
     toast('SysEx must start with F0 and end with F7', 'error');
     return;
   }
   
-  toast(`Parsed ${bytes.length} bytes.`, 'success');
+  toast(`Parsed & Imported ${bytes.length} bytes of Template Data.`, 'success');
   handleSysExIn(new Uint8Array(bytes));
   closeModal();
 };
+
