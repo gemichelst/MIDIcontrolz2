@@ -122,18 +122,18 @@
 
         if (type === "knob") {
           parts.push(
-            `<circle id="${id}" class="${cssClass}" cx="${offsetX + 22}" cy="${y + 20}" r="17" fill="#1e293b" stroke="#94a3b8" stroke-width="2" tabindex="0" role="button" aria-label="${escapeHtml(label)}" oncontextmenu="handleSvgRightClick(event)" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></circle>`,
+            `<circle id="${id}" class="${cssClass}" cx="${offsetX + 22}" cy="${y + 20}" r="17" fill="#1e293b" stroke="#94a3b8" stroke-width="2" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></circle>`,
             `<text x="${offsetX + 22}" y="${y + 24}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="9" pointer-events="none">CC ${control.cc ?? "-"}</text>`
           );
         } else if (type === "fader") {
           parts.push(
             `<rect x="${offsetX + 14}" y="${y}" width="16" height="42" rx="3" fill="#020617" stroke="#475569"/>`,
-            `<rect id="${id}" class="${cssClass}" x="${offsetX + 8}" y="${y + 14}" width="28" height="14" rx="3" fill="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" oncontextmenu="handleSvgRightClick(event)" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
+            `<rect id="${id}" class="${cssClass}" x="${offsetX + 8}" y="${y + 14}" width="28" height="14" rx="3" fill="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
             `<text x="${offsetX + 22}" y="${y + 55}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="9" pointer-events="none">CC ${control.cc ?? "-"}</text>`
           );
         } else {
           parts.push(
-            `<rect id="${id}" class="${cssClass}" x="${offsetX}" y="${y}" width="40" height="40" rx="5" fill="#334155" stroke="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" oncontextmenu="handleSvgRightClick(event)" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
+            `<rect id="${id}" class="${cssClass}" x="${offsetX}" y="${y}" width="40" height="40" rx="5" fill="#334155" stroke="#64748b" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="selectSvgControl('${type}', ${index})" ondragenter="svgDragEnter(event)" ondragleave="svgDragLeave(event)"><title>${escapeHtml(label)}</title></rect>`,
             `<text x="${offsetX + 20}" y="${y + 24}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="10" pointer-events="none">${control.note ?? control.cc ?? "-"}</text>`
           );
         }
@@ -395,24 +395,7 @@
   window.mapperLearnMode = false;
   window.mapperLearnTarget = null;
 
-  window.handleSvgRightClick = function handleSvgRightClick(event) {
-    event.preventDefault();
-    const target = event.target.closest?.(".svg-control");
-    if (!target) return;
-    const [, type, indexText] = target.id?.split("-") ?? [];
-    const index = Number(indexText);
-    const dev = getActiveDevice();
-    const controls = dev?.controls?.[type + "s"];
-    if (!Array.isArray(controls) || !controls[index]) return;
-
-    controls[index].cc = null;
-    if (type === 'pad') controls[index].note = null;
-    save();
-    syncLog("Mapping removed for " + type + " " + (index + 1));
-    notify("Mapping removed for " + type + " " + (index + 1) + ".", "success");
-    refreshMapper();
-  };
-
+  
 
 window.updateDraggableTooltips = function() {
   const MIDI_CC_NAMES = {
@@ -433,28 +416,46 @@ window.updateDraggableTooltips = function() {
 window.addEventListener("DOMContentLoaded", () => {
   window.updateDraggableTooltips();
   
-  let dragTargetCount = 0;
   const svgContainer = document.getElementById('svg-mapper-container');
   if (svgContainer) {
-    svgContainer.addEventListener('dragenter', (e) => {
-      e.preventDefault();
-      dragTargetCount++;
+    // Dropzone feedback using dragover and dragleave
+    svgContainer.addEventListener('dragover', (e) => {
+      e.preventDefault(); // necessary to allow dropping
       svgContainer.classList.add('container-glow');
     });
+    
     svgContainer.addEventListener('dragleave', (e) => {
       e.preventDefault();
-      dragTargetCount--;
-      if (dragTargetCount <= 0) {
-        dragTargetCount = 0;
+      // Ensure we only remove glow if we leave the actual container, not child elements.
+      if (!svgContainer.contains(e.relatedTarget)) {
         svgContainer.classList.remove('container-glow');
       }
     });
-    svgContainer.addEventListener('dragover', (e) => {
-      e.preventDefault();
-    });
+    
     svgContainer.addEventListener('drop', (e) => {
-      dragTargetCount = 0;
       svgContainer.classList.remove('container-glow');
+    });
+
+    // Delegated contextmenu for mapping deletion
+    svgContainer.addEventListener('contextmenu', (e) => {
+      const target = e.target.closest?.(".svg-control");
+      if (!target) return;
+      
+      e.preventDefault();
+      
+      const [, type, indexText] = target.id?.split("-") ?? [];
+      const index = Number(indexText);
+      const dev = getActiveDevice();
+      const controls = dev?.controls?.[type + "s"];
+      if (!Array.isArray(controls) || !controls[index]) return;
+
+      controls[index].cc = null;
+      if (type === 'pad') controls[index].note = null;
+      
+      save();
+      syncLog("Mapping removed for " + type + " " + (index + 1));
+      notify("Mapping removed for " + type + " " + (index + 1) + ".", "success");
+      refreshMapper();
     });
   }
 });

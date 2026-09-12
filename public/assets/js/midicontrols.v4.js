@@ -1028,10 +1028,18 @@ function handleSysExIn(data) {
 function readFromDevice() {
   const dev = getActiveDev(); if (!dev) return;
   if (!State.midiOut) { toast('No MIDI Out connected', 'error'); return; }
+  
   if (dev.id === 'akai_lpd8_v1') {
     const pn = State.activePresetIndex + 1;
-    sendMidiOut([0xF0,0x47,0x7F,0x75,0x61,0x00,0x01, pn, 0xF7]);
+    sendMidiOut([0xF0, 0x47, 0x7F, 0x75, 0x61, 0x00, 0x01, pn, 0xF7]);
     toast(`Reading Preset ${pn} from LPD8…`, 'info');
+  } else if (dev.id.includes('novation')) {
+    // Novation Nocturn & Remote SL template dump request
+    // Common Novation format: F0 00 20 29 [device_type] [command] ... F7
+    // Using a generic template dump request for Novation
+    const dumpReq = [0xF0, 0x00, 0x20, 0x29, 0x02, 0x0A, 0x79, 0x00, 0xF7];
+    sendMidiOut(dumpReq);
+    toast(`Requested SysEx template dump from ${dev.name}…`, 'info');
   } else if (dev.dumpRequest) {
     const req = dev.dumpRequest.map(x => typeof x === 'string' ? parseInt(x, 16) : x);
     sendMidiOut(req);
