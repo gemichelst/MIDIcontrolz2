@@ -1,0 +1,309 @@
+{
+  "id": "ni_maschine_mk3",
+  "name": "Maschine MK3",
+  "manufacturer": "Native Instruments",
+  "icon": "🎛️",
+  "color": "#263238",
+  "midiName": [
+    "Maschine MK3",
+    "Maschine Plus"
+  ],
+  "sysex": true,
+  "presets": 8,
+  "description": "Integrated 96kHz audio interface, dual high-res color displays, Smart Strip, 8 touch knobs",
+  "controls": {
+    "pads": [
+      {
+        "id": "pad1",
+        "label": "Pad 1",
+        "note": 36,
+        "cc": 16,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad2",
+        "label": "Pad 2",
+        "note": 37,
+        "cc": 17,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad3",
+        "label": "Pad 3",
+        "note": 38,
+        "cc": 18,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad4",
+        "label": "Pad 4",
+        "note": 39,
+        "cc": 19,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad5",
+        "label": "Pad 5",
+        "note": 40,
+        "cc": 20,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad6",
+        "label": "Pad 6",
+        "note": 41,
+        "cc": 21,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad7",
+        "label": "Pad 7",
+        "note": 42,
+        "cc": 22,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad8",
+        "label": "Pad 8",
+        "note": 43,
+        "cc": 23,
+        "pc": 7,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad9",
+        "label": "Pad 9",
+        "note": 44,
+        "cc": 24,
+        "pc": 8,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad10",
+        "label": "Pad 10",
+        "note": 45,
+        "cc": 25,
+        "pc": 9,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad11",
+        "label": "Pad 11",
+        "note": 46,
+        "cc": 26,
+        "pc": 10,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad12",
+        "label": "Pad 12",
+        "note": 47,
+        "cc": 27,
+        "pc": 11,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad13",
+        "label": "Pad 13",
+        "note": 48,
+        "cc": 28,
+        "pc": 12,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad14",
+        "label": "Pad 14",
+        "note": 49,
+        "cc": 29,
+        "pc": 13,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad15",
+        "label": "Pad 15",
+        "note": 50,
+        "cc": 30,
+        "pc": 14,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad16",
+        "label": "Pad 16",
+        "note": 51,
+        "cc": 31,
+        "pc": 15,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [
+      {
+        "id": "enc1",
+        "label": "Macro 1",
+        "cc": 20,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc2",
+        "label": "Macro 2",
+        "cc": 21,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc3",
+        "label": "Macro 3",
+        "cc": 22,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc4",
+        "label": "Macro 4",
+        "cc": 23,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc5",
+        "label": "Macro 5",
+        "cc": 24,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc6",
+        "label": "Macro 6",
+        "cc": 25,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc7",
+        "label": "Macro 7",
+        "cc": 26,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc8",
+        "label": "Macro 8",
+        "cc": 27,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "smart_strip",
+        "label": "Smart Strip",
+        "cc": 1,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc_4d",
+        "label": "4-D Encoder",
+        "cc": 7,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [],
+    "buttons": [
+      {
+        "id": "btn_soft1",
+        "label": "Soft 1",
+        "note": 80,
+        "color": "green"
+      },
+      {
+        "id": "btn_soft2",
+        "label": "Soft 2",
+        "note": 81,
+        "color": "green"
+      },
+      {
+        "id": "btn_soft3",
+        "label": "Soft 3",
+        "note": 82,
+        "color": "green"
+      },
+      {
+        "id": "btn_soft4",
+        "label": "Soft 4",
+        "note": 83,
+        "color": "green"
+      },
+      {
+        "id": "btn_play",
+        "label": "Play",
+        "note": 108,
+        "color": "green"
+      },
+      {
+        "id": "btn_rec",
+        "label": "Rec",
+        "note": 109,
+        "color": "red"
+      },
+      {
+        "id": "btn_stop",
+        "label": "Stop",
+        "note": 107,
+        "color": "amber"
+      },
+      {
+        "id": "btn_restart",
+        "label": "Restart",
+        "note": 110,
+        "color": "green"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Group A (Studio Mode)",
+      "channel": 0
+    },
+    {
+      "name": "Group B (Studio Mode)",
+      "channel": 1
+    },
+    {
+      "name": "Group C (Studio Mode)",
+      "channel": 2
+    },
+    {
+      "name": "Group D (Studio Mode)",
+      "channel": 3
+    },
+    {
+      "name": "Group E (Studio Mode)",
+      "channel": 4
+    },
+    {
+      "name": "Group F (Studio Mode)",
+      "channel": 5
+    },
+    {
+      "name": "Group G (Studio Mode)",
+      "channel": 6
+    },
+    {
+      "name": "Group H (Studio Mode)",
+      "channel": 7
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Device Inquiry",
+      "bytes": "F0 7E 7F 06 01 F7"
+    }
+  ]
+}

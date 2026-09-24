@@ -1,0 +1,325 @@
+{
+  "id": "roland_tr8s",
+  "name": "TR-8S Rhythm Performer",
+  "manufacturer": "Roland",
+  "icon": "🥁",
+  "color": "#2e7d32",
+  "midiName": [
+    "TR-8S",
+    "Roland TR-8S"
+  ],
+  "sysex": true,
+  "presets": 16,
+  "description": "11 instrument channels with dedicated Tune, Decay, CTRL knobs, Level faders & 16 TR-REC step pads",
+  "controls": {
+    "pads": [
+      {
+        "id": "step_bd",
+        "label": "BD Pad",
+        "note": 36,
+        "cc": 20,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_sd",
+        "label": "SD Pad",
+        "note": 38,
+        "cc": 28,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_lt",
+        "label": "LT Pad",
+        "note": 41,
+        "cc": 36,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_mt",
+        "label": "MT Pad",
+        "note": 45,
+        "cc": 44,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_ht",
+        "label": "HT Pad",
+        "note": 48,
+        "cc": 52,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_rs",
+        "label": "RS Pad",
+        "note": 37,
+        "cc": 60,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_hc",
+        "label": "HC Pad",
+        "note": 39,
+        "cc": 68,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_ch",
+        "label": "CH Pad",
+        "note": 42,
+        "cc": 76,
+        "pc": 7,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_oh",
+        "label": "OH Pad",
+        "note": 46,
+        "cc": 84,
+        "pc": 8,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_cc",
+        "label": "CC Pad",
+        "note": 49,
+        "cc": 92,
+        "pc": 9,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step_rc",
+        "label": "RC Pad",
+        "note": 51,
+        "cc": 100,
+        "pc": 10,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [
+      {
+        "id": "tune_bd",
+        "label": "BD Tune",
+        "cc": 20,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "decay_bd",
+        "label": "BD Decay",
+        "cc": 23,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "ctrl_bd",
+        "label": "BD CTRL",
+        "cc": 96,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "tune_sd",
+        "label": "SD Tune",
+        "cc": 28,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "decay_sd",
+        "label": "SD Decay",
+        "cc": 31,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "ctrl_sd",
+        "label": "SD CTRL",
+        "cc": 97,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "delay_lvl",
+        "label": "Delay Level",
+        "cc": 16,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "reverb_lvl",
+        "label": "Reverb Level",
+        "cc": 91,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "master_fx",
+        "label": "Master FX CTRL",
+        "cc": 19,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "accent_lvl",
+        "label": "Accent Level",
+        "cc": 71,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [
+      {
+        "id": "fdr_bd",
+        "label": "BD Level",
+        "cc": 24
+      },
+      {
+        "id": "fdr_sd",
+        "label": "SD Level",
+        "cc": 32
+      },
+      {
+        "id": "fdr_lt",
+        "label": "LT Level",
+        "cc": 40
+      },
+      {
+        "id": "fdr_mt",
+        "label": "MT Level",
+        "cc": 48
+      },
+      {
+        "id": "fdr_ht",
+        "label": "HT Level",
+        "cc": 56
+      },
+      {
+        "id": "fdr_rs",
+        "label": "RS Level",
+        "cc": 64
+      },
+      {
+        "id": "fdr_hc",
+        "label": "HC Level",
+        "cc": 72
+      },
+      {
+        "id": "fdr_ch",
+        "label": "CH Level",
+        "cc": 80
+      },
+      {
+        "id": "fdr_oh",
+        "label": "OH Level",
+        "cc": 88
+      },
+      {
+        "id": "fdr_cc",
+        "label": "CC Level",
+        "cc": 94
+      },
+      {
+        "id": "fdr_rc",
+        "label": "RC Level",
+        "cc": 101
+      }
+    ],
+    "buttons": [
+      {
+        "id": "btn_autofill",
+        "label": "Auto Fill-In",
+        "cc": 14,
+        "color": "amber"
+      },
+      {
+        "id": "btn_master_fx",
+        "label": "Master FX On",
+        "cc": 15,
+        "color": "green"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Kit 1 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 2 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 3 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 4 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 5 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 6 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 7 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 8 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 9 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 10 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 11 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 12 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 13 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 14 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 15 (808/909)",
+      "channel": 9
+    },
+    {
+      "name": "Kit 16 (808/909)",
+      "channel": 9
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Roland Identity Inquiry",
+      "bytes": "F0 7E 10 06 01 F7"
+    },
+    {
+      "label": "Kit Parameters Request",
+      "bytes": "F0 41 10 00 00 00 4B 11 00 00 00 00 00 00 01 00 7F F7"
+    }
+  ]
+}

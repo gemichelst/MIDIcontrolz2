@@ -1,0 +1,610 @@
+{
+  "id": "novation_launchpad_pro",
+  "name": "Launchpad Pro",
+  "manufacturer": "Novation",
+  "icon": "🟩",
+  "color": "#16a085",
+  "midiName": [
+    "Launchpad Pro",
+    "LP Pro"
+  ],
+  "sysex": true,
+  "presets": 4,
+  "description": "Professional 64-pad velocity & poly-aftertouch performance grid with dedicated navigation",
+  "controls": {
+    "pads": [
+      {
+        "id": "pad_0_0",
+        "label": "Pad 1:1",
+        "note": 81,
+        "cc": 81,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_1",
+        "label": "Pad 1:2",
+        "note": 82,
+        "cc": 82,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_2",
+        "label": "Pad 1:3",
+        "note": 83,
+        "cc": 83,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_3",
+        "label": "Pad 1:4",
+        "note": 84,
+        "cc": 84,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_4",
+        "label": "Pad 1:5",
+        "note": 85,
+        "cc": 85,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_5",
+        "label": "Pad 1:6",
+        "note": 86,
+        "cc": 86,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_6",
+        "label": "Pad 1:7",
+        "note": 87,
+        "cc": 87,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_7",
+        "label": "Pad 1:8",
+        "note": 88,
+        "cc": 88,
+        "pc": 7,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_0",
+        "label": "Pad 2:1",
+        "note": 71,
+        "cc": 71,
+        "pc": 8,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_1",
+        "label": "Pad 2:2",
+        "note": 72,
+        "cc": 72,
+        "pc": 9,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_2",
+        "label": "Pad 2:3",
+        "note": 73,
+        "cc": 73,
+        "pc": 10,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_3",
+        "label": "Pad 2:4",
+        "note": 74,
+        "cc": 74,
+        "pc": 11,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_4",
+        "label": "Pad 2:5",
+        "note": 75,
+        "cc": 75,
+        "pc": 12,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_5",
+        "label": "Pad 2:6",
+        "note": 76,
+        "cc": 76,
+        "pc": 13,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_6",
+        "label": "Pad 2:7",
+        "note": 77,
+        "cc": 77,
+        "pc": 14,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_7",
+        "label": "Pad 2:8",
+        "note": 78,
+        "cc": 78,
+        "pc": 15,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_0",
+        "label": "Pad 3:1",
+        "note": 61,
+        "cc": 61,
+        "pc": 16,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_1",
+        "label": "Pad 3:2",
+        "note": 62,
+        "cc": 62,
+        "pc": 17,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_2",
+        "label": "Pad 3:3",
+        "note": 63,
+        "cc": 63,
+        "pc": 18,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_3",
+        "label": "Pad 3:4",
+        "note": 64,
+        "cc": 64,
+        "pc": 19,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_4",
+        "label": "Pad 3:5",
+        "note": 65,
+        "cc": 65,
+        "pc": 20,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_5",
+        "label": "Pad 3:6",
+        "note": 66,
+        "cc": 66,
+        "pc": 21,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_6",
+        "label": "Pad 3:7",
+        "note": 67,
+        "cc": 67,
+        "pc": 22,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_7",
+        "label": "Pad 3:8",
+        "note": 68,
+        "cc": 68,
+        "pc": 23,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_0",
+        "label": "Pad 4:1",
+        "note": 51,
+        "cc": 51,
+        "pc": 24,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_1",
+        "label": "Pad 4:2",
+        "note": 52,
+        "cc": 52,
+        "pc": 25,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_2",
+        "label": "Pad 4:3",
+        "note": 53,
+        "cc": 53,
+        "pc": 26,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_3",
+        "label": "Pad 4:4",
+        "note": 54,
+        "cc": 54,
+        "pc": 27,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_4",
+        "label": "Pad 4:5",
+        "note": 55,
+        "cc": 55,
+        "pc": 28,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_5",
+        "label": "Pad 4:6",
+        "note": 56,
+        "cc": 56,
+        "pc": 29,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_6",
+        "label": "Pad 4:7",
+        "note": 57,
+        "cc": 57,
+        "pc": 30,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_7",
+        "label": "Pad 4:8",
+        "note": 58,
+        "cc": 58,
+        "pc": 31,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_0",
+        "label": "Pad 5:1",
+        "note": 41,
+        "cc": 41,
+        "pc": 32,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_1",
+        "label": "Pad 5:2",
+        "note": 42,
+        "cc": 42,
+        "pc": 33,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_2",
+        "label": "Pad 5:3",
+        "note": 43,
+        "cc": 43,
+        "pc": 34,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_3",
+        "label": "Pad 5:4",
+        "note": 44,
+        "cc": 44,
+        "pc": 35,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_4",
+        "label": "Pad 5:5",
+        "note": 45,
+        "cc": 45,
+        "pc": 36,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_5",
+        "label": "Pad 5:6",
+        "note": 46,
+        "cc": 46,
+        "pc": 37,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_6",
+        "label": "Pad 5:7",
+        "note": 47,
+        "cc": 47,
+        "pc": 38,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_7",
+        "label": "Pad 5:8",
+        "note": 48,
+        "cc": 48,
+        "pc": 39,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_0",
+        "label": "Pad 6:1",
+        "note": 31,
+        "cc": 31,
+        "pc": 40,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_1",
+        "label": "Pad 6:2",
+        "note": 32,
+        "cc": 32,
+        "pc": 41,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_2",
+        "label": "Pad 6:3",
+        "note": 33,
+        "cc": 33,
+        "pc": 42,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_3",
+        "label": "Pad 6:4",
+        "note": 34,
+        "cc": 34,
+        "pc": 43,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_4",
+        "label": "Pad 6:5",
+        "note": 35,
+        "cc": 35,
+        "pc": 44,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_5",
+        "label": "Pad 6:6",
+        "note": 36,
+        "cc": 36,
+        "pc": 45,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_6",
+        "label": "Pad 6:7",
+        "note": 37,
+        "cc": 37,
+        "pc": 46,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_7",
+        "label": "Pad 6:8",
+        "note": 38,
+        "cc": 38,
+        "pc": 47,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_0",
+        "label": "Pad 7:1",
+        "note": 21,
+        "cc": 21,
+        "pc": 48,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_1",
+        "label": "Pad 7:2",
+        "note": 22,
+        "cc": 22,
+        "pc": 49,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_2",
+        "label": "Pad 7:3",
+        "note": 23,
+        "cc": 23,
+        "pc": 50,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_3",
+        "label": "Pad 7:4",
+        "note": 24,
+        "cc": 24,
+        "pc": 51,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_4",
+        "label": "Pad 7:5",
+        "note": 25,
+        "cc": 25,
+        "pc": 52,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_5",
+        "label": "Pad 7:6",
+        "note": 26,
+        "cc": 26,
+        "pc": 53,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_6",
+        "label": "Pad 7:7",
+        "note": 27,
+        "cc": 27,
+        "pc": 54,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_7",
+        "label": "Pad 7:8",
+        "note": 28,
+        "cc": 28,
+        "pc": 55,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_0",
+        "label": "Pad 8:1",
+        "note": 11,
+        "cc": 11,
+        "pc": 56,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_1",
+        "label": "Pad 8:2",
+        "note": 12,
+        "cc": 12,
+        "pc": 57,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_2",
+        "label": "Pad 8:3",
+        "note": 13,
+        "cc": 13,
+        "pc": 58,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_3",
+        "label": "Pad 8:4",
+        "note": 14,
+        "cc": 14,
+        "pc": 59,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_4",
+        "label": "Pad 8:5",
+        "note": 15,
+        "cc": 15,
+        "pc": 60,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_5",
+        "label": "Pad 8:6",
+        "note": 16,
+        "cc": 16,
+        "pc": 61,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_6",
+        "label": "Pad 8:7",
+        "note": 17,
+        "cc": 17,
+        "pc": 62,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_7",
+        "label": "Pad 8:8",
+        "note": 18,
+        "cc": 18,
+        "pc": 63,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [],
+    "faders": [],
+    "buttons": [
+      {
+        "id": "btn_shift",
+        "label": "Shift",
+        "note": 80,
+        "color": "amber"
+      },
+      {
+        "id": "btn_click",
+        "label": "Click",
+        "note": 70,
+        "color": "green"
+      },
+      {
+        "id": "btn_undo",
+        "label": "Undo",
+        "note": 60,
+        "color": "green"
+      },
+      {
+        "id": "btn_delete",
+        "label": "Delete",
+        "note": 50,
+        "color": "red"
+      },
+      {
+        "id": "btn_quantise",
+        "label": "Quantise",
+        "note": 40,
+        "color": "green"
+      },
+      {
+        "id": "btn_duplicate",
+        "label": "Duplicate",
+        "note": 30,
+        "color": "green"
+      },
+      {
+        "id": "btn_double",
+        "label": "Double",
+        "note": 20,
+        "color": "green"
+      },
+      {
+        "id": "btn_record",
+        "label": "Record",
+        "note": 10,
+        "color": "red"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Live Session Mode",
+      "channel": 0
+    },
+    {
+      "name": "Standalone Note Mode",
+      "channel": 0
+    },
+    {
+      "name": "Device Fader / Macro Mode",
+      "channel": 0
+    },
+    {
+      "name": "Programmer Mode",
+      "channel": 0
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Enter Programmer Mode",
+      "bytes": "F0 00 20 29 02 10 2C 03 F7"
+    },
+    {
+      "label": "Enter Standalone Note Mode",
+      "bytes": "F0 00 20 29 02 10 2C 01 F7"
+    }
+  ]
+}

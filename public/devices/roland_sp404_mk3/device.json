@@ -1,0 +1,296 @@
+{
+  "id": "roland_sp404_mk3",
+  "name": "SP-404MK3 (Studio Sampler)",
+  "manufacturer": "Roland",
+  "icon": "🎛️",
+  "color": "#212121",
+  "midiName": [
+    "SP-404MK3",
+    "SP-404 Studio"
+  ],
+  "sysex": true,
+  "presets": 12,
+  "description": "Extended studio sampler architecture: 16 expressive pads, 6 multi-FX macro encoders, dual crossfaders",
+  "controls": {
+    "pads": [
+      {
+        "id": "pad1",
+        "label": "Pad 1",
+        "note": 36,
+        "cc": 20,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad2",
+        "label": "Pad 2",
+        "note": 37,
+        "cc": 21,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad3",
+        "label": "Pad 3",
+        "note": 38,
+        "cc": 22,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad4",
+        "label": "Pad 4",
+        "note": 39,
+        "cc": 23,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad5",
+        "label": "Pad 5",
+        "note": 40,
+        "cc": 24,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad6",
+        "label": "Pad 6",
+        "note": 41,
+        "cc": 25,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad7",
+        "label": "Pad 7",
+        "note": 42,
+        "cc": 26,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad8",
+        "label": "Pad 8",
+        "note": 43,
+        "cc": 27,
+        "pc": 7,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad9",
+        "label": "Pad 9",
+        "note": 44,
+        "cc": 28,
+        "pc": 8,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad10",
+        "label": "Pad 10",
+        "note": 45,
+        "cc": 29,
+        "pc": 9,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad11",
+        "label": "Pad 11",
+        "note": 46,
+        "cc": 30,
+        "pc": 10,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad12",
+        "label": "Pad 12",
+        "note": 47,
+        "cc": 31,
+        "pc": 11,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad13",
+        "label": "Pad 13",
+        "note": 48,
+        "cc": 32,
+        "pc": 12,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad14",
+        "label": "Pad 14",
+        "note": 49,
+        "cc": 33,
+        "pc": 13,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad15",
+        "label": "Pad 15",
+        "note": 50,
+        "cc": 34,
+        "pc": 14,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad16",
+        "label": "Pad 16",
+        "note": 51,
+        "cc": 35,
+        "pc": 15,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [
+      {
+        "id": "macro1",
+        "label": "Macro 1 (Filter)",
+        "cc": 16,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "macro2",
+        "label": "Macro 2 (Reso)",
+        "cc": 17,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "macro3",
+        "label": "Macro 3 (Tape/Vinyl)",
+        "cc": 18,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "macro4",
+        "label": "Macro 4 (Delay)",
+        "cc": 19,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "macro5",
+        "label": "Macro 5 (Reverb)",
+        "cc": 20,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "macro6",
+        "label": "Macro 6 (Comp)",
+        "cc": 21,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [
+      {
+        "id": "fdr_xfade",
+        "label": "Master Crossfader",
+        "cc": 8
+      },
+      {
+        "id": "fdr_master",
+        "label": "Master Level",
+        "cc": 7
+      }
+    ],
+    "buttons": [
+      {
+        "id": "btn_chromatic",
+        "label": "Chromatic",
+        "note": 88,
+        "color": "green"
+      },
+      {
+        "id": "btn_slice",
+        "label": "Slice Mode",
+        "note": 89,
+        "color": "amber"
+      },
+      {
+        "id": "btn_poly",
+        "label": "Polyphonic",
+        "note": 90,
+        "color": "green"
+      },
+      {
+        "id": "btn_mutegroup",
+        "label": "Mute Group",
+        "note": 91,
+        "color": "red"
+      },
+      {
+        "id": "btn_resample",
+        "label": "Resample",
+        "note": 92,
+        "color": "amber"
+      },
+      {
+        "id": "btn_loop",
+        "label": "DJ Looper",
+        "note": 93,
+        "color": "green"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Bank A (Ch 1)",
+      "channel": 0
+    },
+    {
+      "name": "Bank B (Ch 2)",
+      "channel": 1
+    },
+    {
+      "name": "Bank C (Ch 3)",
+      "channel": 2
+    },
+    {
+      "name": "Bank D (Ch 4)",
+      "channel": 3
+    },
+    {
+      "name": "Bank E (Ch 5)",
+      "channel": 4
+    },
+    {
+      "name": "Bank F (Ch 6)",
+      "channel": 5
+    },
+    {
+      "name": "Bank G (Ch 7)",
+      "channel": 6
+    },
+    {
+      "name": "Bank H (Ch 8)",
+      "channel": 7
+    },
+    {
+      "name": "Bank I (Ch 9)",
+      "channel": 8
+    },
+    {
+      "name": "Bank J (Ch 10)",
+      "channel": 9
+    },
+    {
+      "name": "Bank K (Ch 11)",
+      "channel": 10
+    },
+    {
+      "name": "Bank L (Ch 12)",
+      "channel": 11
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Studio Identity Inquiry",
+      "bytes": "F0 7E 10 06 01 F7"
+    }
+  ]
+}

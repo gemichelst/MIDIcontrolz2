@@ -1,0 +1,185 @@
+{
+  "id": "behringer_edge",
+  "name": "Edge Percussion Synthesizer",
+  "manufacturer": "Behringer",
+  "icon": "⚡",
+  "color": "#d81b60",
+  "midiName": [
+    "Edge",
+    "Behringer Edge"
+  ],
+  "sysex": true,
+  "presets": 8,
+  "description": "Analog semi-modular percussion synthesizer with dual 8-step sequencer, filter modulation & MIDI clock sync",
+  "controls": {
+    "pads": [
+      {
+        "id": "step1",
+        "label": "Step 1",
+        "note": 60,
+        "cc": 16,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step2",
+        "label": "Step 2",
+        "note": 61,
+        "cc": 17,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step3",
+        "label": "Step 3",
+        "note": 62,
+        "cc": 18,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step4",
+        "label": "Step 4",
+        "note": 63,
+        "cc": 19,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step5",
+        "label": "Step 5",
+        "note": 64,
+        "cc": 20,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step6",
+        "label": "Step 6",
+        "note": 65,
+        "cc": 21,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step7",
+        "label": "Step 7",
+        "note": 66,
+        "cc": 22,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "step8",
+        "label": "Step 8",
+        "note": 67,
+        "cc": 23,
+        "pc": 7,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [
+      {
+        "id": "cutoff",
+        "label": "VCF Cutoff",
+        "cc": 74,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "resonance",
+        "label": "VCF Reso",
+        "cc": 71,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "vcf_decay",
+        "label": "VCF Decay",
+        "cc": 75,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "vca_decay",
+        "label": "VCA Decay",
+        "cc": 79,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pitch_mod",
+        "label": "Pitch Mod Depth",
+        "cc": 76,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "noise_level",
+        "label": "Pink Noise",
+        "cc": 77,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "seq_pitch",
+        "label": "Seq Pitch Mod",
+        "cc": 1,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "velocity_amt",
+        "label": "Velocity Sens",
+        "cc": 2,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [],
+    "buttons": [
+      {
+        "id": "btn_trigger",
+        "label": "Trigger",
+        "note": 36,
+        "color": "red"
+      },
+      {
+        "id": "btn_advance",
+        "label": "Advance Step",
+        "note": 37,
+        "color": "green"
+      },
+      {
+        "id": "btn_play",
+        "label": "Play / Stop",
+        "note": 108,
+        "color": "green"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Drum Synth Pattern 1",
+      "channel": 0
+    },
+    {
+      "name": "Aggressive Noise Hit",
+      "channel": 0
+    },
+    {
+      "name": "Acid Bassline Sequence",
+      "channel": 0
+    },
+    {
+      "name": "Industrial Polyrhythm",
+      "channel": 0
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Behringer Identity Request",
+      "bytes": "F0 7E 7F 06 01 F7"
+    }
+  ]
+}

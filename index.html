@@ -626,7 +626,40 @@
               <input type="file" accept=".syx" style="display:none;" onchange="loadSyxFileIntoPanel(event)">
             </label>
           </h3>
-          <p style="font-size:0.8rem;color:var(--text3);margin-bottom:12px;">Manually dump SysEx from devices (e.g. Novation SL), paste HEX bytes below, or load a .syx file to import and visualize.</p>
+          <p style="font-size:0.8rem;color:var(--text3);margin-bottom:8px;">Select a standard starting template below, paste raw HEX bytes, or load a .syx file to import and visualize.</p>
+          
+          <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <label for="sysex-template-preset-select" style="font-size:0.75rem; color:var(--text2); font-weight:600;">Standard Templates:</label>
+            <select id="sysex-template-preset-select" onchange="loadStandardSysExTemplate(this.value, 'panel')" style="flex:1; min-width:210px; background:var(--surface3); border:1px solid var(--border); color:var(--text); padding:5px 8px; border-radius:4px; font-size:0.75rem; outline:none;">
+              <option value="">-- Choose a standard starting template --</option>
+              <optgroup label="Akai Professional">
+                <option value="akai_lpd8_req1">Akai LPD8 — Read Preset 1 Request</option>
+                <option value="akai_lpd8_dump1">Akai LPD8 — Preset 1 Full Configuration Dump</option>
+                <option value="akai_lpd8_dump2">Akai LPD8 — Preset 2 Ableton Mapping Dump</option>
+              </optgroup>
+              <optgroup label="Novation">
+                <option value="novation_remote_req">Novation Remote SL — Template Dump Request</option>
+                <option value="novation_remote_dump">Novation Remote SL — Template 1 Factory Dump</option>
+                <option value="novation_nocturn_on">Novation Nocturn — Automap Mode Enable</option>
+                <option value="novation_launchcontrol_req">Novation Launch Control XL — Template 1 Request</option>
+                <option value="novation_launchcontrol_dump">Novation Launch Control XL — Template 1 Dump</option>
+                <option value="novation_launchpad_prog">Novation Launchpad — Programmer Mode SysEx</option>
+              </optgroup>
+              <optgroup label="Roland">
+                <option value="roland_sp404_inquiry">Roland SP-404MKII — Device Identity Inquiry</option>
+                <option value="roland_tr8s_req">Roland TR-8S — Kit Data Parameter Request</option>
+              </optgroup>
+              <optgroup label="Native Instruments & Behringer">
+                <option value="ni_inquiry">Native Instruments Controller Inquiry</option>
+                <option value="behringer_inquiry">Behringer Synthesizer Identity Request</option>
+              </optgroup>
+              <optgroup label="Universal Standard">
+                <option value="universal_inquiry">Universal MIDI Device Inquiry (All Devices)</option>
+              </optgroup>
+            </select>
+            <button class="btn sm" onclick="loadSelectedTemplateBtn('panel')" title="Insert selected template into editor">Load</button>
+          </div>
+
           <div style="display:flex; gap:8px;">
             <textarea id="sysex-panel-textarea" oninput="updateSysExPanelVisualizer()" style="flex:1; height:120px; font-family:monospace; font-size:0.8rem; padding:8px; background:var(--surface3); color:var(--text); border:1px solid var(--border); border-radius:4px; outline:none; resize:vertical;" placeholder="Paste raw HEX bytes (e.g. F0 00 20 29 ... F7)"></textarea>
           </div>
@@ -901,7 +934,7 @@
         <div class="settings-card">
           <h3>ℹ About</h3>
           <div style="font-size:0.82rem;color:var(--text2);line-height:1.9;">
-            <strong>MIDIcontrolz2</strong> v2.17.1<br>
+            <strong>MIDIcontrolz2</strong> v2.18.0<br>
             WebMIDI API · No backend · No install<br>
             Device configs: JSON templates<br>
             <a href="https://midicontrolz.doerd.de" target="_blank"

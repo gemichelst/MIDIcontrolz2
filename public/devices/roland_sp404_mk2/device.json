@@ -1,0 +1,266 @@
+{
+  "id": "roland_sp404_mk2",
+  "name": "SP-404MKII",
+  "manufacturer": "Roland",
+  "icon": "🎚️",
+  "color": "#37474f",
+  "midiName": [
+    "SP-404MKII",
+    "Roland SP-404MKII"
+  ],
+  "sysex": true,
+  "presets": 10,
+  "description": "16 velocity-sensitive pads, 3 top control knobs + value push encoder, dual bus FX routing",
+  "controls": {
+    "pads": [
+      {
+        "id": "pad1",
+        "label": "Pad 1",
+        "note": 48,
+        "cc": 20,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad2",
+        "label": "Pad 2",
+        "note": 49,
+        "cc": 21,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad3",
+        "label": "Pad 3",
+        "note": 50,
+        "cc": 22,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad4",
+        "label": "Pad 4",
+        "note": 51,
+        "cc": 23,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad5",
+        "label": "Pad 5",
+        "note": 44,
+        "cc": 24,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad6",
+        "label": "Pad 6",
+        "note": 45,
+        "cc": 25,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad7",
+        "label": "Pad 7",
+        "note": 46,
+        "cc": 26,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad8",
+        "label": "Pad 8",
+        "note": 47,
+        "cc": 27,
+        "pc": 7,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad9",
+        "label": "Pad 9",
+        "note": 40,
+        "cc": 28,
+        "pc": 8,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad10",
+        "label": "Pad 10",
+        "note": 41,
+        "cc": 29,
+        "pc": 9,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad11",
+        "label": "Pad 11",
+        "note": 42,
+        "cc": 30,
+        "pc": 10,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad12",
+        "label": "Pad 12",
+        "note": 43,
+        "cc": 31,
+        "pc": 11,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad13",
+        "label": "Pad 13",
+        "note": 36,
+        "cc": 32,
+        "pc": 12,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad14",
+        "label": "Pad 14",
+        "note": 37,
+        "cc": 33,
+        "pc": 13,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad15",
+        "label": "Pad 15",
+        "note": 38,
+        "cc": 34,
+        "pc": 14,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad16",
+        "label": "Pad 16",
+        "note": 39,
+        "cc": 35,
+        "pc": 15,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [
+      {
+        "id": "value_enc",
+        "label": "Value / Push",
+        "cc": 14,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "ctrl1",
+        "label": "CTRL 1 (FX)",
+        "cc": 16,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "ctrl2",
+        "label": "CTRL 2 (FX)",
+        "cc": 17,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "ctrl3",
+        "label": "CTRL 3 (FX)",
+        "cc": 18,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [
+      {
+        "id": "xfade",
+        "label": "X-Fade / Balance",
+        "cc": 8
+      },
+      {
+        "id": "ch_vol",
+        "label": "Channel Volume",
+        "cc": 7
+      }
+    ],
+    "buttons": [
+      {
+        "id": "btn_bus1_efx",
+        "label": "BUS 1 EFX On/Off",
+        "cc": 19,
+        "color": "green"
+      },
+      {
+        "id": "btn_bus2_efx",
+        "label": "BUS 2 EFX On/Off",
+        "cc": 80,
+        "color": "green"
+      },
+      {
+        "id": "btn_bpm_plus",
+        "label": "BPM +",
+        "cc": 26,
+        "color": "amber"
+      },
+      {
+        "id": "btn_bpm_minus",
+        "label": "BPM -",
+        "cc": 27,
+        "color": "amber"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Bank A (Ch 1)",
+      "channel": 0
+    },
+    {
+      "name": "Bank B (Ch 2)",
+      "channel": 1
+    },
+    {
+      "name": "Bank C (Ch 3)",
+      "channel": 2
+    },
+    {
+      "name": "Bank D (Ch 4)",
+      "channel": 3
+    },
+    {
+      "name": "Bank E (Ch 5)",
+      "channel": 4
+    },
+    {
+      "name": "Bank F (Ch 6)",
+      "channel": 5
+    },
+    {
+      "name": "Bank G (Ch 7)",
+      "channel": 6
+    },
+    {
+      "name": "Bank H (Ch 8)",
+      "channel": 7
+    },
+    {
+      "name": "Bank I (Ch 9)",
+      "channel": 8
+    },
+    {
+      "name": "Bank J (Ch 10)",
+      "channel": 9
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "SP-404MKII Identity Request",
+      "bytes": "F0 7E 10 06 01 F7"
+    },
+    {
+      "label": "Set Bus 4 303 VinylSim",
+      "bytes": "B3 53 01"
+    }
+  ]
+}

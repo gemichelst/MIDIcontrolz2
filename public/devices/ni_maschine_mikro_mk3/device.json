@@ -1,0 +1,1037 @@
+{
+  "id": "ni_maschine_mikro_mk3",
+  "name": "Maschine Mikro MK3",
+  "manufacturer": "Native Instruments",
+  "icon": "🎛️",
+  "color": "#bf360c",
+  "midiName": [
+    "Maschine Mikro MK3",
+    "Mikro MK3"
+  ],
+  "sysex": true,
+  "presets": 8,
+  "description": "16 oversized multi-colored pads, dual-touch Smart Strip, compact push encoder",
+  "controls": {
+    "pads": [
+      {
+        "id": "pad1",
+        "label": "Pad 1",
+        "note": 36,
+        "cc": 16,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad2",
+        "label": "Pad 2",
+        "note": 37,
+        "cc": 17,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad3",
+        "label": "Pad 3",
+        "note": 38,
+        "cc": 18,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad4",
+        "label": "Pad 4",
+        "note": 39,
+        "cc": 19,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad5",
+        "label": "Pad 5",
+        "note": 40,
+        "cc": 20,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad6",
+        "label": "Pad 6",
+        "note": 41,
+        "cc": 21,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad7",
+        "label": "Pad 7",
+        "note": 42,
+        "cc": 22,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad8",
+        "label": "Pad 8",
+        "note": 43,
+        "cc": 23,
+        "pc": 7,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad9",
+        "label": "Pad 9",
+        "note": 44,
+        "cc": 24,
+        "pc": 8,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad10",
+        "label": "Pad 10",
+        "note": 45,
+        "cc": 25,
+        "pc": 9,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad11",
+        "label": "Pad 11",
+        "note": 46,
+        "cc": 26,
+        "pc": 10,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad12",
+        "label": "Pad 12",
+        "note": 47,
+        "cc": 27,
+        "pc": 11,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad13",
+        "label": "Pad 13",
+        "note": 48,
+        "cc": 28,
+        "pc": 12,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad14",
+        "label": "Pad 14",
+        "note": 49,
+        "cc": 29,
+        "pc": 13,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad15",
+        "label": "Pad 15",
+        "note": 50,
+        "cc": 30,
+        "pc": 14,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad16",
+        "label": "Pad 16",
+        "note": 51,
+        "cc": 31,
+        "pc": 15,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [
+      {
+        "id": "encoder",
+        "label": "4-D Encoder",
+        "cc": 7,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "smart_strip",
+        "label": "Smart Strip",
+        "cc": 1,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [],
+    "buttons": [
+      {
+        "id": "btn_pitch",
+        "label": "Pitch",
+        "note": 90,
+        "color": "amber"
+      },
+      {
+        "id": "btn_mod",
+        "label": "Mod",
+        "note": 91,
+        "color": "amber"
+      },
+      {
+        "id": "btn_perform",
+        "label": "Perform",
+        "note": 92,
+        "color": "green"
+      },
+      {
+        "id": "btn_notes",
+        "label": "Notes",
+        "note": 93,
+        "color": "green"
+      },
+      {
+        "id": "btn_play",
+        "label": "Play",
+        "note": 108,
+        "color": "green"
+      },
+      {
+        "id": "btn_rec",
+        "label": "Rec",
+        "note": 109,
+        "color": "red"
+      },
+      {
+        "id": "btn_stop",
+        "label": "Stop",
+        "note": 107,
+        "color": "amber"
+      },
+      {
+        "id": "btn_shift",
+        "label": "Shift",
+        "note": 100,
+        "color": "green"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Bank A",
+      "channel": 0,
+      "pads": [
+        {
+          "note": 36,
+          "cc": 16,
+          "pc": 0,
+          "mode": "Momentary"
+        },
+        {
+          "note": 37,
+          "cc": 17,
+          "pc": 1,
+          "mode": "Momentary"
+        },
+        {
+          "note": 38,
+          "cc": 18,
+          "pc": 2,
+          "mode": "Momentary"
+        },
+        {
+          "note": 39,
+          "cc": 19,
+          "pc": 3,
+          "mode": "Momentary"
+        },
+        {
+          "note": 40,
+          "cc": 20,
+          "pc": 4,
+          "mode": "Momentary"
+        },
+        {
+          "note": 41,
+          "cc": 21,
+          "pc": 5,
+          "mode": "Momentary"
+        },
+        {
+          "note": 42,
+          "cc": 22,
+          "pc": 6,
+          "mode": "Momentary"
+        },
+        {
+          "note": 43,
+          "cc": 23,
+          "pc": 7,
+          "mode": "Momentary"
+        },
+        {
+          "note": 44,
+          "cc": 24,
+          "pc": 8,
+          "mode": "Momentary"
+        },
+        {
+          "note": 45,
+          "cc": 25,
+          "pc": 9,
+          "mode": "Momentary"
+        },
+        {
+          "note": 46,
+          "cc": 26,
+          "pc": 10,
+          "mode": "Momentary"
+        },
+        {
+          "note": 47,
+          "cc": 27,
+          "pc": 11,
+          "mode": "Momentary"
+        },
+        {
+          "note": 48,
+          "cc": 28,
+          "pc": 12,
+          "mode": "Momentary"
+        },
+        {
+          "note": 49,
+          "cc": 29,
+          "pc": 13,
+          "mode": "Momentary"
+        },
+        {
+          "note": 50,
+          "cc": 30,
+          "pc": 14,
+          "mode": "Momentary"
+        },
+        {
+          "note": 51,
+          "cc": 31,
+          "pc": 15,
+          "mode": "Momentary"
+        }
+      ]
+    },
+    {
+      "name": "Bank B",
+      "channel": 1,
+      "pads": [
+        {
+          "note": 36,
+          "cc": 16,
+          "pc": 0,
+          "mode": "Momentary"
+        },
+        {
+          "note": 37,
+          "cc": 17,
+          "pc": 1,
+          "mode": "Momentary"
+        },
+        {
+          "note": 38,
+          "cc": 18,
+          "pc": 2,
+          "mode": "Momentary"
+        },
+        {
+          "note": 39,
+          "cc": 19,
+          "pc": 3,
+          "mode": "Momentary"
+        },
+        {
+          "note": 40,
+          "cc": 20,
+          "pc": 4,
+          "mode": "Momentary"
+        },
+        {
+          "note": 41,
+          "cc": 21,
+          "pc": 5,
+          "mode": "Momentary"
+        },
+        {
+          "note": 42,
+          "cc": 22,
+          "pc": 6,
+          "mode": "Momentary"
+        },
+        {
+          "note": 43,
+          "cc": 23,
+          "pc": 7,
+          "mode": "Momentary"
+        },
+        {
+          "note": 44,
+          "cc": 24,
+          "pc": 8,
+          "mode": "Momentary"
+        },
+        {
+          "note": 45,
+          "cc": 25,
+          "pc": 9,
+          "mode": "Momentary"
+        },
+        {
+          "note": 46,
+          "cc": 26,
+          "pc": 10,
+          "mode": "Momentary"
+        },
+        {
+          "note": 47,
+          "cc": 27,
+          "pc": 11,
+          "mode": "Momentary"
+        },
+        {
+          "note": 48,
+          "cc": 28,
+          "pc": 12,
+          "mode": "Momentary"
+        },
+        {
+          "note": 49,
+          "cc": 29,
+          "pc": 13,
+          "mode": "Momentary"
+        },
+        {
+          "note": 50,
+          "cc": 30,
+          "pc": 14,
+          "mode": "Momentary"
+        },
+        {
+          "note": 51,
+          "cc": 31,
+          "pc": 15,
+          "mode": "Momentary"
+        }
+      ]
+    },
+    {
+      "name": "Bank C",
+      "channel": 2,
+      "pads": [
+        {
+          "note": 36,
+          "cc": 16,
+          "pc": 0,
+          "mode": "Momentary"
+        },
+        {
+          "note": 37,
+          "cc": 17,
+          "pc": 1,
+          "mode": "Momentary"
+        },
+        {
+          "note": 38,
+          "cc": 18,
+          "pc": 2,
+          "mode": "Momentary"
+        },
+        {
+          "note": 39,
+          "cc": 19,
+          "pc": 3,
+          "mode": "Momentary"
+        },
+        {
+          "note": 40,
+          "cc": 20,
+          "pc": 4,
+          "mode": "Momentary"
+        },
+        {
+          "note": 41,
+          "cc": 21,
+          "pc": 5,
+          "mode": "Momentary"
+        },
+        {
+          "note": 42,
+          "cc": 22,
+          "pc": 6,
+          "mode": "Momentary"
+        },
+        {
+          "note": 43,
+          "cc": 23,
+          "pc": 7,
+          "mode": "Momentary"
+        },
+        {
+          "note": 44,
+          "cc": 24,
+          "pc": 8,
+          "mode": "Momentary"
+        },
+        {
+          "note": 45,
+          "cc": 25,
+          "pc": 9,
+          "mode": "Momentary"
+        },
+        {
+          "note": 46,
+          "cc": 26,
+          "pc": 10,
+          "mode": "Momentary"
+        },
+        {
+          "note": 47,
+          "cc": 27,
+          "pc": 11,
+          "mode": "Momentary"
+        },
+        {
+          "note": 48,
+          "cc": 28,
+          "pc": 12,
+          "mode": "Momentary"
+        },
+        {
+          "note": 49,
+          "cc": 29,
+          "pc": 13,
+          "mode": "Momentary"
+        },
+        {
+          "note": 50,
+          "cc": 30,
+          "pc": 14,
+          "mode": "Momentary"
+        },
+        {
+          "note": 51,
+          "cc": 31,
+          "pc": 15,
+          "mode": "Momentary"
+        }
+      ]
+    },
+    {
+      "name": "Bank D",
+      "channel": 3,
+      "pads": [
+        {
+          "note": 36,
+          "cc": 16,
+          "pc": 0,
+          "mode": "Momentary"
+        },
+        {
+          "note": 37,
+          "cc": 17,
+          "pc": 1,
+          "mode": "Momentary"
+        },
+        {
+          "note": 38,
+          "cc": 18,
+          "pc": 2,
+          "mode": "Momentary"
+        },
+        {
+          "note": 39,
+          "cc": 19,
+          "pc": 3,
+          "mode": "Momentary"
+        },
+        {
+          "note": 40,
+          "cc": 20,
+          "pc": 4,
+          "mode": "Momentary"
+        },
+        {
+          "note": 41,
+          "cc": 21,
+          "pc": 5,
+          "mode": "Momentary"
+        },
+        {
+          "note": 42,
+          "cc": 22,
+          "pc": 6,
+          "mode": "Momentary"
+        },
+        {
+          "note": 43,
+          "cc": 23,
+          "pc": 7,
+          "mode": "Momentary"
+        },
+        {
+          "note": 44,
+          "cc": 24,
+          "pc": 8,
+          "mode": "Momentary"
+        },
+        {
+          "note": 45,
+          "cc": 25,
+          "pc": 9,
+          "mode": "Momentary"
+        },
+        {
+          "note": 46,
+          "cc": 26,
+          "pc": 10,
+          "mode": "Momentary"
+        },
+        {
+          "note": 47,
+          "cc": 27,
+          "pc": 11,
+          "mode": "Momentary"
+        },
+        {
+          "note": 48,
+          "cc": 28,
+          "pc": 12,
+          "mode": "Momentary"
+        },
+        {
+          "note": 49,
+          "cc": 29,
+          "pc": 13,
+          "mode": "Momentary"
+        },
+        {
+          "note": 50,
+          "cc": 30,
+          "pc": 14,
+          "mode": "Momentary"
+        },
+        {
+          "note": 51,
+          "cc": 31,
+          "pc": 15,
+          "mode": "Momentary"
+        }
+      ]
+    },
+    {
+      "name": "Bank E",
+      "channel": 4,
+      "pads": [
+        {
+          "note": 36,
+          "cc": 16,
+          "pc": 0,
+          "mode": "Momentary"
+        },
+        {
+          "note": 37,
+          "cc": 17,
+          "pc": 1,
+          "mode": "Momentary"
+        },
+        {
+          "note": 38,
+          "cc": 18,
+          "pc": 2,
+          "mode": "Momentary"
+        },
+        {
+          "note": 39,
+          "cc": 19,
+          "pc": 3,
+          "mode": "Momentary"
+        },
+        {
+          "note": 40,
+          "cc": 20,
+          "pc": 4,
+          "mode": "Momentary"
+        },
+        {
+          "note": 41,
+          "cc": 21,
+          "pc": 5,
+          "mode": "Momentary"
+        },
+        {
+          "note": 42,
+          "cc": 22,
+          "pc": 6,
+          "mode": "Momentary"
+        },
+        {
+          "note": 43,
+          "cc": 23,
+          "pc": 7,
+          "mode": "Momentary"
+        },
+        {
+          "note": 44,
+          "cc": 24,
+          "pc": 8,
+          "mode": "Momentary"
+        },
+        {
+          "note": 45,
+          "cc": 25,
+          "pc": 9,
+          "mode": "Momentary"
+        },
+        {
+          "note": 46,
+          "cc": 26,
+          "pc": 10,
+          "mode": "Momentary"
+        },
+        {
+          "note": 47,
+          "cc": 27,
+          "pc": 11,
+          "mode": "Momentary"
+        },
+        {
+          "note": 48,
+          "cc": 28,
+          "pc": 12,
+          "mode": "Momentary"
+        },
+        {
+          "note": 49,
+          "cc": 29,
+          "pc": 13,
+          "mode": "Momentary"
+        },
+        {
+          "note": 50,
+          "cc": 30,
+          "pc": 14,
+          "mode": "Momentary"
+        },
+        {
+          "note": 51,
+          "cc": 31,
+          "pc": 15,
+          "mode": "Momentary"
+        }
+      ]
+    },
+    {
+      "name": "Bank F",
+      "channel": 5,
+      "pads": [
+        {
+          "note": 36,
+          "cc": 16,
+          "pc": 0,
+          "mode": "Momentary"
+        },
+        {
+          "note": 37,
+          "cc": 17,
+          "pc": 1,
+          "mode": "Momentary"
+        },
+        {
+          "note": 38,
+          "cc": 18,
+          "pc": 2,
+          "mode": "Momentary"
+        },
+        {
+          "note": 39,
+          "cc": 19,
+          "pc": 3,
+          "mode": "Momentary"
+        },
+        {
+          "note": 40,
+          "cc": 20,
+          "pc": 4,
+          "mode": "Momentary"
+        },
+        {
+          "note": 41,
+          "cc": 21,
+          "pc": 5,
+          "mode": "Momentary"
+        },
+        {
+          "note": 42,
+          "cc": 22,
+          "pc": 6,
+          "mode": "Momentary"
+        },
+        {
+          "note": 43,
+          "cc": 23,
+          "pc": 7,
+          "mode": "Momentary"
+        },
+        {
+          "note": 44,
+          "cc": 24,
+          "pc": 8,
+          "mode": "Momentary"
+        },
+        {
+          "note": 45,
+          "cc": 25,
+          "pc": 9,
+          "mode": "Momentary"
+        },
+        {
+          "note": 46,
+          "cc": 26,
+          "pc": 10,
+          "mode": "Momentary"
+        },
+        {
+          "note": 47,
+          "cc": 27,
+          "pc": 11,
+          "mode": "Momentary"
+        },
+        {
+          "note": 48,
+          "cc": 28,
+          "pc": 12,
+          "mode": "Momentary"
+        },
+        {
+          "note": 49,
+          "cc": 29,
+          "pc": 13,
+          "mode": "Momentary"
+        },
+        {
+          "note": 50,
+          "cc": 30,
+          "pc": 14,
+          "mode": "Momentary"
+        },
+        {
+          "note": 51,
+          "cc": 31,
+          "pc": 15,
+          "mode": "Momentary"
+        }
+      ]
+    },
+    {
+      "name": "Bank G",
+      "channel": 6,
+      "pads": [
+        {
+          "note": 36,
+          "cc": 16,
+          "pc": 0,
+          "mode": "Momentary"
+        },
+        {
+          "note": 37,
+          "cc": 17,
+          "pc": 1,
+          "mode": "Momentary"
+        },
+        {
+          "note": 38,
+          "cc": 18,
+          "pc": 2,
+          "mode": "Momentary"
+        },
+        {
+          "note": 39,
+          "cc": 19,
+          "pc": 3,
+          "mode": "Momentary"
+        },
+        {
+          "note": 40,
+          "cc": 20,
+          "pc": 4,
+          "mode": "Momentary"
+        },
+        {
+          "note": 41,
+          "cc": 21,
+          "pc": 5,
+          "mode": "Momentary"
+        },
+        {
+          "note": 42,
+          "cc": 22,
+          "pc": 6,
+          "mode": "Momentary"
+        },
+        {
+          "note": 43,
+          "cc": 23,
+          "pc": 7,
+          "mode": "Momentary"
+        },
+        {
+          "note": 44,
+          "cc": 24,
+          "pc": 8,
+          "mode": "Momentary"
+        },
+        {
+          "note": 45,
+          "cc": 25,
+          "pc": 9,
+          "mode": "Momentary"
+        },
+        {
+          "note": 46,
+          "cc": 26,
+          "pc": 10,
+          "mode": "Momentary"
+        },
+        {
+          "note": 47,
+          "cc": 27,
+          "pc": 11,
+          "mode": "Momentary"
+        },
+        {
+          "note": 48,
+          "cc": 28,
+          "pc": 12,
+          "mode": "Momentary"
+        },
+        {
+          "note": 49,
+          "cc": 29,
+          "pc": 13,
+          "mode": "Momentary"
+        },
+        {
+          "note": 50,
+          "cc": 30,
+          "pc": 14,
+          "mode": "Momentary"
+        },
+        {
+          "note": 51,
+          "cc": 31,
+          "pc": 15,
+          "mode": "Momentary"
+        }
+      ]
+    },
+    {
+      "name": "Bank H",
+      "channel": 7,
+      "pads": [
+        {
+          "note": 36,
+          "cc": 16,
+          "pc": 0,
+          "mode": "Momentary"
+        },
+        {
+          "note": 37,
+          "cc": 17,
+          "pc": 1,
+          "mode": "Momentary"
+        },
+        {
+          "note": 38,
+          "cc": 18,
+          "pc": 2,
+          "mode": "Momentary"
+        },
+        {
+          "note": 39,
+          "cc": 19,
+          "pc": 3,
+          "mode": "Momentary"
+        },
+        {
+          "note": 40,
+          "cc": 20,
+          "pc": 4,
+          "mode": "Momentary"
+        },
+        {
+          "note": 41,
+          "cc": 21,
+          "pc": 5,
+          "mode": "Momentary"
+        },
+        {
+          "note": 42,
+          "cc": 22,
+          "pc": 6,
+          "mode": "Momentary"
+        },
+        {
+          "note": 43,
+          "cc": 23,
+          "pc": 7,
+          "mode": "Momentary"
+        },
+        {
+          "note": 44,
+          "cc": 24,
+          "pc": 8,
+          "mode": "Momentary"
+        },
+        {
+          "note": 45,
+          "cc": 25,
+          "pc": 9,
+          "mode": "Momentary"
+        },
+        {
+          "note": 46,
+          "cc": 26,
+          "pc": 10,
+          "mode": "Momentary"
+        },
+        {
+          "note": 47,
+          "cc": 27,
+          "pc": 11,
+          "mode": "Momentary"
+        },
+        {
+          "note": 48,
+          "cc": 28,
+          "pc": 12,
+          "mode": "Momentary"
+        },
+        {
+          "note": 49,
+          "cc": 29,
+          "pc": 13,
+          "mode": "Momentary"
+        },
+        {
+          "note": 50,
+          "cc": 30,
+          "pc": 14,
+          "mode": "Momentary"
+        },
+        {
+          "note": 51,
+          "cc": 31,
+          "pc": 15,
+          "mode": "Momentary"
+        }
+      ]
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Identity Request",
+      "bytes": "F0 7E 7F 06 01 F7"
+    }
+  ]
+}

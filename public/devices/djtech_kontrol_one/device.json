@@ -1,0 +1,170 @@
+{
+  "id": "djtech_kontrol_one",
+  "name": "Kontrol One",
+  "manufacturer": "DJ-Tech",
+  "icon": "🎧",
+  "color": "#0288d1",
+  "midiName": [
+    "Kontrol One",
+    "DJ-Tech Kontrol One"
+  ],
+  "sysex": false,
+  "presets": 4,
+  "description": "Modular USB DJ controller with FX knobs, scratch jogwheel, loop encoder & deck switches",
+  "controls": {
+    "pads": [
+      {
+        "id": "cue1",
+        "label": "Hot Cue 1",
+        "note": 60,
+        "cc": 60,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "cue2",
+        "label": "Hot Cue 2",
+        "note": 61,
+        "cc": 61,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "cue3",
+        "label": "Hot Cue 3",
+        "note": 62,
+        "cc": 62,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "cue4",
+        "label": "Hot Cue 4",
+        "note": 63,
+        "cc": 63,
+        "pc": 3,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [
+      {
+        "id": "fx1",
+        "label": "FX 1",
+        "cc": 16,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "fx2",
+        "label": "FX 2",
+        "cc": 17,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "fx3",
+        "label": "FX 3",
+        "cc": 18,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "fx_drywet",
+        "label": "Dry / Wet",
+        "cc": 19,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "enc_browse",
+        "label": "Browse / Loop",
+        "cc": 20,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "jog_wheel",
+        "label": "Jog Wheel",
+        "cc": 21,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [
+      {
+        "id": "pitch_fdr",
+        "label": "Tempo Pitch Fader",
+        "cc": 7
+      }
+    ],
+    "buttons": [
+      {
+        "id": "btn_fx1",
+        "label": "FX 1 On",
+        "note": 48,
+        "color": "green"
+      },
+      {
+        "id": "btn_fx2",
+        "label": "FX 2 On",
+        "note": 49,
+        "color": "green"
+      },
+      {
+        "id": "btn_fx3",
+        "label": "FX 3 On",
+        "note": 50,
+        "color": "green"
+      },
+      {
+        "id": "btn_fx4",
+        "label": "FX 4 On",
+        "note": 51,
+        "color": "green"
+      },
+      {
+        "id": "btn_play",
+        "label": "Play / Pause",
+        "note": 64,
+        "color": "green"
+      },
+      {
+        "id": "btn_cue",
+        "label": "Cue",
+        "note": 65,
+        "color": "amber"
+      },
+      {
+        "id": "btn_sync",
+        "label": "Sync",
+        "note": 66,
+        "color": "green"
+      },
+      {
+        "id": "btn_tap",
+        "label": "Tap Tempo",
+        "note": 67,
+        "color": "amber"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Deck A",
+      "channel": 0
+    },
+    {
+      "name": "Deck B",
+      "channel": 1
+    },
+    {
+      "name": "Deck C",
+      "channel": 2
+    },
+    {
+      "name": "Deck D",
+      "channel": 3
+    }
+  ],
+  "quickSysEx": []
+}

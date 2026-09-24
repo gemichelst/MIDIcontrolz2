@@ -1,0 +1,213 @@
+{
+  "id": "roland_sp404_mk1",
+  "name": "SP-404 / SX / A",
+  "manufacturer": "Roland",
+  "icon": "📼",
+  "color": "#546e7a",
+  "midiName": [
+    "SP-404",
+    "SP-404SX",
+    "SP-404A"
+  ],
+  "sysex": true,
+  "presets": 10,
+  "description": "12 sample trigger pads, 3 top control knobs for realtime Vinyl Sim and multi-effects",
+  "controls": {
+    "pads": [
+      {
+        "id": "pad1",
+        "label": "Pad 1",
+        "note": 48,
+        "cc": 1,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad2",
+        "label": "Pad 2",
+        "note": 49,
+        "cc": 2,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad3",
+        "label": "Pad 3",
+        "note": 50,
+        "cc": 3,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad4",
+        "label": "Pad 4",
+        "note": 51,
+        "cc": 4,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad5",
+        "label": "Pad 5",
+        "note": 52,
+        "cc": 5,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad6",
+        "label": "Pad 6",
+        "note": 53,
+        "cc": 6,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad7",
+        "label": "Pad 7",
+        "note": 54,
+        "cc": 7,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad8",
+        "label": "Pad 8",
+        "note": 55,
+        "cc": 8,
+        "pc": 7,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad9",
+        "label": "Pad 9",
+        "note": 56,
+        "cc": 9,
+        "pc": 8,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad10",
+        "label": "Pad 10",
+        "note": 57,
+        "cc": 10,
+        "pc": 9,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad11",
+        "label": "Pad 11",
+        "note": 58,
+        "cc": 11,
+        "pc": 10,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad12",
+        "label": "Pad 12",
+        "note": 59,
+        "cc": 12,
+        "pc": 11,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [
+      {
+        "id": "ctrl1",
+        "label": "CTRL 1 (Cutoff)",
+        "cc": 16,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "ctrl2",
+        "label": "CTRL 2 (Resonance)",
+        "cc": 17,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "ctrl3",
+        "label": "CTRL 3 (Balance)",
+        "cc": 18,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [],
+    "buttons": [
+      {
+        "id": "btn_hold",
+        "label": "Hold",
+        "note": 60,
+        "color": "amber"
+      },
+      {
+        "id": "btn_ext_src",
+        "label": "External Source",
+        "note": 35,
+        "color": "green"
+      },
+      {
+        "id": "btn_subpad",
+        "label": "Sub Pad",
+        "note": 61,
+        "color": "amber"
+      },
+      {
+        "id": "btn_pattern",
+        "label": "Pattern Select",
+        "note": 62,
+        "color": "green"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Bank A (Ch 1)",
+      "channel": 0
+    },
+    {
+      "name": "Bank B (Ch 1)",
+      "channel": 0
+    },
+    {
+      "name": "Bank C (Ch 2)",
+      "channel": 1
+    },
+    {
+      "name": "Bank D (Ch 2)",
+      "channel": 1
+    },
+    {
+      "name": "Bank E (Ch 3)",
+      "channel": 2
+    },
+    {
+      "name": "Bank F (Ch 3)",
+      "channel": 2
+    },
+    {
+      "name": "Bank G (Ch 4)",
+      "channel": 3
+    },
+    {
+      "name": "Bank H (Ch 4)",
+      "channel": 3
+    },
+    {
+      "name": "Bank I (Ch 5)",
+      "channel": 4
+    },
+    {
+      "name": "Bank J (Ch 5)",
+      "channel": 4
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Universal Inquiry",
+      "bytes": "F0 7E 7F 06 01 F7"
+    }
+  ]
+}

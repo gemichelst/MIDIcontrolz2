@@ -1,0 +1,403 @@
+{
+  "id": "novation_launchcontrol_xl_mk1",
+  "name": "Launch Control XL MK1",
+  "manufacturer": "Novation",
+  "icon": "🎚️",
+  "color": "#00b16a",
+  "midiName": [
+    "Launch Control XL",
+    "Launch Control XL 1"
+  ],
+  "sysex": true,
+  "presets": 16,
+  "description": "24 rotary knobs (3 rows of 8), 8 smooth 60mm faders, 16 multi-color buttons",
+  "controls": {
+    "pads": [],
+    "knobs": [
+      {
+        "id": "send_a_1",
+        "label": "Send A 1",
+        "cc": 13,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_a_2",
+        "label": "Send A 2",
+        "cc": 14,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_a_3",
+        "label": "Send A 3",
+        "cc": 15,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_a_4",
+        "label": "Send A 4",
+        "cc": 16,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_a_5",
+        "label": "Send A 5",
+        "cc": 17,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_a_6",
+        "label": "Send A 6",
+        "cc": 18,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_a_7",
+        "label": "Send A 7",
+        "cc": 19,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_a_8",
+        "label": "Send A 8",
+        "cc": 20,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_b_1",
+        "label": "Send B 1",
+        "cc": 29,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_b_2",
+        "label": "Send B 2",
+        "cc": 30,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_b_3",
+        "label": "Send B 3",
+        "cc": 31,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_b_4",
+        "label": "Send B 4",
+        "cc": 32,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_b_5",
+        "label": "Send B 5",
+        "cc": 33,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_b_6",
+        "label": "Send B 6",
+        "cc": 34,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_b_7",
+        "label": "Send B 7",
+        "cc": 35,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "send_b_8",
+        "label": "Send B 8",
+        "cc": 36,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pan_1",
+        "label": "Pan 1",
+        "cc": 49,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pan_2",
+        "label": "Pan 2",
+        "cc": 50,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pan_3",
+        "label": "Pan 3",
+        "cc": 51,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pan_4",
+        "label": "Pan 4",
+        "cc": 52,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pan_5",
+        "label": "Pan 5",
+        "cc": 53,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pan_6",
+        "label": "Pan 6",
+        "cc": 54,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pan_7",
+        "label": "Pan 7",
+        "cc": 55,
+        "lo": 0,
+        "hi": 127
+      },
+      {
+        "id": "pan_8",
+        "label": "Pan 8",
+        "cc": 56,
+        "lo": 0,
+        "hi": 127
+      }
+    ],
+    "faders": [
+      {
+        "id": "fdr1",
+        "label": "Track 1",
+        "cc": 77
+      },
+      {
+        "id": "fdr2",
+        "label": "Track 2",
+        "cc": 78
+      },
+      {
+        "id": "fdr3",
+        "label": "Track 3",
+        "cc": 79
+      },
+      {
+        "id": "fdr4",
+        "label": "Track 4",
+        "cc": 80
+      },
+      {
+        "id": "fdr5",
+        "label": "Track 5",
+        "cc": 81
+      },
+      {
+        "id": "fdr6",
+        "label": "Track 6",
+        "cc": 82
+      },
+      {
+        "id": "fdr7",
+        "label": "Track 7",
+        "cc": 83
+      },
+      {
+        "id": "fdr8",
+        "label": "Track 8",
+        "cc": 84
+      }
+    ],
+    "buttons": [
+      {
+        "id": "focus_1",
+        "label": "Focus 1",
+        "note": 41,
+        "color": "green"
+      },
+      {
+        "id": "focus_2",
+        "label": "Focus 2",
+        "note": 42,
+        "color": "green"
+      },
+      {
+        "id": "focus_3",
+        "label": "Focus 3",
+        "note": 43,
+        "color": "green"
+      },
+      {
+        "id": "focus_4",
+        "label": "Focus 4",
+        "note": 44,
+        "color": "green"
+      },
+      {
+        "id": "focus_5",
+        "label": "Focus 5",
+        "note": 57,
+        "color": "green"
+      },
+      {
+        "id": "focus_6",
+        "label": "Focus 6",
+        "note": 58,
+        "color": "green"
+      },
+      {
+        "id": "focus_7",
+        "label": "Focus 7",
+        "note": 59,
+        "color": "green"
+      },
+      {
+        "id": "focus_8",
+        "label": "Focus 8",
+        "note": 60,
+        "color": "green"
+      },
+      {
+        "id": "ctrl_1",
+        "label": "Control 1",
+        "note": 73,
+        "color": "amber"
+      },
+      {
+        "id": "ctrl_2",
+        "label": "Control 2",
+        "note": 74,
+        "color": "amber"
+      },
+      {
+        "id": "ctrl_3",
+        "label": "Control 3",
+        "note": 75,
+        "color": "amber"
+      },
+      {
+        "id": "ctrl_4",
+        "label": "Control 4",
+        "note": 76,
+        "color": "amber"
+      },
+      {
+        "id": "ctrl_5",
+        "label": "Control 5",
+        "note": 89,
+        "color": "amber"
+      },
+      {
+        "id": "ctrl_6",
+        "label": "Control 6",
+        "note": 90,
+        "color": "amber"
+      },
+      {
+        "id": "ctrl_7",
+        "label": "Control 7",
+        "note": 91,
+        "color": "amber"
+      },
+      {
+        "id": "ctrl_8",
+        "label": "Control 8",
+        "note": 92,
+        "color": "amber"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "User 1",
+      "channel": 8
+    },
+    {
+      "name": "User 2",
+      "channel": 8
+    },
+    {
+      "name": "User 3",
+      "channel": 8
+    },
+    {
+      "name": "User 4",
+      "channel": 8
+    },
+    {
+      "name": "User 5",
+      "channel": 8
+    },
+    {
+      "name": "User 6",
+      "channel": 8
+    },
+    {
+      "name": "User 7",
+      "channel": 8
+    },
+    {
+      "name": "User 8",
+      "channel": 8
+    },
+    {
+      "name": "Factory 1",
+      "channel": 8
+    },
+    {
+      "name": "Factory 2",
+      "channel": 8
+    },
+    {
+      "name": "Factory 3",
+      "channel": 8
+    },
+    {
+      "name": "Factory 4",
+      "channel": 8
+    },
+    {
+      "name": "Factory 5",
+      "channel": 8
+    },
+    {
+      "name": "Factory 6",
+      "channel": 8
+    },
+    {
+      "name": "Factory 7",
+      "channel": 8
+    },
+    {
+      "name": "Factory 8",
+      "channel": 8
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Request Template 1",
+      "bytes": "F0 00 20 29 02 11 77 00 F7"
+    },
+    {
+      "label": "Set All LEDs Amber",
+      "bytes": "B8 00 7D"
+    }
+  ]
+}

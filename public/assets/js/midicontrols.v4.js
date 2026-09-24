@@ -114,7 +114,23 @@ const DEVICE_MANIFEST = [
   'novation_launchcontrol_mk1',
   'novation_nocturn',
   'novation_remote_zero_sl_mk1',
-  'novation_remote25_sl_compact_mk1'
+  'novation_remote25_sl_compact_mk1',
+  'ni_maschine_mikro_mk1',
+  'ni_maschine_mikro_mk2',
+  'ni_maschine_mikro_mk3',
+  'ni_maschine_mk1',
+  'ni_maschine_mk2',
+  'ni_maschine_mk3',
+  'novation_launchcontrol_xl_mk1',
+  'novation_launchcontrol_xl_mk2',
+  'novation_launchpad_mk2',
+  'novation_launchpad_pro',
+  'djtech_kontrol_one',
+  'roland_tr8s',
+  'roland_sp404_mk1',
+  'roland_sp404_mk2',
+  'roland_sp404_mk3',
+  'behringer_edge'
 ];
 
 // ============================================================
@@ -3088,12 +3104,43 @@ window.openSysExInspector = function() {
   }
   
   const html = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <h2 style="margin:0;">SysEx Template Importer</h2>
       <label class="btn sm" style="cursor:pointer; background:var(--surface3);">
         📂 Load .syx File
         <input type="file" accept=".syx" style="display:none;" onchange="loadSyxFileIntoInspector(event)">
       </label>
+    </div>
+    <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <label for="sysex-modal-preset-select" style="font-size:0.75rem; color:var(--text2); font-weight:600;">Standard Templates:</label>
+      <select id="sysex-modal-preset-select" onchange="loadStandardSysExTemplate(this.value, 'inspector')" style="flex:1; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:4px 8px; border-radius:4px; font-size:0.75rem; outline:none;">
+        <option value="">-- Choose a standard starting template --</option>
+        <optgroup label="Akai Professional">
+          <option value="akai_lpd8_req1">Akai LPD8 — Read Preset 1 Request</option>
+          <option value="akai_lpd8_dump1">Akai LPD8 — Preset 1 Full Configuration Dump</option>
+          <option value="akai_lpd8_dump2">Akai LPD8 — Preset 2 Ableton Mapping Dump</option>
+        </optgroup>
+        <optgroup label="Novation">
+          <option value="novation_remote_req">Novation Remote SL — Template Dump Request</option>
+          <option value="novation_remote_dump">Novation Remote SL — Template 1 Factory Dump</option>
+          <option value="novation_nocturn_on">Novation Nocturn — Automap Mode Enable</option>
+          <option value="novation_launchcontrol_req">Novation Launch Control XL — Template 1 Request</option>
+          <option value="novation_launchcontrol_dump">Novation Launch Control XL — Template 1 Dump</option>
+          <option value="novation_launchpad_prog">Novation Launchpad — Programmer Mode SysEx</option>
+        </optgroup>
+        <optgroup label="Roland">
+          <option value="roland_sp404_inquiry">Roland SP-404MKII — Device Identity Inquiry</option>
+          <option value="roland_tr8s_req">Roland TR-8S — Kit Data Parameter Request</option>
+        </optgroup>
+        <optgroup label="Native Instruments & Behringer">
+          <option value="ni_inquiry">Native Instruments Controller Inquiry</option>
+          <option value="behringer_inquiry">Behringer Synthesizer Identity Request</option>
+        </optgroup>
+        <optgroup label="Universal Standard">
+          <option value="universal_inquiry">Universal MIDI Device Inquiry (All Devices)</option>
+        </optgroup>
+      </select>
+      <button class="btn sm" onclick="loadSelectedTemplateBtn('inspector')">Load</button>
     </div>
     ${sysexContent}
     <div style="display:flex; gap:12px; margin-bottom:12px;">
@@ -3313,4 +3360,113 @@ window.applySysExPanelImport = function() {
   
   toast(`Parsed & Imported ${bytes.length} bytes of Template Data.`, 'success');
   handleSysExIn(new Uint8Array(bytes));
+};
+
+
+// ============================================================
+//  STANDARD SYSEX TEMPLATES LIBRARY
+// ============================================================
+const STANDARD_SYSEX_TEMPLATES = {
+  akai_lpd8_req1: {
+    name: 'Akai LPD8 — Read Preset 1 Request',
+    hex: 'F0 47 7F 75 61 00 01 01 F7',
+    desc: 'Requests Preset 1 configuration dump from Akai LPD8 hardware.'
+  },
+  akai_lpd8_dump1: {
+    name: 'Akai LPD8 — Preset 1 Full Configuration Dump',
+    hex: 'F0 47 7F 75 63 00 01 01 00 24 00 01 00 25 01 02 00 26 02 03 00 27 03 04 00 28 04 01 00 29 05 02 00 2A 06 03 00 2B 07 04 00 01 00 7F 02 00 7F 03 00 7F 04 00 7F 05 00 7F 06 00 7F 07 00 7F 08 00 7F F7',
+    desc: 'Full factory Preset 1 dump for LPD8 (8 pads + 8 knobs CC/Note configuration).'
+  },
+  akai_lpd8_dump2: {
+    name: 'Akai LPD8 — Preset 2 Ableton Mapping Dump',
+    hex: 'F0 47 7F 75 63 00 01 02 07 58 1E 18 07 59 1F 19 07 5A 20 1A 07 5B 21 1B 07 5C 1A 1C 07 5D 1B 1D 07 5E 1C 1E 07 5F 1D 1F 07 32 00 7F 07 33 00 7F 07 34 00 7F 07 35 00 7F 07 36 00 7F 07 37 00 7F 07 38 00 7F 07 39 00 7F F7',
+    desc: 'Ableton Live clip/device mapping dump for LPD8.'
+  },
+  novation_remote_req: {
+    name: 'Novation Remote SL — Template Dump Request',
+    hex: 'F0 00 20 29 02 0A 79 00 F7',
+    desc: 'Handshake request asking Novation Remote SL / Zero SL to dump active template memory.'
+  },
+  novation_remote_dump: {
+    name: 'Novation Remote SL — Template 1 Factory Dump',
+    hex: 'F0 00 20 29 02 0A 79 00 01 00 54 65 6D 70 6C 61 74 65 20 31 00 15 16 17 18 19 1A 1B 1C 29 2A 2B 2C 2D 2E 2F 30 70 71 72 73 74 75 76 77 F7',
+    desc: 'Novation Remote SL Template 1 header and control assignment structure.'
+  },
+  novation_nocturn_on: {
+    name: 'Novation Nocturn — Automap Mode Enable',
+    hex: 'F0 00 20 29 40 5C F7',
+    desc: 'Puts Novation Nocturn into full high-speed Automap LED feedback mode.'
+  },
+  novation_launchcontrol_req: {
+    name: 'Novation Launch Control XL — Template 1 Request',
+    hex: 'F0 00 20 29 02 11 77 00 F7',
+    desc: 'Requests User Template 1 memory dump from Launch Control XL.'
+  },
+  novation_launchcontrol_dump: {
+    name: 'Novation Launch Control XL — Template 1 Dump',
+    hex: 'F0 00 20 29 02 11 77 00 0D 0E 0F 10 11 12 13 14 1D 1E 1F 20 21 22 23 24 31 32 33 34 35 36 37 38 4D 4E 4F 50 51 52 53 54 F7',
+    desc: 'Standard Launch Control XL template mapping: 24 knobs (Send A, Send B, Pan) and 8 faders.'
+  },
+  novation_launchpad_prog: {
+    name: 'Novation Launchpad — Programmer Mode SysEx',
+    hex: 'F0 00 20 29 02 10 2C 03 F7',
+    desc: 'Switches Launchpad Pro / MK2 into direct Programmer Mode for full RGB addressability.'
+  },
+  roland_sp404_inquiry: {
+    name: 'Roland SP-404MKII — Device Identity Inquiry',
+    hex: 'F0 7E 10 06 01 F7',
+    desc: 'Broadcasts Roland device inquiry to SP-404MKII for model handshake and firmware verification.'
+  },
+  roland_tr8s_req: {
+    name: 'Roland TR-8S — Kit Data Parameter Request',
+    hex: 'F0 41 10 00 00 00 4B 11 00 00 00 00 00 00 01 00 7F F7',
+    desc: 'Requests current kit parameters from Roland TR-8S Rhythm Performer.'
+  },
+  universal_inquiry: {
+    name: 'Universal MIDI Device Inquiry (All Devices)',
+    hex: 'F0 7E 7F 06 01 F7',
+    desc: 'Standard MMA/AMEI non-realtime universal identity request recognised by all compliant MIDI devices.'
+  },
+  ni_inquiry: {
+    name: 'Native Instruments Controller Inquiry',
+    hex: 'F0 00 21 09 00 00 01 F7',
+    desc: 'Standard Native Instruments hardware inquiry handshake.'
+  },
+  behringer_inquiry: {
+    name: 'Behringer Identity Request',
+    hex: 'F0 00 20 32 00 7F 06 01 F7',
+    desc: 'Behringer synthesizer handshake and model inquiry request.'
+  }
+};
+
+window.STANDARD_SYSEX_TEMPLATES = STANDARD_SYSEX_TEMPLATES;
+
+window.loadStandardSysExTemplate = function(key, target) {
+  if (!key || !STANDARD_SYSEX_TEMPLATES[key]) return;
+  const tmpl = STANDARD_SYSEX_TEMPLATES[key];
+  if (target === 'panel') {
+    const ta = document.getElementById('sysex-panel-textarea');
+    if (ta) {
+      ta.value = tmpl.hex;
+      if (typeof window.updateSysExPanelVisualizer === 'function') window.updateSysExPanelVisualizer();
+      toast(`Loaded standard template: ${tmpl.name}`, 'info');
+    }
+  } else if (target === 'inspector') {
+    const ta = document.getElementById('sysex-inspector-textarea');
+    if (ta) {
+      ta.value = tmpl.hex;
+      if (typeof window.updateSysExVisualizer === 'function') window.updateSysExVisualizer();
+      toast(`Loaded standard template: ${tmpl.name}`, 'info');
+    }
+  }
+};
+
+window.loadSelectedTemplateBtn = function(target) {
+  const selId = target === 'panel' ? 'sysex-template-preset-select' : 'sysex-modal-preset-select';
+  const sel = document.getElementById(selId);
+  if (sel && sel.value) {
+    window.loadStandardSysExTemplate(sel.value, target);
+  } else {
+    toast('Please select a template from the dropdown first.', 'info');
+  }
 };

@@ -1,0 +1,614 @@
+{
+  "id": "novation_launchpad_mk2",
+  "name": "Launchpad MK2",
+  "manufacturer": "Novation",
+  "icon": "🟩",
+  "color": "#27ae60",
+  "midiName": [
+    "Launchpad MK2",
+    "Launchpad"
+  ],
+  "sysex": true,
+  "presets": 3,
+  "description": "The iconic 8x8 RGB grid controller with scene launch and control buttons",
+  "controls": {
+    "pads": [
+      {
+        "id": "pad_0_0",
+        "label": "R1 C1",
+        "note": 81,
+        "cc": 81,
+        "pc": 0,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_1",
+        "label": "R1 C2",
+        "note": 82,
+        "cc": 82,
+        "pc": 1,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_2",
+        "label": "R1 C3",
+        "note": 83,
+        "cc": 83,
+        "pc": 2,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_3",
+        "label": "R1 C4",
+        "note": 84,
+        "cc": 84,
+        "pc": 3,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_4",
+        "label": "R1 C5",
+        "note": 85,
+        "cc": 85,
+        "pc": 4,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_5",
+        "label": "R1 C6",
+        "note": 86,
+        "cc": 86,
+        "pc": 5,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_6",
+        "label": "R1 C7",
+        "note": 87,
+        "cc": 87,
+        "pc": 6,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_0_7",
+        "label": "R1 C8",
+        "note": 88,
+        "cc": 88,
+        "pc": 7,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_0",
+        "label": "R2 C1",
+        "note": 71,
+        "cc": 71,
+        "pc": 8,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_1",
+        "label": "R2 C2",
+        "note": 72,
+        "cc": 72,
+        "pc": 9,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_2",
+        "label": "R2 C3",
+        "note": 73,
+        "cc": 73,
+        "pc": 10,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_3",
+        "label": "R2 C4",
+        "note": 74,
+        "cc": 74,
+        "pc": 11,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_4",
+        "label": "R2 C5",
+        "note": 75,
+        "cc": 75,
+        "pc": 12,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_5",
+        "label": "R2 C6",
+        "note": 76,
+        "cc": 76,
+        "pc": 13,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_6",
+        "label": "R2 C7",
+        "note": 77,
+        "cc": 77,
+        "pc": 14,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_1_7",
+        "label": "R2 C8",
+        "note": 78,
+        "cc": 78,
+        "pc": 15,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_0",
+        "label": "R3 C1",
+        "note": 61,
+        "cc": 61,
+        "pc": 16,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_1",
+        "label": "R3 C2",
+        "note": 62,
+        "cc": 62,
+        "pc": 17,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_2",
+        "label": "R3 C3",
+        "note": 63,
+        "cc": 63,
+        "pc": 18,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_3",
+        "label": "R3 C4",
+        "note": 64,
+        "cc": 64,
+        "pc": 19,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_4",
+        "label": "R3 C5",
+        "note": 65,
+        "cc": 65,
+        "pc": 20,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_5",
+        "label": "R3 C6",
+        "note": 66,
+        "cc": 66,
+        "pc": 21,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_6",
+        "label": "R3 C7",
+        "note": 67,
+        "cc": 67,
+        "pc": 22,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_2_7",
+        "label": "R3 C8",
+        "note": 68,
+        "cc": 68,
+        "pc": 23,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_0",
+        "label": "R4 C1",
+        "note": 51,
+        "cc": 51,
+        "pc": 24,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_1",
+        "label": "R4 C2",
+        "note": 52,
+        "cc": 52,
+        "pc": 25,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_2",
+        "label": "R4 C3",
+        "note": 53,
+        "cc": 53,
+        "pc": 26,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_3",
+        "label": "R4 C4",
+        "note": 54,
+        "cc": 54,
+        "pc": 27,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_4",
+        "label": "R4 C5",
+        "note": 55,
+        "cc": 55,
+        "pc": 28,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_5",
+        "label": "R4 C6",
+        "note": 56,
+        "cc": 56,
+        "pc": 29,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_6",
+        "label": "R4 C7",
+        "note": 57,
+        "cc": 57,
+        "pc": 30,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_3_7",
+        "label": "R4 C8",
+        "note": 58,
+        "cc": 58,
+        "pc": 31,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_0",
+        "label": "R5 C1",
+        "note": 41,
+        "cc": 41,
+        "pc": 32,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_1",
+        "label": "R5 C2",
+        "note": 42,
+        "cc": 42,
+        "pc": 33,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_2",
+        "label": "R5 C3",
+        "note": 43,
+        "cc": 43,
+        "pc": 34,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_3",
+        "label": "R5 C4",
+        "note": 44,
+        "cc": 44,
+        "pc": 35,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_4",
+        "label": "R5 C5",
+        "note": 45,
+        "cc": 45,
+        "pc": 36,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_5",
+        "label": "R5 C6",
+        "note": 46,
+        "cc": 46,
+        "pc": 37,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_6",
+        "label": "R5 C7",
+        "note": 47,
+        "cc": 47,
+        "pc": 38,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_4_7",
+        "label": "R5 C8",
+        "note": 48,
+        "cc": 48,
+        "pc": 39,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_0",
+        "label": "R6 C1",
+        "note": 31,
+        "cc": 31,
+        "pc": 40,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_1",
+        "label": "R6 C2",
+        "note": 32,
+        "cc": 32,
+        "pc": 41,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_2",
+        "label": "R6 C3",
+        "note": 33,
+        "cc": 33,
+        "pc": 42,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_3",
+        "label": "R6 C4",
+        "note": 34,
+        "cc": 34,
+        "pc": 43,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_4",
+        "label": "R6 C5",
+        "note": 35,
+        "cc": 35,
+        "pc": 44,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_5",
+        "label": "R6 C6",
+        "note": 36,
+        "cc": 36,
+        "pc": 45,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_6",
+        "label": "R6 C7",
+        "note": 37,
+        "cc": 37,
+        "pc": 46,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_5_7",
+        "label": "R6 C8",
+        "note": 38,
+        "cc": 38,
+        "pc": 47,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_0",
+        "label": "R7 C1",
+        "note": 21,
+        "cc": 21,
+        "pc": 48,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_1",
+        "label": "R7 C2",
+        "note": 22,
+        "cc": 22,
+        "pc": 49,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_2",
+        "label": "R7 C3",
+        "note": 23,
+        "cc": 23,
+        "pc": 50,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_3",
+        "label": "R7 C4",
+        "note": 24,
+        "cc": 24,
+        "pc": 51,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_4",
+        "label": "R7 C5",
+        "note": 25,
+        "cc": 25,
+        "pc": 52,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_5",
+        "label": "R7 C6",
+        "note": 26,
+        "cc": 26,
+        "pc": 53,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_6",
+        "label": "R7 C7",
+        "note": 27,
+        "cc": 27,
+        "pc": 54,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_6_7",
+        "label": "R7 C8",
+        "note": 28,
+        "cc": 28,
+        "pc": 55,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_0",
+        "label": "R8 C1",
+        "note": 11,
+        "cc": 11,
+        "pc": 56,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_1",
+        "label": "R8 C2",
+        "note": 12,
+        "cc": 12,
+        "pc": 57,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_2",
+        "label": "R8 C3",
+        "note": 13,
+        "cc": 13,
+        "pc": 58,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_3",
+        "label": "R8 C4",
+        "note": 14,
+        "cc": 14,
+        "pc": 59,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_4",
+        "label": "R8 C5",
+        "note": 15,
+        "cc": 15,
+        "pc": 60,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_5",
+        "label": "R8 C6",
+        "note": 16,
+        "cc": 16,
+        "pc": 61,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_6",
+        "label": "R8 C7",
+        "note": 17,
+        "cc": 17,
+        "pc": 62,
+        "mode": "Momentary"
+      },
+      {
+        "id": "pad_7_7",
+        "label": "R8 C8",
+        "note": 18,
+        "cc": 18,
+        "pc": 63,
+        "mode": "Momentary"
+      }
+    ],
+    "knobs": [],
+    "faders": [],
+    "buttons": [
+      {
+        "id": "btn_up",
+        "label": "Up",
+        "cc": 104,
+        "color": "amber"
+      },
+      {
+        "id": "btn_down",
+        "label": "Down",
+        "cc": 105,
+        "color": "amber"
+      },
+      {
+        "id": "btn_left",
+        "label": "Left",
+        "cc": 106,
+        "color": "amber"
+      },
+      {
+        "id": "btn_right",
+        "label": "Right",
+        "cc": 107,
+        "color": "amber"
+      },
+      {
+        "id": "btn_session",
+        "label": "Session",
+        "cc": 108,
+        "color": "green"
+      },
+      {
+        "id": "btn_user1",
+        "label": "User 1",
+        "cc": 109,
+        "color": "green"
+      },
+      {
+        "id": "btn_user2",
+        "label": "User 2",
+        "cc": 110,
+        "color": "green"
+      },
+      {
+        "id": "btn_mixer",
+        "label": "Mixer",
+        "cc": 111,
+        "color": "green"
+      }
+    ]
+  },
+  "defaultPresets": [
+    {
+      "name": "Session Mode (Layout 0)",
+      "channel": 0
+    },
+    {
+      "name": "User 1 / Drum Mode (Layout 1)",
+      "channel": 0
+    },
+    {
+      "name": "User 2 Mode (Layout 2)",
+      "channel": 0
+    }
+  ],
+  "quickSysEx": [
+    {
+      "label": "Switch to Session Mode",
+      "bytes": "F0 00 20 29 02 18 22 00 F7"
+    },
+    {
+      "label": "Switch to User 1 Mode",
+      "bytes": "F0 00 20 29 02 18 22 01 F7"
+    },
+    {
+      "label": "Switch to User 2 Mode",
+      "bytes": "F0 00 20 29 02 18 22 02 F7"
+    },
+    {
+      "label": "Reset Grid LEDs",
+      "bytes": "F0 00 20 29 02 18 0E 00 F7"
+    }
+  ]
+}
