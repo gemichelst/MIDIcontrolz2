@@ -621,22 +621,75 @@
           <button class="btn sm" style="background:#dc2626;color:white;border:none;" onclick="sendFactoryReset()" data-tooltip="Sends a universal System Exclusive factory reset command to the connected hardware">⚠️ Factory Reset</button>
         </div>
         <div id="device-quick-cmds-list" style="display:flex;gap:8px;flex-wrap:wrap;">
- style="display:flex;gap:8px;flex-wrap:wrap;">
           <span style="font-size:0.8rem;color:var(--text3);">Select a device to see device-specific commands.</span>
         </div>
       </div>
       
       <div class="sysex-area" style="display:flex;gap:20px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:300px;border:1px solid var(--border);border-radius:6px;padding:12px;background:var(--surface2);">
-          <h3 style="margin-top:0;font-size:1rem;">SysEx Bulk Queue</h3>
-          <p style="font-size:0.8rem;color:var(--text3);margin-bottom:12px;">Queue multiple .syx files and send sequentially.</p>
-          <input type="file" id="sysex-queue-input" accept=".syx,.sys" multiple style="display:none" onchange="handleSysexQueueFiles(event)">
-          <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <button class="btn" onclick="document.getElementById('sysex-queue-input').click()">📁 Select Files</button>
-            <button class="btn primary" onclick="sendSysexQueue()">▶ Send Queue</button>
+        <!-- SYSEX BATCH PROCESSING QUEUE -->
+        <div style="flex:1;min-width:320px;border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--surface2);display:flex;flex-direction:column;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <h3 style="margin:0;font-size:1rem;display:flex;align-items:center;gap:6px;">
+              <span>📦 SysEx Batch Processing Queue</span>
+            </h3>
+            <span id="sysex-queue-badge" style="font-size:0.7rem;background:var(--surface3);padding:2px 8px;border-radius:10px;color:var(--text3);font-family:monospace;">0 files</span>
           </div>
-          <div id="sysex-queue-list" style="font-size:0.8rem;background:var(--surface3);padding:8px;border-radius:4px;min-height:60px;max-height:120px;overflow-y:auto;">
-            <span style="color:var(--text3);">No files queued.</span>
+          <p style="font-size:0.78rem;color:var(--text3);margin-bottom:10px;">Drag & drop multiple <code>.syx</code> dumps for sequential transmission with real-time status indicators and hardware pace control.</p>
+
+          <!-- Drag and Drop Zone -->
+          <div id="sysex-queue-dropzone" 
+               ondragover="handleSysexQueueDragOver(event)" 
+               ondragleave="handleSysexQueueDragLeave(event)" 
+               ondrop="handleSysexQueueDrop(event)"
+               onclick="document.getElementById('sysex-queue-input').click()"
+               style="border:2px dashed var(--border);border-radius:8px;padding:14px 10px;text-align:center;background:var(--surface3);cursor:pointer;transition:all 0.2s ease;margin-bottom:10px;">
+            <div style="font-size:1.5rem;margin-bottom:2px;">📥</div>
+            <div style="font-size:0.82rem;font-weight:600;color:var(--text2);">Drag & Drop Multiple .syx Files Here</div>
+            <div style="font-size:0.7rem;color:var(--text3);margin-top:2px;">or click to select files from your computer</div>
+            <input type="file" id="sysex-queue-input" accept=".syx,.sys,.bin,.mid" multiple style="display:none" onchange="handleSysexQueueFiles(event)">
+          </div>
+
+          <!-- Queue Controls Toolbar -->
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn primary sm" id="btn-sysex-send-queue" onclick="startSysexBatchTransmission()" title="Transmit all queued .syx files in sequence">
+                ▶ Start Batch
+              </button>
+              <button class="btn sm" id="btn-sysex-pause-queue" onclick="pauseOrResumeSysexBatch()" style="display:none;" title="Pause or resume current queue">
+                ⏸ Pause
+              </button>
+              <button class="btn sm danger" onclick="clearSysexBatchQueue()" title="Clear all queued files">
+                🗑 Clear
+              </button>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:0.72rem;color:var(--text3);">
+              <label for="sysex-delay-select">Delay:</label>
+              <select id="sysex-delay-select" style="background:var(--surface3);border:1px solid var(--border);color:var(--text);font-size:0.72rem;padding:3px 6px;border-radius:4px;outline:none;" onchange="updateSysexBatchDelay(this.value)">
+                <option value="50">50 ms (Fast)</option>
+                <option value="150" selected>150 ms (Standard)</option>
+                <option value="300">300 ms (Safe)</option>
+                <option value="600">600 ms (Vintage)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Overall Batch Progress Bar -->
+          <div id="sysex-batch-progress-container" style="display:none;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text3);margin-bottom:3px;">
+              <span id="sysex-batch-progress-text">Transmitting 0 of 0...</span>
+              <span id="sysex-batch-progress-percent">0%</span>
+            </div>
+            <div style="width:100%;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+              <div id="sysex-batch-progress-bar" style="width:0%;height:100%;background:#38bdf8;transition:width 0.2s;"></div>
+            </div>
+          </div>
+
+          <!-- Per-File Status List -->
+          <div id="sysex-queue-list" style="flex:1;min-height:120px;max-height:220px;overflow-y:auto;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+            <div id="sysex-queue-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:0.78rem;padding:20px 0;">
+              <span>No .syx files queued.</span>
+              <span style="font-size:0.7rem;opacity:0.7;margin-top:4px;">Drag and drop files above to begin batch transmission.</span>
+            </div>
           </div>
         </div>
         
@@ -953,7 +1006,7 @@
         <div class="settings-card">
           <h3>ℹ About</h3>
           <div style="font-size:0.82rem;color:var(--text2);line-height:1.9;">
-            <strong>MIDIcontrolz2</strong> v2.19.0<br>
+            <strong>MIDIcontrolz2</strong> v2.21.1<br>
             WebMIDI API · No backend · No install<br>
             Device configs: JSON templates<br>
             <a href="https://midicontrolz.doerd.de" target="_blank"

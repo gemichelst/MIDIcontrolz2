@@ -13384,42 +13384,368 @@ window.hideDmCardPreview = function() {
 
 
 // ============================================================
-//  SYSEX BULK QUEUE & SAFETY
+//  SYSEX BATCH PROCESSING QUEUE ENGINE
 // ============================================================
-window.sysexQueue = [];
-window.sysexQueueActive = false;
+window.sysexBatchQueue = [];
+window.sysexQueueState = {
+  active: false,
+  paused: false,
+  stopRequested: false,
+  currentIndex: -1,
+  intervalMs: 150,
+  totalBytesSent: 0
+};
 
-window.handleSysexQueueFiles = function(event) {
-  const files = Array.from(event.target.files);
-  if (!files.length) return;
-  
-  window.sysexQueue = files;
-  const list = document.getElementById('sysex-queue-list');
-  if (list) {
-    list.innerHTML = files.map(f => `<div>📄 ${f.name} (${f.size} bytes)</div>`).join('');
+// Formats byte size into human readable string
+function formatSyxSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(2) + ' MB';
+}
+
+window.handleSysexQueueDragOver = function(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const zone = document.getElementById('sysex-queue-dropzone');
+  if (zone) {
+    zone.style.borderColor = '#38bdf8';
+    zone.style.background = 'rgba(56, 189, 248, 0.12)';
   }
 };
 
-window.sendSysexQueue = async function() {
-  if (!State.midiOut) return toast('No MIDI Out connected', 'error');
-  if (!window.sysexQueue.length) return toast('No files queued', 'error');
-  
-  window.sysexQueueActive = true;
-  for (let i = 0; i < window.sysexQueue.length; i++) {
-    const file = window.sysexQueue[i];
-    try {
-      const buffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      sendMidiOut(bytes);
-      toast(`Sent ${file.name}`, 'info');
-      // Wait a bit between files to not overwhelm hardware
-      await new Promise(r => setTimeout(r, 200));
-    } catch(e) {
-      toast(`Error sending ${file.name}`, 'error');
+window.handleSysexQueueDragLeave = function(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const zone = document.getElementById('sysex-queue-dropzone');
+  if (zone) {
+    zone.style.borderColor = 'var(--border)';
+    zone.style.background = 'var(--surface3)';
+  }
+};
+
+window.handleSysexQueueDrop = function(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const zone = document.getElementById('sysex-queue-dropzone');
+  if (zone) {
+    zone.style.borderColor = 'var(--border)';
+    zone.style.background = 'var(--surface3)';
+  }
+
+  const files = event.dataTransfer?.files;
+  if (files && files.length) {
+    window.addFilesToSysexQueue(Array.from(files));
+  }
+};
+
+window.handleSysexQueueFiles = function(event) {
+  const files = Array.from(event.target.files || []);
+  if (files.length) {
+    window.addFilesToSysexQueue(files);
+  }
+  event.target.value = ''; // Reset input so same file can be re-selected if desired
+};
+
+window.addFilesToSysexQueue = function(fileList) {
+  if (!fileList || !fileList.length) return;
+
+  let addedCount = 0;
+  fileList.forEach(file => {
+    // Basic filter or accept all MIDI/SysEx extensions
+    const id = 'syx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 7);
+    window.sysexBatchQueue.push({
+      id,
+      file,
+      name: file.name,
+      size: file.size,
+      sizeFormatted: formatSyxSize(file.size),
+      status: 'pending', // 'pending' | 'reading' | 'transmitting' | 'sent' | 'error' | 'cancelled'
+      errorMsg: null,
+      byteCount: null,
+      timestamp: null
+    });
+    addedCount++;
+  });
+
+  renderSysexBatchQueueUI();
+  toast(`Added ${addedCount} file(s) to SysEx batch queue.`, 'info');
+};
+
+window.removeSysexQueueItem = function(id) {
+  if (window.sysexQueueState.active) {
+    const activeItem = window.sysexBatchQueue[window.sysexQueueState.currentIndex];
+    if (activeItem && activeItem.id === id) {
+      toast('Cannot remove a file currently transmitting.', 'error');
+      return;
     }
   }
-  toast('SysEx Queue finished', 'success');
-  window.sysexQueueActive = false;
+
+  window.sysexBatchQueue = window.sysexBatchQueue.filter(item => item.id !== id);
+  renderSysexBatchQueueUI();
+};
+
+window.clearSysexBatchQueue = function() {
+  if (window.sysexQueueState.active) {
+    window.sysexQueueState.stopRequested = true;
+  }
+  window.sysexBatchQueue = [];
+  renderSysexBatchQueueUI();
+  toast('SysEx queue cleared.', 'info');
+};
+
+window.updateSysexBatchDelay = function(val) {
+  const parsed = parseInt(val, 10);
+  if (!isNaN(parsed) && parsed >= 10) {
+    window.sysexQueueState.intervalMs = parsed;
+  }
+};
+
+function renderSysexBatchQueueUI() {
+  const listEl = document.getElementById('sysex-queue-list');
+  const badgeEl = document.getElementById('sysex-queue-badge');
+  const progressContainer = document.getElementById('sysex-batch-progress-container');
+  const progressBar = document.getElementById('sysex-batch-progress-bar');
+  const progressText = document.getElementById('sysex-batch-progress-text');
+  const progressPercent = document.getElementById('sysex-batch-progress-percent');
+  const btnSend = document.getElementById('btn-sysex-send-queue');
+  const btnPause = document.getElementById('btn-sysex-pause-queue');
+
+  if (!listEl) return;
+
+  const queue = window.sysexBatchQueue;
+  const total = queue.length;
+  const sentCount = queue.filter(item => item.status === 'sent').length;
+
+  if (badgeEl) {
+    badgeEl.textContent = `${total} file${total === 1 ? '' : 's'}`;
+  }
+
+  if (total === 0) {
+    listEl.innerHTML = `
+      <div id="sysex-queue-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:0.78rem;padding:24px 0;">
+        <span>No .syx files queued.</span>
+        <span style="font-size:0.7rem;opacity:0.7;margin-top:4px;">Drag and drop files above to begin batch transmission.</span>
+      </div>
+    `;
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (btnPause) btnPause.style.display = 'none';
+    if (btnSend) {
+      btnSend.disabled = false;
+      btnSend.innerHTML = '▶ Start Batch';
+    }
+    return;
+  }
+
+  // Update progress if batch active
+  if (progressContainer) {
+    if (window.sysexQueueState.active || sentCount > 0) {
+      progressContainer.style.display = 'block';
+      const pct = Math.round((sentCount / total) * 100);
+      if (progressBar) progressBar.style.width = pct + '%';
+      if (progressPercent) progressPercent.textContent = pct + '%';
+      if (progressText) progressText.textContent = `Completed ${sentCount} of ${total} files`;
+    } else {
+      progressContainer.style.display = 'none';
+    }
+  }
+
+  // Render items
+  listEl.innerHTML = queue.map(item => {
+    let statusBadge = '';
+    let itemBorder = 'var(--border)';
+    let itemBg = 'rgba(255,255,255,0.02)';
+
+    switch(item.status) {
+      case 'reading':
+        statusBadge = `<span style="font-size:0.68rem;padding:2px 8px;border-radius:10px;background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid #38bdf8;font-weight:600;">🔄 Reading</span>`;
+        itemBorder = '#38bdf8';
+        break;
+      case 'transmitting':
+        statusBadge = `<span style="font-size:0.68rem;padding:2px 8px;border-radius:10px;background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid #f59e0b;font-weight:600;">⚡ Transmitting...</span>`;
+        itemBorder = '#f59e0b';
+        itemBg = 'rgba(245,158,11,0.06)';
+        break;
+      case 'sent':
+        statusBadge = `<span style="font-size:0.68rem;padding:2px 8px;border-radius:10px;background:rgba(16,185,129,0.18);color:#10b981;border:1px solid #10b981;font-weight:600;">✅ Sent (${item.byteCount || item.size} B)</span>`;
+        itemBorder = 'rgba(16,185,129,0.4)';
+        break;
+      case 'error':
+        statusBadge = `<span style="font-size:0.68rem;padding:2px 8px;border-radius:10px;background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid #ef4444;font-weight:600;" title="${escapeHtml(item.errorMsg || 'Failed')}">❌ Error</span>`;
+        itemBorder = '#ef4444';
+        break;
+      case 'cancelled':
+        statusBadge = `<span style="font-size:0.68rem;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border);">⏹ Stopped</span>`;
+        break;
+      default: // pending
+        statusBadge = `<span style="font-size:0.68rem;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid rgba(255,255,255,0.1);">⏳ Pending</span>`;
+    }
+
+    return `
+      <div id="syx-item-${item.id}" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:${itemBg};border:1px solid ${itemBorder};border-radius:6px;gap:8px;transition:all 0.15s ease;">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+          <span style="font-size:0.95rem;">📄</span>
+          <div style="min-width:0;flex:1;">
+            <div style="font-size:0.78rem;font-weight:600;color:#f8fafc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+            <div style="font-size:0.68rem;color:var(--text3);">${item.sizeFormatted}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${statusBadge}
+          <button class="btn sm" onclick="previewQueueItemInVisualizer('${item.id}')" title="Inspect SysEx bytes in Template Visualizer" style="padding:2px 6px;font-size:0.68rem;background:var(--surface3);">🔍</button>
+          <button class="btn sm danger" onclick="removeSysexQueueItem('${item.id}')" title="Remove from queue" style="padding:2px 6px;font-size:0.68rem;">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.startSysexBatchTransmission = async function() {
+  if (window.sysexQueueState.active) return;
+  if (!State.midiOut) {
+    toast('No MIDI Output port connected. Please select an active MIDI Out port first.', 'error');
+    return;
+  }
+
+  const queue = window.sysexBatchQueue;
+  if (!queue.length) {
+    toast('No SysEx files queued. Drag & drop .syx files first.', 'info');
+    return;
+  }
+
+  // Find index of first non-sent file, or reset if all sent
+  let startIndex = queue.findIndex(item => item.status !== 'sent');
+  if (startIndex === -1) {
+    // All already sent, reset statuses
+    queue.forEach(item => { item.status = 'pending'; item.errorMsg = null; });
+    startIndex = 0;
+  }
+
+  window.sysexQueueState.active = true;
+  window.sysexQueueState.paused = false;
+  window.sysexQueueState.stopRequested = false;
+
+  const btnSend = document.getElementById('btn-sysex-send-queue');
+  const btnPause = document.getElementById('btn-sysex-pause-queue');
+  if (btnSend) {
+    btnSend.disabled = true;
+    btnSend.innerHTML = '⚡ Transmitting...';
+  }
+  if (btnPause) {
+    btnPause.style.display = 'inline-block';
+    btnPause.innerHTML = '⏸ Pause';
+  }
+
+  let sentBytesTotal = 0;
+  let successCount = 0;
+
+  for (let i = startIndex; i < queue.length; i++) {
+    if (window.sysexQueueState.stopRequested) {
+      queue[i].status = 'cancelled';
+      break;
+    }
+
+    // Handle pause
+    while (window.sysexQueueState.paused) {
+      await new Promise(r => setTimeout(r, 100));
+      if (window.sysexQueueState.stopRequested) break;
+    }
+    if (window.sysexQueueState.stopRequested) break;
+
+    const item = queue[i];
+    window.sysexQueueState.currentIndex = i;
+
+    // 1. Read
+    item.status = 'reading';
+    renderSysexBatchQueueUI();
+
+    try {
+      const buffer = await item.file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      if (bytes.length === 0) {
+        throw new Error('File is empty (0 bytes).');
+      }
+
+      // 2. Transmit
+      item.status = 'transmitting';
+      item.byteCount = bytes.length;
+      renderSysexBatchQueueUI();
+
+      if (typeof sendSysExOut === 'function') {
+        sendSysExOut(bytes);
+      } else if (typeof sendMidiOut === 'function') {
+        sendMidiOut(bytes);
+      } else if (State.midiOut) {
+        State.midiOut.send(bytes);
+      } else {
+        throw new Error('MIDI Out disconnected during transmission.');
+      }
+
+      sentBytesTotal += bytes.length;
+      successCount++;
+      item.status = 'sent';
+      item.timestamp = new Date().toLocaleTimeString();
+      renderSysexBatchQueueUI();
+
+      // Pace delay between packets to prevent MIDI FIFO queue overflow
+      await new Promise(r => setTimeout(r, window.sysexQueueState.intervalMs));
+
+    } catch(err) {
+      console.error(`[SysEx Batch] Error transmitting ${item.name}:`, err);
+      item.status = 'error';
+      item.errorMsg = err.message || 'Transmission failed';
+      renderSysexBatchQueueUI();
+    }
+  }
+
+  window.sysexQueueState.active = false;
+  window.sysexQueueState.paused = false;
+
+  if (btnSend) {
+    btnSend.disabled = false;
+    btnSend.innerHTML = '▶ Start Batch';
+  }
+  if (btnPause) {
+    btnPause.style.display = 'none';
+  }
+
+  if (window.sysexQueueState.stopRequested) {
+    toast('SysEx batch transmission stopped.', 'info');
+  } else {
+    toast(`SysEx Batch Complete: ${successCount} of ${queue.length} files (${formatSyxSize(sentBytesTotal)}) transmitted.`, 'success');
+  }
+};
+
+window.pauseOrResumeSysexBatch = function() {
+  if (!window.sysexQueueState.active) return;
+  window.sysexQueueState.paused = !window.sysexQueueState.paused;
+  const btnPause = document.getElementById('btn-sysex-pause-queue');
+  if (btnPause) {
+    btnPause.innerHTML = window.sysexQueueState.paused ? '▶ Resume' : '⏸ Pause';
+  }
+  toast(window.sysexQueueState.paused ? 'Batch queue paused.' : 'Resuming batch queue...', 'info');
+};
+
+window.previewQueueItemInVisualizer = async function(id) {
+  const item = window.sysexBatchQueue.find(it => it.id === id);
+  if (!item) return;
+
+  try {
+    const buffer = await item.file.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+
+    const panelTa = document.getElementById('sysex-panel-textarea');
+    if (panelTa) {
+      panelTa.value = hex;
+      if (typeof window.updateSysExPanelVisualizer === 'function') {
+        window.updateSysExPanelVisualizer();
+      }
+      toast(`Loaded ${item.name} into Template Visualizer.`, 'info');
+    }
+  } catch(e) {
+    toast(`Failed to read file: ${e.message}`, 'error');
+  }
 };
 
 window.addEventListener('beforeunload', (e) => {
