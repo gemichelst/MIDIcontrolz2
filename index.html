@@ -222,16 +222,18 @@
 
     #svg-mapper-container {
       width: 100%;
-      min-height: 250px;
-      background: var(--surface2);
+      min-height: 580px;
+      max-height: 750px;
+      background: #090d16;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 12px;
       margin-bottom: 20px;
       position: relative;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     .svg-control {
       cursor: pointer;
@@ -478,26 +480,46 @@
       <div id="editor-device" style="display:none;"></div>
 
       
-      <!-- MIDI MAPPER & SVG ENGINE -->
-      <div id="midi-mapper-section" style="display:none; margin-top:20px; background:var(--surface2); padding:12px; border-radius:8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <h2 style="font-size:1.1rem;margin:0;">Visual MIDI Mapper (Drag & Drop)</h2>
-          <div style="display:flex; gap:8px;">
+      <!-- MIDI MAPPER & TOP-VIEW CONTROLLER ENGINE -->
+      <div id="midi-mapper-section" style="display:none; margin-top:20px; background:var(--surface2); padding:16px; border-radius:10px; border:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <h2 style="font-size:1.15rem;margin:0;display:flex;align-items:center;gap:8px;">
+              <span>🎛️ Controller Faceplate & Visual MIDI Mapper</span>
+            </h2>
+            <div style="font-size:0.75rem;color:var(--text3);margin-top:2px;">
+              Interactive top-down hardware workbench · Move & position controls or map CC/Notes with realtime MIDI feedback
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
             <button class="btn sm" id="btn-mapper-learn" onclick="toggleMapperLearn()">🎛 Learn: OFF</button>
             <button class="btn sm primary" onclick="exportSvgMapping()">💾 Export Mapping</button>
           </div>
         </div>
-        <p style="font-size:0.85rem;color:var(--text3);margin-bottom:10px;">Drag CC numbers onto the SVG controls to map them instantly. Click a control to edit.</p>
 
-        <div id="draggable-ccs" style="margin-bottom:10px; background:var(--surface3); padding:10px; border-radius:6px; min-height:40px;">
+        <!-- TOP-VIEW PHOTO NOTIFICATION BANNER -->
+        <div style="background:rgba(56, 189, 248, 0.07); border:1px solid rgba(56, 189, 248, 0.3); border-radius:6px; padding:8px 12px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:0.75rem; color:#cbd5e1; display:flex; align-items:center; gap:8px; line-height:1.35;">
+            <span style="font-size:1rem;">📷</span>
+            <span><strong>Top-View Photo Notice:</strong> Uploaded controller pictures <strong>must be a straight 90° top-view photo</strong> (flat overhead angle). Angled or side-perspective photos will cause misalignment with the overlay pads, knobs, and faders.</span>
+          </div>
+          <div>
+            <button class="btn sm" onclick="openUploadFaceplateModal()" style="font-size:0.72rem; white-space:nowrap;">📷 Upload Faceplate</button>
+          </div>
+        </div>
+
+        <div id="draggable-ccs" style="margin-bottom:12px; background:var(--surface3); padding:8px 12px; border-radius:6px; min-height:40px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text2); margin-right:6px;">Drag to Map:</span>
           <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="1" >CC 1 (Mod)</span>
           <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="7" >CC 7 (Vol)</span>
           <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="10" >CC 10 (Pan)</span>
           <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="74" >CC 74 (Cutoff)</span>
           <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="71" >CC 71 (Reso)</span>
+          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="11" >CC 11 (Exp)</span>
+          <span class="draggable-cc" draggable="true" ondragstart="dragCC(event)" data-cc="64" >CC 64 (Sustain)</span>
         </div>
         <div id="svg-mapper-container" ondrop="dropOnSvg(event)" ondragover="allowDrop(event)">
-          <!-- SVG rendered by JS -->
+          <!-- Faceplate Canvas and Controls Rendered by mapper.js -->
         </div>
       </div>
 
@@ -628,36 +650,33 @@
           </h3>
           <p style="font-size:0.8rem;color:var(--text3);margin-bottom:8px;">Select a standard starting template below, paste raw HEX bytes, or load a .syx file to import and visualize.</p>
           
-          <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <label for="sysex-template-preset-select" style="font-size:0.75rem; color:var(--text2); font-weight:600;">Standard Templates:</label>
-            <select id="sysex-template-preset-select" onchange="loadStandardSysExTemplate(this.value, 'panel')" style="flex:1; min-width:210px; background:var(--surface3); border:1px solid var(--border); color:var(--text); padding:5px 8px; border-radius:4px; font-size:0.75rem; outline:none;">
-              <option value="">-- Choose a standard starting template --</option>
-              <optgroup label="Akai Professional">
-                <option value="akai_lpd8_req1">Akai LPD8 — Read Preset 1 Request</option>
-                <option value="akai_lpd8_dump1">Akai LPD8 — Preset 1 Full Configuration Dump</option>
-                <option value="akai_lpd8_dump2">Akai LPD8 — Preset 2 Ableton Mapping Dump</option>
-              </optgroup>
-              <optgroup label="Novation">
-                <option value="novation_remote_req">Novation Remote SL — Template Dump Request</option>
-                <option value="novation_remote_dump">Novation Remote SL — Template 1 Factory Dump</option>
-                <option value="novation_nocturn_on">Novation Nocturn — Automap Mode Enable</option>
-                <option value="novation_launchcontrol_req">Novation Launch Control XL — Template 1 Request</option>
-                <option value="novation_launchcontrol_dump">Novation Launch Control XL — Template 1 Dump</option>
-                <option value="novation_launchpad_prog">Novation Launchpad — Programmer Mode SysEx</option>
-              </optgroup>
-              <optgroup label="Roland">
-                <option value="roland_sp404_inquiry">Roland SP-404MKII — Device Identity Inquiry</option>
-                <option value="roland_tr8s_req">Roland TR-8S — Kit Data Parameter Request</option>
-              </optgroup>
-              <optgroup label="Native Instruments & Behringer">
-                <option value="ni_inquiry">Native Instruments Controller Inquiry</option>
-                <option value="behringer_inquiry">Behringer Synthesizer Identity Request</option>
-              </optgroup>
-              <optgroup label="Universal Standard">
-                <option value="universal_inquiry">Universal MIDI Device Inquiry (All Devices)</option>
-              </optgroup>
-            </select>
-            <button class="btn sm" onclick="loadSelectedTemplateBtn('panel')" title="Insert selected template into editor">Load</button>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:0.75rem; color:var(--text2); font-weight:700;">Standard Hardware SysEx Templates:</span>
+              <span style="font-size:0.68rem; color:var(--text3);">Select to populate factory init HEX</span>
+            </div>
+            
+            <!-- Category Filter Pills -->
+            <div id="sysex-panel-filters" style="display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px;">
+              <button class="btn sm primary" data-cat="All" onclick="filterSysExTemplatesByCategory('All', 'panel')">All</button>
+              <button class="btn sm" data-cat="Native Instruments" onclick="filterSysExTemplatesByCategory('Native Instruments', 'panel')">Native Inst</button>
+              <button class="btn sm" data-cat="Novation" onclick="filterSysExTemplatesByCategory('Novation', 'panel')">Novation</button>
+              <button class="btn sm" data-cat="Roland" onclick="filterSysExTemplatesByCategory('Roland', 'panel')">Roland</button>
+              <button class="btn sm" data-cat="Akai" onclick="filterSysExTemplatesByCategory('Akai', 'panel')">Akai</button>
+              <button class="btn sm" data-cat="DJ-Tech" onclick="filterSysExTemplatesByCategory('DJ-Tech', 'panel')">DJ-Tech</button>
+              <button class="btn sm" data-cat="Behringer" onclick="filterSysExTemplatesByCategory('Behringer', 'panel')">Behringer</button>
+              <button class="btn sm" data-cat="Universal" onclick="filterSysExTemplatesByCategory('Universal', 'panel')">Universal</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+              <select id="sysex-template-preset-select" onchange="loadStandardSysExTemplate(this.value, 'panel')" style="flex:1; background:var(--surface3); border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:4px; font-size:0.75rem; outline:none;">
+                <option value="">-- Choose a standard starting template --</option>
+              </select>
+              <button class="btn sm" onclick="loadSelectedTemplateBtn('panel')" title="Insert selected template into editor">Load</button>
+            </div>
+
+            <!-- Dynamic Template Details & Hardware Transmission Card -->
+            <div id="sysex-panel-card-container"></div>
           </div>
 
           <div style="display:flex; gap:8px;">
@@ -934,7 +953,7 @@
         <div class="settings-card">
           <h3>ℹ About</h3>
           <div style="font-size:0.82rem;color:var(--text2);line-height:1.9;">
-            <strong>MIDIcontrolz2</strong> v2.18.0<br>
+            <strong>MIDIcontrolz2</strong> v2.19.0<br>
             WebMIDI API · No backend · No install<br>
             Device configs: JSON templates<br>
             <a href="https://midicontrolz.doerd.de" target="_blank"
@@ -989,7 +1008,7 @@
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
-<script type="text/javascript" src="/assets/js/midicontrols.v4.js" defer></script>
+<script type="text/javascript" src="/assets/js/midicontrolz2.js" defer></script>
 <script type="text/javascript" src="/assets/js/mapper.js" defer></script>
 </body>
 </html>

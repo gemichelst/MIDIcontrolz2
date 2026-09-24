@@ -2,9 +2,28 @@
 
 Welcome to **MIDIcontrolz2** – an offline-first, highly advanced MIDI mapping and diagnostic tool built purely with WebMIDI, HTML5, and vanilla JavaScript. No external dependencies, no server backends required. Runs directly in any modern browser.
 
-## 🚀 Features (v2.18.0)
+## 🚀 Features (v2.19.0)
 
-### 🎛️ Expanded Hardware Controller Library (15 New Controllers, 16 Device Definitions)
+### 📷 Controller Faceplate Photo Upload & Top-View Visual Mapping
+*   **Orthographic Top-View Faceplate Visualizer:** High-fidelity hardware faceplate canvas with generous dimensions (min 580px, responsive, expandable), displaying either procedural vector hardware faceplates or high-resolution user-uploaded photos.
+*   **Top-View Image Upload Routine:** Upload custom faceplate photos directly from disk with clear, mandatory orthographic guidance (reminding users that straight 90° top-down photos are required to avoid perspective misalignments).
+*   **Predefault Control Placement Routine:** Mathematically stable layout engine that automatically positions pads, knobs, faders, and buttons into ergonomically balanced groupings matching each controller's architecture (4x4 pad matrices, 3-tier knob racks, channel faders, TR-REC step sequencers, and jogwheels).
+*   **Interactive Move Controls Mode:** Toggle into Move Mode to freely drag and drop any pad, knob, fader, or button overlay across the faceplate image. Position coordinates are saved persistently per device in `localStorage`.
+*   **Auto-Arrange Controls:** Single-click realignment back to predefault geometric coordinates.
+*   **Live MIDI Feedback:** Overlaid controls illuminate and dials/faders animate in real-time when incoming MIDI messages are received from connected hardware.
+
+### 📦 Dynamic SysEx Template Library & Instant Hardware Inits
+*   **Dynamic Hardware Catalog:** Integrated catalog in the **Template Importer** panel supporting Native Instruments (Maschine MK1/MK2/MK3, Mikro MK1/MK2/MK3), Novation (Launch Control XL MK1/MK2, Launchpad MK2/Pro, Nocturn, ReMOTE SL), Roland (TR-8S, SP-404 MK1/MK2/MK3), DJ-Tech (Kontrol One), Behringer (Edge), and Akai (LPD8, MIDImix).
+*   **Category Filter Pills:** Rapidly filter by manufacturer (`All`, `Native Inst`, `Novation`, `Roland`, `Akai`, `DJ-Tech`, `Behringer`, `Universal`).
+*   **Automatic Population & Live Breakdown:** Choosing any controller instantly populates the SysEx editor with factory initialization hex bytes, triggers packet visualization, and renders an interactive summary card.
+*   **Direct Hardware Transmission:** Transmit loaded factory initialization hex messages directly to connected MIDI Output ports with the **"⚡ Send to Hardware"** button.
+
+### 🧹 Codebase Consolidation & Performance
+*   **Single Unified Core:** Removed legacy `midicontrol.*.js` scripts (`midicontrol.bak.js`, `midicontrols.v1.js`, `midicontrols.v2.js`, `midicontrols.v3.js`).
+*   **Renamed to `midicontrolz2.js`:** All core logic, built-in device definitions, and SysEx routines consolidated into `public/assets/js/midicontrolz2.js`.
+*   **Offline Guarantee:** Built-in hardware definitions for all 22 devices embedded directly into `midicontrolz2.js`.
+
+### 🎛️ Expanded Hardware Controller Library (22 Device Definitions)
 Full native support, custom vector controls, pad layouts, encoders, faders, MIDI Learn, and SysEx definitions for:
 *   **Native Instruments Maschine Series:**
     *   **Maschine Mikro MK1:** 16 velocity-sensitive pads, master push encoder, wheel, and transport controls.
@@ -17,6 +36,9 @@ Full native support, custom vector controls, pad layouts, encoders, faders, MIDI
     *   **Launch Control XL MK1 & MK2:** 24 rotary knobs (Send A, Send B, Pan), 8 smooth 60mm faders, 16 multi-color track focus/control buttons, and template dump requests.
     *   **Launchpad MK2:** Iconic 8x8 RGB grid (64 pads) with scene launch and function control buttons.
     *   **Launchpad Pro:** Professional 64-pad velocity & poly-aftertouch performance grid with dedicated navigation and Programmer Mode.
+    *   **Launch Control MK1:** 16 rotary knobs, 8 pad buttons, 4 navigation switches.
+    *   **Nocturn:** 8 endless encoders with LED rings, speed dial, and crossfader.
+    *   **ReMOTE Zero SL & ReMOTE 25 SL Compact:** Dual LCD screens, 8 faders, 8 rotary pots, 8 encoders, and 32 buttons.
 *   **DJ-Tech Modular Controller:**
     *   **Kontrol One:** Dedicated USB DJ controller with 4 FX rotary knobs, scratch jogwheel, loop encoder, tempo pitch fader, 4 hot cues, and deck select switches.
 *   **Roland Rhythm & Sampler Series:**
@@ -26,19 +48,23 @@ Full native support, custom vector controls, pad layouts, encoders, faders, MIDI
     *   **SP-404MK3 (Studio Sampler):** Extended 16 expressive pads, 6 multi-FX macro encoders, dual crossfaders, and chromatic/slice modes.
 *   **Behringer Synthesizers:**
     *   **Edge Percussion Synthesizer:** Dual 8-step sequencer pitch/velocity knobs, VCF Cutoff/Resonance, VCF/VCA Decay, Pitch Mod depth, Pink Noise, and step trigger pads.
-
-### 📦 Pre-configured Standard SysEx Template Library
-*   **Instant Starting Point:** Integrated template selector dropdown right inside the **Template Importer** panel and the **SysEx Inspector Modal**.
-*   **Supported Out-of-the-Box Templates:**
-    *   *Akai Professional:* LPD8 Preset 1 Dump Request, Preset 1 Full Configuration Dump, Preset 2 Ableton Mapping Dump.
-    *   *Novation:* Remote SL Template Dump Request, Remote SL Template 1 Factory Dump, Nocturn Automap Enable, Launch Control XL Template 1 Request & Dump, Launchpad Programmer Mode.
-    *   *Roland:* SP-404MKII Device Identity Inquiry, TR-8S Kit Data Parameter Request.
-    *   *Universal & Standards:* Native Instruments Controller Inquiry, Behringer Synthesizer Identity Request, Universal MIDI Device Inquiry (All Devices).
-*   **Realtime Structural Visualization:** Instant hexadecimal decoding, byte segmentation, ASCII preview, and validation.
+*   **Akai Professional:**
+    *   **LPD8 (v1 & Wireless):** 8 velocity pads, 8 Q-Link knobs, 4 memory banks.
+    *   **MIDImix:** 24 rotary knobs (3 per channel), 9 faders (8 channel + master), 16 channel mute/rec buttons.
 
 ---
 
 ## 📜 Changelog
+
+### [v2.19.0] - 2026-09-24
+*   **Added:** Controller Faceplate Photo Upload with mandatory top-view orthographic perspective notice and live image preview.
+*   **Added:** Stable predefault control placement routine for pads, knobs, faders, and buttons matching hardware geometry.
+*   **Added:** "Move Controls" mode allowing free dragging and positioning of controls on top-view photos with persistent local storage.
+*   **Added:** Generous, non-reduced faceplate canvas sizing (min-height: 580px) with canvas expansion toggle and grid snapping.
+*   **Added:** Dynamic SysEx template selector in Template Importer with manufacturer filter pills, live breakdown card, and direct "Send to Hardware" button.
+*   **Added:** Offline built-in definitions for all 22 controllers embedded directly in `midicontrolz2.js`.
+*   **Cleaned:** Removed legacy `midicontrol.*.js` files and renamed primary script to `public/assets/js/midicontrolz2.js`.
+*   **Updated:** Version bump to v2.19.0 across `package.json`, `index.html`, and `README.md`.
 
 ### [v2.18.0] - 2026-09-24
 *   **Added:** 15 newly requested hardware MIDI controller models (16 configurations total) across Native Instruments, Novation, Roland, DJ-Tech, and Behringer.
